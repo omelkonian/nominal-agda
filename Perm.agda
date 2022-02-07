@@ -1,9 +1,7 @@
-open import Prelude.Init hiding (swap)
+open import Prelude.Init
 open import Prelude.DecEq
 
 module Perm (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
-
--- postulate 𝕒 𝕓 𝕔 𝕕 : Atom
 
 open import Swap Atom ⦃ it ⦄
 

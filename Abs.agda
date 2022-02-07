@@ -1,4 +1,4 @@
-open import Prelude.Init hiding (swap)
+open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.General
 

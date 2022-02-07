@@ -1,4 +1,4 @@
-open import Prelude.Init hiding (swap)
+open import Prelude.Init
 open import Prelude.DecEq
 
 module Swap.Base (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
@@ -19,7 +19,19 @@ instance
 swapId : Atom → Atom → A → A
 swapId _ _ = id
 
--- ** Nameless
+mkNameless : (A : Set) → Swap A
+mkNameless A = λ where .swap → swapId
+
+-- ** Nameless instances.
+instance
+  ⊤∅ = mkNameless ⊤
+  𝔹∅ = mkNameless Bool
+  ℕ∅ = mkNameless ℕ
+  ℤ∅ = mkNameless ℤ
+  Char∅   = mkNameless Char
+  String∅ = mkNameless String
+
+{-
 record Nameless (A : Set ℓ) : Set ℓ where
   field ⦃ register ⦄ : ⊤
 open Nameless ⦃...⦄
@@ -31,5 +43,6 @@ instance
   Char∅   = Nameless Char ∋ it
   String∅ = Nameless String ∋ it
 
-  -- Nameless↔ : ⦃ Nameless A ⦄ → Swap A
-  -- Nameless↔ .swap = swapId
+  Nameless↔ : ⦃ Nameless A ⦄ → Swap A
+  Nameless↔ .swap = swapId
+-}
