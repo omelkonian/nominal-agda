@@ -1,4 +1,6 @@
-open import Swap
-open import Perm
-open import Abs
+open import Nominal
+
+open import Swap.Example
 open import Example
+
+open import ULC

@@ -21,6 +21,14 @@ module _ {ℓ} {A : Set ℓ} ⦃ _ : Swap A ⦄ where
     Swap-Abs : Swap (Abs A)
     Swap-Abs .swap 𝕒 𝕓 (abs 𝕔 x) = abs (swap 𝕒 𝕓 𝕔) (swap 𝕒 𝕓 x)
 
+  -- modulo some subtleties, Abs captures the monadic version of И
+  --   * Abs∗: n-ary version
+  --   * etc...
+  -- instance
+  --   -- should be ≃ И
+  --   Monad-Abs : Monad Abs
+  --   Monad-Abs = ?
+
   -- _≈_ : Rel (Abs A) _
   -- x ≈ y = let 𝕔 = freshAtom in conc x 𝕔 ≡ conc y 𝕔
   --   where postulate freshAtom : Atom

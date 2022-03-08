@@ -1,4 +1,5 @@
 open import Prelude.Init
+open import Prelude.General
 open import Prelude.DecEq
 
 module Swap.Base (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
@@ -46,3 +47,14 @@ instance
   Nameless↔ : ⦃ Nameless A ⦄ → Swap A
   Nameless↔ .swap = swapId
 -}
+
+swapˡ : ∀ 𝕒 𝕓 → swap 𝕒 𝕓 𝕒 ≡ 𝕓
+swapˡ 𝕒 𝕓 rewrite ≟-refl _≟_ 𝕒 = refl
+
+swapʳ : ∀ 𝕒 𝕓 → swap 𝕒 𝕓 𝕓 ≡ 𝕒
+swapʳ 𝕒 𝕓 with 𝕓 ≟ 𝕒
+... | yes refl = refl
+... | no  𝕓≢
+  rewrite T⇒true $ fromWitnessFalse {Q = 𝕓 ≟ 𝕒} 𝕓≢
+        | ≟-refl _≟_ 𝕓
+        = refl
