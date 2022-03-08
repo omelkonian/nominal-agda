@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>ULC.Substitution</title><link rel="stylesheet" href="css/Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">-- ** Substitution.</a>
+<a id="21" class="Keyword">module</a> <a id="28" href="ULC.Substitution.html" class="Module">ULC.Substitution</a> <a id="45" class="Comment">{- (Atom : Set) ⦃ _ : DecEq Atom ⦄ -}</a> <a id="83" class="Keyword">where</a>
+
+<a id="90" class="Keyword">open</a> <a id="95" class="Keyword">import</a> <a id="102" href="ULC.Base.html" class="Module">ULC.Base</a>
+<a id="111" class="Keyword">open</a> <a id="116" class="Keyword">import</a> <a id="123" href="Nominal.html" class="Module">Nominal</a> <a id="131" href="ULC.Base.html#331" class="Datatype">Atom</a>
+
+<a id="137" class="Comment">{-
+_[_] : Abs Term → Term → Term
+(abs 𝕒 t) [ s ] = (ƛ 𝕒 ⇒ t) · s
+
+_[_↝_] : Term → Atom → Term → Term
+t [ 𝕒 ↝ s ] = go t
+  where
+    go : Term → Term
+    go = λ where
+      (tˡ · tʳ)  → go tˡ · go tʳ
+      (` 𝕓)      → if 𝕓 == 𝕒 then s else ` 𝕓
+      (ƛ 𝕓 ⇒ t′) → ƛ 𝕓 ⇒ (if 𝕓 == 𝕒 then t′ else go t′)
+
+private
+  _ = (` a) [ a ↝ ` b ] ≡ ` b
+    ∋ refl
+
+  _ = (` a) [ a ↝ ` b · ` b ] ≡ ` b · ` b
+    ∋ refl
+
+  _ = (` a · ` a) [ a ↝ ` b ] ≡ ` b · ` b
+    ∋ refl
+
+  _ = (` a · ` a) [ a ↝ ` b · ` b ]
+    ≡ (` b · ` b) · (` b · ` b)
+    ∋ refl
+
+  _ = (` a · (ƛ a ⇒ ` a)) [ a ↝ ` b ]
+    ≡ ` b · (ƛ a ⇒ ` a)
+    ∋ refl
+
+  _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a ↝ ` b ]
+    ≡ (` b · (ƛ c ⇒ ` c · ` b))
+    ∋ refl
+-}</a>
+</pre></body></html>
