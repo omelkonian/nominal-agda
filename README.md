@@ -1,4 +1,4 @@
-## Nominal techniques in Agda
+## Nominal techniques in Agda [![CI](https://github.com/omelkonian/nominal-agda/workflows/CI/badge.svg)](https://github.com/omelkonian/nominal-agda/actions)
 
 Mostly based on:
 
