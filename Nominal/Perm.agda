@@ -1,12 +1,13 @@
 open import Prelude.Init
 open import Prelude.DecEq
 
-module Perm (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Perm (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
-open import Swap Atom ⦃ it ⦄
+open import Nominal.Swap Atom
+
+private variable A : Set ℓ
 
 -- ** permutations
-
 Perm = List (Atom × Atom)
 
 perm : ⦃ Swap A ⦄ → Perm → A → A

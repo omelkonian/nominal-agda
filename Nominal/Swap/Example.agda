@@ -1,5 +1,5 @@
 {-# OPTIONS -v nominal:100 #-}
-module Swap.Example where
+module Nominal.Swap.Example where
 
 open import Prelude.Init
 open import Prelude.DecEq
@@ -8,7 +8,7 @@ open import Prelude.DecEq
 data Atom : Set where
   `_ : ℕ → Atom
 unquoteDecl DecEq-Atom = DERIVE DecEq [ quote Atom , DecEq-Atom ]
-open import Swap Atom ⦃ it ⦄
+open import Nominal.Swap Atom
 𝕒 = ` 0; 𝕓 = ` 1
 
 data λTerm : Set where

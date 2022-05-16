@@ -1,3 +1,7 @@
+{- Here we derive the canonical swapping for every
+inductive datatype, i.e. the swapping the equivariantly distributes amongst constructors, a.k.a. constructors are equivariant.
+-}
+
 {-# OPTIONS -v nominal:100 #-}
 open import Prelude.Init
 open import Prelude.DecEq
@@ -15,9 +19,9 @@ open import Prelude.Generics
 open import Prelude.Tactics.Extra using (getPatTele)
 open Debug ("nominal" , 100)
 
-module Swap.Derive (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Swap.Derive (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
-open import Swap.Base Atom ⦃ it ⦄
+open import Nominal.Swap.Base Atom ⦃ it ⦄
 
 {-# TERMINATING #-}
 derive↔ : Definition → TC Term
@@ -76,6 +80,8 @@ derive↔ d with d
 ... | data-cons _ = error "[not supported] data constructors"
 ... | axiom       = error "[not supported] axioms or mutual definitions"
 ... | prim-fun    = error "[not supported] primitive functions"
+
+private variable A : Set ℓ
 
 dropFront : ⦃ DecEq A ⦄ → List A → List A → List A
 dropFront xs ys =
