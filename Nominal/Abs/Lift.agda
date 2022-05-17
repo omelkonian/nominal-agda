@@ -40,8 +40,8 @@ instance
 --   x y → let 𝕔 = freshAtom in conc x 𝕔 ~ conc y 𝕔
 --    where postulate freshAtom : Atom
 
-instance
-  Setoid-Abs : ⦃ ISetoid A ⦄ → ISetoid (Abs A)
-  Setoid-Abs = λ where
-    .relℓ → _
-    ._≈_  → lift _≈_
+-- instance
+--   Setoid-Abs : ⦃ ISetoid A ⦄ → ISetoid (Abs A)
+--   Setoid-Abs = λ where
+--     .relℓ → _
+--     ._≈_  → lift _≈_

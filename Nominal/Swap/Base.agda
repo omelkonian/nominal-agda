@@ -2,10 +2,20 @@ open import Prelude.Init
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
+open import Prelude.Setoid
 
 module Nominal.Swap.Base (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
-private variable A : Set ℓ
+-- data Permutation
+--   idᵖ  : Permutation A
+--   _∘ᵖ_ : Permutation A → Permutation A → Permutation A
+--   _∷ᵖ_ : (→ Permutation A → Permutation A
+
+-- Perm =
+
+-- instance
+--   Semigroup-Perm : Semigroup Perm
+--   Semigroup-Perm ._◇_ f g = f ∘ g
 
 record Swap (A : Set ℓ) : Set ℓ where
   field swap : Atom → Atom → A → A
@@ -14,7 +24,21 @@ record Swap (A : Set ℓ) : Set ℓ where
   --      ∙ p (p′ x) = (p ∘ p′) x
 
   -- NB: equivariant functions commute with this group action
+
+  swaps : List (Atom × Atom) → A → A
+  swaps []             = id
+  swaps ((x , y) ∷ as) = swap x y ∘ swaps as
 open Swap ⦃...⦄ public
+
+private variable
+  A : Set ℓ
+  𝕒 𝕓 𝕔 𝕕 : Atom
+  x y : A
+
+-- record SwapLaws (A : Set ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ : Set ℓ where
+--   field
+--     -- swap∘swap : swap 𝕒 𝕓 (swap 𝕔 𝕕 x) ≈ swap swap
+-- open SwapLaws ⦃...⦄ public
 
 instance
   Atom↔ : Swap Atom

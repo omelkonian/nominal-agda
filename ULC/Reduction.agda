@@ -1,12 +1,14 @@
 open import Prelude.Init
 open import Prelude.InferenceRules
+open import Prelude.Closures
+open import Prelude.Decidable
 
 module ULC.Reduction {- ⋯ -} where
 
 open import ULC.Base
+open import ULC.Substitution
 open import Nominal Atom
 
-{-
 -- ** Reduction rules.
 infix 0 _—→_
 data _—→_ : Rel₀ Term where
@@ -66,6 +68,7 @@ private
   plusᶜ = ƛ m ⇒ ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z))
   2+2ᶜ  = plusᶜ · twoᶜ · twoᶜ
 
+{-
   _ : 2+2ᶜ —↠ fourᶜ
   _ =
     begin
@@ -84,6 +87,7 @@ private
       ƛ s ⇒ ƛ z ⇒ ` s · (` s · (` s · (` s · ` z)))
       -- fourᶜ
     ∎
+-}
 
 -- ** Specific term forms.
 Neutral Normal Value : Pred₀ Term
@@ -99,8 +103,6 @@ Value = λ where
   _ → ⊥
 
 -- ** Progress.
-
-open import Prelude.Decidable
 
 pattern step_ x = inj₁ x
 pattern ⟨+_ x   = inj₁ x
@@ -287,7 +289,6 @@ confluence L↠M₁ L↠M₂ =
   let _ , M₁⇛N , M₂⇛N = par-confluence (betas-pars L↠M₁) (betas-pars L↠M₂)
   in -, pars-betas M₁⇛N , pars-betas M₂⇛N
 
--}
 {- Version working with an abstract `Atom` type and rewriting with decidable equality.
   open import Relation.Nullary.Decidable using (isYes≗does)
   private
@@ -296,10 +297,10 @@ confluence L↠M₁ L↠M₂ =
       b≢a : 𝕓 ≢ 𝕒
 
     rw₁ : isYes (𝕒 ≟ 𝕒) ≡ true
-    rw₁ rewrite ≟-refl _≟_ 𝕒 = refl
+    rw₁ rewrite ≟-refl 𝕒 = refl
     {-` REWRITE rw₁ `-}
     rw₂ : isYes (𝕓 ≟ 𝕓) ≡ true
-    rw₂ rewrite ≟-refl _≟_ 𝕓 = refl
+    rw₂ rewrite ≟-refl 𝕓 = refl
     {-` REWRITE rw₂ `-}
     rw₃ : isYes (𝕓 ≟ 𝕒) ≡ false
     rw₃ rewrite isYes≗does (𝕓 ≟ 𝕒) | dec-false (𝕓 ≟ 𝕒) b≢a = refl

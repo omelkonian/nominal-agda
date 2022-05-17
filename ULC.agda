@@ -1,6 +1,6 @@
-module ULC where
+open import Prelude.DecEq
 
-open import ULC.Base public
-open import ULC.Alpha public
-open import ULC.Substitution public
-open import ULC.Reduction public
+module ULC (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+
+open import ULC.Base  Atom public
+open import ULC.Alpha Atom public
