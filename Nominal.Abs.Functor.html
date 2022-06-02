@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Nominal.Abs.Functor</title><link rel="stylesheet" href="css/Agda.css"></head><body><pre class="Agda"><a id="1" class="Keyword">open</a> <a id="6" class="Keyword">import</a> <a id="13" href="Prelude.Init.html" class="Module">Prelude.Init</a>
+<a id="26" class="Keyword">open</a> <a id="31" class="Keyword">import</a> <a id="38" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
+
+<a id="53" class="Keyword">module</a> <a id="60" href="Nominal.Abs.Functor.html" class="Module">Nominal.Abs.Functor</a> <a id="80" class="Symbol">(</a><a id="81" href="Nominal.Abs.Functor.html#81" class="Bound">Atom</a> <a id="86" class="Symbol">:</a> <a id="88" href="Agda.Primitive.html#326" class="Primitive">Set</a><a id="91" class="Symbol">)</a> <a id="93" class="Symbol">⦃</a> <a id="95" href="Nominal.Abs.Functor.html#95" class="Bound">_</a> <a id="97" class="Symbol">:</a> <a id="99" href="Prelude.DecEq.Core.html#97" class="Record">DecEq</a> <a id="105" href="Nominal.Abs.Functor.html#81" class="Bound">Atom</a> <a id="110" class="Symbol">⦄</a> <a id="112" class="Keyword">where</a>
+
+<a id="119" class="Keyword">open</a> <a id="124" class="Keyword">import</a> <a id="131" href="Nominal.Swap.html" class="Module">Nominal.Swap</a>     <a id="148" href="Nominal.Abs.Functor.html#81" class="Bound">Atom</a>
+<a id="153" class="Keyword">open</a> <a id="158" class="Keyword">import</a> <a id="165" href="Nominal.Abs.Base.html" class="Module">Nominal.Abs.Base</a> <a id="182" href="Nominal.Abs.Functor.html#81" class="Bound">Atom</a>
+
+  <a id="190" class="Comment">-- postulate New : (Atom → Set) → Set</a>
+
+  <a id="231" class="Comment">-- mutual</a>
+  <a id="243" class="Comment">--   fresh : (Atom → X) → X</a>
+  <a id="273" class="Comment">--   fresh = {!!}</a>
+
+  <a id="294" class="Comment">--   mapAbs : (A → B) → (Abs A → Abs B)</a>
+  <a id="336" class="Comment">--   mapAbs f x&#39; = fresh λ 𝕒 →</a>
+  <a id="369" class="Comment">--   -- New 𝕒. mapAbs f x&#39; =</a>
+  <a id="400" class="Comment">--     abs 𝕒 (f $ conc x&#39; 𝕒)</a>
+
+<a id="430" class="Comment">-- instance</a>
+<a id="442" class="Comment">--   Functor-AbsAtom : Functor Abs</a>
+<a id="477" class="Comment">--   Functor-AbsAtom ._&lt;$&gt;_ f (abs 𝕒 x) = abs 𝕒 (f x)</a>
+<a id="531" class="Comment">--   Functor-AbsAtom ._&lt;$&gt;_ f x&#39; = fresh λ 𝕒 → abs 𝕒 (f $ conc x&#39; 𝕒)</a>
+
+  <a id="603" class="Comment">-- fresh : (Atom → X) → X</a>
+
+  <a id="632" class="Comment">-- New a. f &lt;$&gt; x&#39; = [a] (f (x&#39; @ a))</a>
+
+  <a id="673" class="Comment">-- modulo some subtleties, Abs captures the monadic version of И</a>
+  <a id="740" class="Comment">--   * Abs∗: n-ary version</a>
+  <a id="769" class="Comment">--   * etc...</a>
+  <a id="785" class="Comment">-- instance</a>
+  <a id="799" class="Comment">--   -- should be ≃ И</a>
+  <a id="823" class="Comment">--   Monad-Abs : Monad Abs</a>
+  <a id="852" class="Comment">--   Monad-Abs = ?</a>
+
+  <a id="874" class="Comment">-- _≈_ : Rel (Abs A) _</a>
+  <a id="899" class="Comment">-- x ≈ y = let 𝕔 = freshAtom in conc x 𝕔 ≡ conc y 𝕔</a>
+  <a id="953" class="Comment">--   where postulate freshAtom : Atom</a>
+
+  <a id="994" class="Comment">-- instance</a>
+  <a id="1008" class="Comment">--   DecEq-Abs : ⦃ DecEq A ⦄ → DecEq (Abs A)</a>
+  <a id="1055" class="Comment">--   DecEq-Abs ._≟_ (abs 𝕒 x) (abs 𝕓 y) = {!!}</a>
+</pre></body></html>

@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Nominal.Perm</title><link rel="stylesheet" href="css/Agda.css"></head><body><pre class="Agda"><a id="1" class="Keyword">open</a> <a id="6" class="Keyword">import</a> <a id="13" href="Prelude.Init.html" class="Module">Prelude.Init</a>
+<a id="26" class="Keyword">open</a> <a id="31" class="Keyword">import</a> <a id="38" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
+<a id="52" class="Keyword">open</a> <a id="57" class="Keyword">import</a> <a id="64" href="Prelude.Semigroup.html" class="Module">Prelude.Semigroup</a>
+<a id="82" class="Keyword">open</a> <a id="87" class="Keyword">import</a> <a id="94" href="Prelude.Monoid.html" class="Module">Prelude.Monoid</a>
+<a id="109" class="Keyword">open</a> <a id="114" class="Keyword">import</a> <a id="121" href="Prelude.Group.html" class="Module">Prelude.Group</a>
+<a id="135" class="Keyword">open</a> <a id="140" class="Keyword">import</a> <a id="147" href="Prelude.Setoid.html" class="Module">Prelude.Setoid</a>
+
+<a id="163" class="Keyword">module</a> <a id="170" href="Nominal.Perm.html" class="Module">Nominal.Perm</a> <a id="183" class="Symbol">(</a><a id="184" href="Nominal.Perm.html#184" class="Bound">Atom</a> <a id="189" class="Symbol">:</a> <a id="191" href="Agda.Primitive.html#326" class="Primitive">Set</a><a id="194" class="Symbol">)</a> <a id="196" class="Symbol">⦃</a> <a id="198" href="Nominal.Perm.html#198" class="Bound">_</a> <a id="200" class="Symbol">:</a> <a id="202" href="Prelude.DecEq.Core.html#97" class="Record">DecEq</a> <a id="208" href="Nominal.Perm.html#184" class="Bound">Atom</a> <a id="213" class="Symbol">⦄</a> <a id="215" class="Keyword">where</a>
+
+<a id="222" class="Keyword">open</a> <a id="227" class="Keyword">import</a> <a id="234" href="Nominal.Swap.html" class="Module">Nominal.Swap</a> <a id="247" href="Nominal.Perm.html#184" class="Bound">Atom</a>
+
+<a id="253" class="Comment">-- ** permutations</a>
+<a id="Perm"></a><a id="272" href="Nominal.Perm.html#272" class="Function">Perm</a> <a id="277" class="Symbol">=</a> <a id="279" href="Nominal.Perm.html#184" class="Bound">Atom</a> <a id="284" href="Data.Product.html#1167" class="Function Operator">×</a> <a id="286" href="Nominal.Perm.html#184" class="Bound">Atom</a>
+<a id="Perms"></a><a id="291" href="Nominal.Perm.html#291" class="Function">Perms</a> <a id="297" class="Symbol">=</a> <a id="299" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="304" href="Nominal.Perm.html#272" class="Function">Perm</a>
+
+<a id="310" class="Keyword">module</a> <a id="317" href="Nominal.Perm.html#317" class="Module">_</a> <a id="319" class="Symbol">{</a><a id="320" href="Nominal.Perm.html#320" class="Bound">ℓ</a><a id="321" class="Symbol">}</a> <a id="323" class="Symbol">{</a><a id="324" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="326" class="Symbol">:</a> <a id="328" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="332" href="Nominal.Perm.html#320" class="Bound">ℓ</a><a id="333" class="Symbol">}</a> <a id="335" class="Symbol">⦃</a> <a id="337" href="Nominal.Perm.html#337" class="Bound">_</a> <a id="339" class="Symbol">:</a> <a id="341" href="Nominal.Swap.Base.html#373" class="Record">Swap</a> <a id="346" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="348" class="Symbol">⦄</a> <a id="350" class="Keyword">where</a>
+
+  <a id="359" href="Nominal.Perm.html#359" class="Function">permute</a> <a id="367" class="Symbol">:</a> <a id="369" href="Nominal.Perm.html#272" class="Function">Perm</a> <a id="374" class="Symbol">→</a> <a id="376" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="378" class="Symbol">→</a> <a id="380" href="Nominal.Perm.html#324" class="Bound">A</a>
+  <a id="384" href="Nominal.Perm.html#359" class="Function">permute</a> <a id="392" class="Symbol">=</a> <a id="394" href="Data.Product.html#3422" class="Function">uncurry</a> <a id="402" href="Nominal.Swap.Base.html#412" class="Field">swap</a>
+
+  <a id="410" href="Nominal.Perm.html#410" class="Function">permute∗</a> <a id="419" class="Symbol">:</a> <a id="421" href="Nominal.Perm.html#291" class="Function">Perms</a> <a id="427" class="Symbol">→</a> <a id="429" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="431" class="Symbol">→</a> <a id="433" href="Nominal.Perm.html#324" class="Bound">A</a>
+  <a id="437" href="Nominal.Perm.html#410" class="Function">permute∗</a> <a id="446" class="Symbol">=</a> <a id="448" href="Nominal.Perm.html#478" class="Function">chain</a> <a id="454" href="Function.Base.html#1031" class="Function Operator">∘</a> <a id="456" href="Data.List.Base.html#1544" class="Function">map</a> <a id="460" href="Nominal.Perm.html#359" class="Function">permute</a>
+    <a id="472" class="Keyword">where</a> <a id="478" href="Nominal.Perm.html#478" class="Function">chain</a> <a id="484" class="Symbol">=</a> <a id="486" href="Data.List.Base.html#4192" class="Function">foldr</a> <a id="492" href="Function.Base.html#3706" class="Function Operator">_∘′_</a> <a id="497" href="Function.Base.html#615" class="Function">id</a>
+
+  <a id="503" class="Keyword">instance</a>
+    <a id="516" href="Nominal.Perm.html#516" class="Function">Setoid-Perms</a> <a id="529" class="Symbol">:</a> <a id="531" href="Prelude.Setoid.html#128" class="Record">ISetoid</a> <a id="539" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="549" href="Nominal.Perm.html#516" class="Function">Setoid-Perms</a> <a id="562" class="Symbol">=</a> <a id="564" class="Symbol">λ</a> <a id="566" class="Keyword">where</a>
+      <a id="578" class="Symbol">.</a><a id="579" href="Prelude.Setoid.html#192" class="Field">relℓ</a> <a id="584" class="Symbol">→</a> <a id="586" href="Nominal.Perm.html#320" class="Bound">ℓ</a>
+      <a id="594" class="Symbol">.</a><a id="595" href="Prelude.Setoid.html#210" class="Field Operator">_≈_</a> <a id="599" class="Symbol">→</a> <a id="601" href="Relation.Binary.PropositionalEquality.html#1471" class="Function Operator">_≗_</a> <a id="605" href="Function.Base.html#6285" class="Function Operator">on</a> <a id="608" href="Nominal.Perm.html#410" class="Function">permute∗</a>
+
+    <a id="622" href="Nominal.Perm.html#622" class="Function">Semigroup-Perms</a> <a id="638" class="Symbol">:</a> <a id="640" href="Prelude.Semigroup.html#94" class="Record">Semigroup</a> <a id="650" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="660" href="Nominal.Perm.html#622" class="Function">Semigroup-Perms</a> <a id="676" class="Symbol">.</a><a id="677" href="Prelude.Semigroup.html#158" class="Field Operator">_◇_</a> <a id="681" class="Symbol">=</a> <a id="683" href="Data.List.Base.html#1810" class="Function Operator">_++_</a>
+
+    <a id="693" class="Comment">-- SemigroupLaws-Perms : SemigroupLaws≡ Perms</a>
+    <a id="743" class="Comment">-- SemigroupLaws-Perms = record { ◇-comm = {!◇-comm!} ; ◇-assocʳ = {!!} }</a>
+
+    <a id="822" href="Nominal.Perm.html#822" class="Function">Monoid-Perms</a> <a id="835" class="Symbol">:</a> <a id="837" href="Prelude.Monoid.html#100" class="Record">Monoid</a> <a id="844" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="854" href="Nominal.Perm.html#822" class="Function">Monoid-Perms</a> <a id="867" class="Symbol">.</a><a id="868" href="Prelude.Monoid.html#178" class="Field">ε</a> <a id="870" class="Symbol">=</a> <a id="872" href="Agda.Builtin.List.html#185" class="InductiveConstructor">[]</a>
+
+    <a id="880" href="Nominal.Perm.html#880" class="Function">MonoidLaws-Perms</a> <a id="897" class="Symbol">:</a> <a id="899" href="Prelude.Monoid.html#532" class="Function">MonoidLaws≡</a> <a id="911" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="921" href="Nominal.Perm.html#880" class="Function">MonoidLaws-Perms</a> <a id="938" class="Symbol">=</a> <a id="940" href="Prelude.Monoid.html#709" class="Function">MonoidLaws-List</a>
+
+    <a id="961" href="Nominal.Perm.html#961" class="Function">Group-Perms</a> <a id="973" class="Symbol">:</a> <a id="975" href="Prelude.Group.html#146" class="Record">Group</a> <a id="981" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="991" href="Nominal.Perm.html#961" class="Function">Group-Perms</a> <a id="1003" class="Symbol">.</a><a id="1004" href="Prelude.Group.html#219" class="Field Operator">_⁻¹</a> <a id="1008" class="Symbol">=</a> <a id="1010" href="Data.List.Base.html#9817" class="Function">L.reverse</a> <a id="1020" href="Function.Base.html#1031" class="Function Operator">∘</a> <a id="1022" href="Data.List.Base.html#1544" class="Function">map</a> <a id="1026" href="Data.Product.html#5317" class="Function">Product.swap</a>
+
+<a id="1040" class="Comment">{-
+    GroupLaws-Perms : GroupLaws Perms _≈_
+    GroupLaws-Perms = record {inverse = invˡ , invʳ; ⁻¹-cong = inv-cong}
+      where
+        open Alg _≈_
+        -- open Group Group-Perms
+
+        invˡ : LeftInverse [] _⁻¹ _++_
+        invˡ [] = λ _ → refl
+        invˡ (p ∷ ps)
+          = {!!}
+
+        -- rewrite invˡ ps x = {!!}
+
+        invʳ : RightInverse [] _⁻¹ _++_
+        invʳ = {!!}
+
+        inv-cong : Congruent₁ _⁻¹
+        inv-cong = {!!}
+-}</a>
+
+
+  <a id="1497" class="Keyword">module</a> <a id="1504" href="Nominal.Perm.html#1504" class="Module">_</a> <a id="1506" class="Symbol">⦃</a> <a id="1508" href="Nominal.Perm.html#1508" class="Bound">setoidA</a> <a id="1516" class="Symbol">:</a> <a id="1518" href="Prelude.Setoid.html#128" class="Record">ISetoid</a> <a id="1526" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="1528" class="Symbol">⦄</a> <a id="1530" class="Symbol">⦃</a> <a id="1532" href="Nominal.Perm.html#1532" class="Bound">_</a> <a id="1534" class="Symbol">:</a> <a id="1536" href="Prelude.Setoid.html#534" class="Record">Setoid-Laws</a> <a id="1548" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="1550" class="Symbol">⦄</a> <a id="1552" class="Symbol">⦃</a> <a id="1554" href="Nominal.Perm.html#1554" class="Bound">_</a> <a id="1556" class="Symbol">:</a> <a id="1558" href="Nominal.Swap.Base.html#1950" class="Record">SwapLaws</a> <a id="1567" href="Nominal.Perm.html#324" class="Bound">A</a> <a id="1569" class="Symbol">⦄</a> <a id="1571" class="Keyword">where</a>
+
+    <a id="1582" class="Keyword">open</a> <a id="1587" href="Prelude.Group.html#872" class="Module">Actionˡ</a>
+
+    <a id="1600" href="Nominal.Perm.html#1600" class="Function">swaps-++</a> <a id="1609" class="Symbol">:</a> <a id="1611" class="Symbol">∀</a> <a id="1613" class="Symbol">(</a><a id="1614" href="Nominal.Perm.html#1614" class="Bound">ps</a> <a id="1617" href="Nominal.Perm.html#1617" class="Bound">ps′</a> <a id="1621" class="Symbol">:</a> <a id="1623" href="Nominal.Perm.html#291" class="Function">Perms</a><a id="1628" class="Symbol">)</a> <a id="1630" class="Symbol">{</a><a id="1631" href="Nominal.Perm.html#1631" class="Bound">x</a> <a id="1633" class="Symbol">:</a> <a id="1635" href="Nominal.Perm.html#324" class="Bound">A</a><a id="1636" class="Symbol">}</a> <a id="1638" class="Symbol">→</a>
+      <a id="1646" href="Nominal.Swap.Base.html#670" class="Function">swaps</a> <a id="1652" class="Symbol">(</a><a id="1653" href="Nominal.Perm.html#1614" class="Bound">ps</a> <a id="1656" href="Data.List.Base.html#1810" class="Function Operator">++</a> <a id="1659" href="Nominal.Perm.html#1617" class="Bound">ps′</a><a id="1662" class="Symbol">)</a> <a id="1664" href="Nominal.Perm.html#1631" class="Bound">x</a> <a id="1666" href="Prelude.Setoid.html#210" class="Field Operator">≈</a> <a id="1668" href="Nominal.Swap.Base.html#670" class="Function">swaps</a> <a id="1674" href="Nominal.Perm.html#1614" class="Bound">ps</a> <a id="1677" class="Symbol">(</a><a id="1678" href="Nominal.Swap.Base.html#670" class="Function">swaps</a> <a id="1684" href="Nominal.Perm.html#1617" class="Bound">ps′</a> <a id="1688" href="Nominal.Perm.html#1631" class="Bound">x</a><a id="1689" class="Symbol">)</a>
+    <a id="1695" href="Nominal.Perm.html#1600" class="Function">swaps-++</a> <a id="1704" href="Agda.Builtin.List.html#185" class="InductiveConstructor">[]</a> <a id="1707" class="Symbol">_</a> <a id="1709" class="Symbol">=</a> <a id="1711" href="Prelude.Setoid.html#696" class="Function">≈-refl</a>
+    <a id="1722" href="Nominal.Perm.html#1600" class="Function">swaps-++</a> <a id="1731" class="Symbol">(_</a> <a id="1734" href="Agda.Builtin.List.html#200" class="InductiveConstructor Operator">∷</a> <a id="1736" href="Nominal.Perm.html#1736" class="Bound">ps</a><a id="1738" class="Symbol">)</a> <a id="1740" class="Symbol">_</a> <a id="1742" class="Symbol">=</a> <a id="1744" href="Nominal.Swap.Base.html#2051" class="Field">cong-swap</a> <a id="1754" href="Function.Base.html#1919" class="Function Operator">$</a> <a id="1756" href="Nominal.Perm.html#1600" class="Function">swaps-++</a> <a id="1765" href="Nominal.Perm.html#1736" class="Bound">ps</a> <a id="1768" class="Symbol">_</a>
+
+    <a id="1775" href="Nominal.Perm.html#1775" class="Function">Perms-Action</a> <a id="1788" class="Symbol">:</a> <a id="1790" href="Prelude.Group.html#872" class="Record">Actionˡ</a> <a id="1798" href="Nominal.Perm.html#291" class="Function">Perms</a> <a id="1804" href="Nominal.Perm.html#324" class="Bound">A</a>
+    <a id="1810" href="Nominal.Perm.html#1775" class="Function">Perms-Action</a> <a id="1823" class="Symbol">=</a> <a id="1825" class="Symbol">λ</a> <a id="1827" class="Keyword">where</a>
+      <a id="1839" class="Symbol">.</a><a id="1840" href="Prelude.Group.html#943" class="Field Operator">_·_</a> <a id="1844" class="Symbol">→</a> <a id="1846" href="Nominal.Swap.Base.html#670" class="Function">swaps</a>
+      <a id="1858" class="Symbol">.</a><a id="1859" href="Prelude.Group.html#965" class="Field">identity</a> <a id="1868" class="Symbol">→</a> <a id="1870" href="Prelude.Setoid.html#696" class="Function">≈-refl</a>
+      <a id="1883" class="Symbol">.</a><a id="1884" href="Prelude.Group.html#1004" class="Field">compatibility</a> <a id="1898" class="Symbol">{</a><a id="1899" href="Nominal.Perm.html#1899" class="Bound">ps</a><a id="1901" class="Symbol">}{</a><a id="1903" href="Nominal.Perm.html#1903" class="Bound">ps′</a><a id="1906" class="Symbol">}</a> <a id="1908" class="Symbol">→</a> <a id="1910" href="Prelude.Setoid.html#711" class="Function">≈-sym</a> <a id="1916" href="Function.Base.html#1919" class="Function Operator">$</a> <a id="1918" href="Nominal.Perm.html#1600" class="Function">swaps-++</a> <a id="1927" href="Nominal.Perm.html#1899" class="Bound">ps</a> <a id="1930" href="Nominal.Perm.html#1903" class="Bound">ps′</a>
+
+    <a id="1939" class="Keyword">instance</a>
+      <a id="1954" href="Nominal.Perm.html#1954" class="Function">Perms-GSet</a> <a id="1965" class="Symbol">:</a> <a id="1967" href="Prelude.Group.html#1379" class="Record">GSet</a> <a id="1972" href="Nominal.Perm.html#291" class="Function">Perms</a> <a id="1978" href="Nominal.Perm.html#324" class="Bound">A</a>
+      <a id="1986" href="Nominal.Perm.html#1954" class="Function">Perms-GSet</a> <a id="1997" class="Symbol">.</a><a id="1998" href="Prelude.Group.html#1466" class="Field">action</a> <a id="2005" class="Symbol">=</a> <a id="2007" href="Nominal.Perm.html#1775" class="Function">Perms-Action</a>
+
+    <a id="2025" href="Nominal.Perm.html#2025" class="Function">Perms-GSet′</a> <a id="2037" class="Symbol">:</a> <a id="2039" href="Prelude.Group.html#1520" class="Record">GSet′</a> <a id="2045" href="Nominal.Perm.html#291" class="Function">Perms</a>
+    <a id="2055" href="Nominal.Perm.html#2025" class="Function">Perms-GSet′</a> <a id="2067" class="Symbol">=</a> <a id="2069" class="Symbol">λ</a> <a id="2071" class="Keyword">where</a>
+      <a id="2083" class="Symbol">.</a><a id="2084" href="Prelude.Group.html#1580" class="Field">ℓₓ</a> <a id="2087" class="Symbol">→</a> <a id="2089" href="Nominal.Perm.html#320" class="Bound">ℓ</a>
+      <a id="2097" class="Symbol">.</a><a id="2098" href="Prelude.Group.html#1596" class="Field">X</a>  <a id="2101" class="Symbol">→</a> <a id="2103" href="Nominal.Perm.html#324" class="Bound">A</a>
+      <a id="2111" class="Symbol">.</a><a id="2112" href="Prelude.Group.html#1613" class="Field">setoidX</a> <a id="2120" class="Symbol">→</a> <a id="2122" href="Nominal.Perm.html#1508" class="Bound">setoidA</a>
+      <a id="2136" class="Symbol">.</a><a id="2137" href="Prelude.Group.html#1639" class="Field">action′</a> <a id="2145" class="Symbol">→</a> <a id="2147" href="Nominal.Perm.html#1775" class="Function">Perms-Action</a>
+
+    <a id="2165" class="Keyword">open</a> <a id="2170" href="Prelude.Group.html#1687" class="Module">GSet-Morphisms</a> <a id="2185" href="Nominal.Perm.html#291" class="Function">Perms</a> <a id="2191" class="Keyword">public</a>
+    <a id="2202" class="Comment">-- equivariant maps betweens G-sets X and Y are denoted X —𝔾→ Y.</a>
+</pre></body></html>
