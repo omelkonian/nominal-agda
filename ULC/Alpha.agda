@@ -1,11 +1,11 @@
 open import Prelude.Init
 open SetAsType
+open L.Mem
 open import Prelude.DecEq
 open import Prelude.General
 open import Prelude.Closures
 open import Prelude.InferenceRules
 open import Prelude.Decidable
-open import Prelude.Membership
 open import Prelude.Setoid
 open import Prelude.Bifunctor
 open import Prelude.Measurable
@@ -15,26 +15,35 @@ open import Prelude.Ord
 -- ** α-equivalence.
 module ULC.Alpha (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
-open import ULC.Base Atom ⦃ it ⦄
-open import Nominal  Atom ⦃ it ⦄
+open import ULC.Base    Atom ⦃ it ⦄
+open import ULC.Measure Atom ⦃ it ⦄
+open import Nominal     Atom ⦃ it ⦄
 
 private variable A : Type ℓ; f g h : Abs A
 
+-- T0D0: factor out abstractions, deal with them generically
 data _≡α_ : Term → Term → Type₀ where
-  ν≡ :
+
+  ν≈ :
+    x ≈ y
     ──────────
-    ` x ≡α ` x
-  ζ≡_ : ∀ {f g : Abs Term} →
-    -- f ≗α g
-    И (λ 𝕩 → conc f 𝕩 ≡α conc g 𝕩)
-    ──────────────────────────────
-    (ƛ f) ≡α (ƛ g)
+    ` x ≡α ` y
+
   ξ≡ :
     ∙ L ≡α L′
     ∙ M ≡α M′
       ────────────────────
       (L · M) ≡α (L′ · M′)
+
+  ζ≡_ : ∀ {f g : Abs Term} →
+    -- f ≗α g
+    И (λ 𝕩 → conc f 𝕩 ≡α conc g 𝕩)
+    ──────────────────────────────
+    (ƛ f) ≡α (ƛ g)
+
 _≢α_ = ¬_ ∘₂ _≡α_
+
+pattern ν≡ = ν≈ refl
 
 instance
   Setoid-Term : ISetoid Term
@@ -45,42 +54,7 @@ instance
 _≗α_ : Rel₀ (Abs Term)
 f ≗α g = И (λ 𝕩 → conc f 𝕩 ≡α conc g 𝕩)
 
-instance
-  Measurable-Term : Measurable Term
-  Measurable-Term .∣_∣ t with t
-  ... | ` _     = 1
-  ... | l · m   = ∣ l ∣ + ∣ m ∣
-  ... | ƛ _ ⇒ t = suc ∣ t ∣
-  -- ... | ƛ _ ⇒  = ∣ f ∣
-
-  Measurable-Abs : ⦃ Measurable A ⦄ → Measurable (Abs A)
-  Measurable-Abs .∣_∣ f = suc ∣ f .term ∣
-
-swap≡ : ∀ x y (t : Term) → ∣ swap x y t ∣ ≡ ∣ t ∣
-swap≡ x y (` _) = refl
-swap≡ x y (l · m) rewrite swap≡ x y l | swap≡ x y m = refl
-swap≡ x y (ƛ z ⇒ t) = cong suc (swap≡ x y t)
-
-conc≡ : ∀ (f : Abs Term) x → ∣ conc f x ∣ ≡ ∣ f .term ∣
-conc≡ (abs x t) y = swap≡ y x t
-
-conc≺ : ∀ (f : Abs Term) x → ∣ conc f x ∣ ≺ ∣ f ∣
-conc≺ f x rewrite conc≡ f x = Nat.≤-refl
-
-measure⁺ : ∀ (t : Term) → ∣ t ∣ > 0
-measure⁺ (l · m) with ∣ l ∣ | measure⁺ l | ∣ m ∣ | measure⁺ m
-... | suc l′ | _ | suc m′ | _ = s≤s z≤n
-measure⁺ (` _)   = s≤s z≤n
-measure⁺ (ƛ _)   = s≤s z≤n
-_·≺ˡ_ : ∀ L M → L ≺ (L · M)
-_ ·≺ˡ M = Nat.m<m+n _ (measure⁺ M)
-_·≺ʳ_ : ∀ L M → M ≺ (L · M)
-L ·≺ʳ _ = Nat.m<n+m _ (measure⁺ L)
-
-
-X = Term ⊎ Abs Term
-
-data _≡α⊎_ : Rel₀ X where
+data _≡α⊎_ : Rel₀ (Term ⊎ Abs Term) where
   ≡_ :
     t ≡α t′
     ──────────────────
@@ -101,10 +75,11 @@ data _≡α⊎_ : Rel₀ X where
 ≡α⊎-refl = ≺-rec _ go
   where
     go : ∀ x → (∀ y → y ≺ x → y ≡α⊎ y) → x ≡α⊎ x
-    go (inj₁ (` x)) rec   = ≡ ν≡
-    go (inj₁ (l · m)) rec = ≡ (ξ≡ (≡˘ rec _ (l ·≺ˡ m)) (≡˘ rec _ (l ·≺ʳ m)))
-    go (inj₁ (ƛ f)) rec   = ≡ ζ≡ ≗˘ go (inj₂ f) rec
-    go (inj₂ f) rec       = ≗ ([] , (λ y _ → ≡˘ rec _ (conc≺ f y)))
+    go x rec with x
+    ... | inj₁ (` _)   = ≡ ν≡
+    ... | inj₁ (l · m) = ≡ ξ≡ (≡˘ rec _ (l ·≺ˡ m)) (≡˘ rec _ (l ·≺ʳ m))
+    ... | inj₁ (ƛ f)   = ≡ ζ≡ ≗˘ go (inj₂ f) rec
+    ... | inj₂ f       = ≗ ([] , (λ y _ → ≡˘ rec _ (conc≺ f y)))
 
 ≡α-refl : ∀ t → t ≡α t
 ≡α-refl t = ≡˘ ≡α⊎-refl (inj₁ t)
@@ -117,14 +92,15 @@ data _≡α⊎_ : Rel₀ X where
   where
     go : ∀ x → (∀ y → y ≺ x → (∀ z → y ≡α⊎ z → z ≡α⊎ y))
              → (∀ y → x ≡α⊎ y → y ≡α⊎ x)
-    go (inj₁ (` _))   rec _
-      (≡ ν≡) = ≡ ν≡
-    go (inj₁ (l · m)) rec _
-      (≡ ξ≡ p q) = ≡ (ξ≡ (≡˘ rec _ (l ·≺ˡ m) _ (≡ p)) (≡˘ rec _ (l ·≺ʳ m) _ (≡ q)))
-    go (inj₁ (ƛ f))   rec _
-      (≡ (ζ≡ p)) = ≡ (ζ≡ (≗˘ go (inj₂ f) rec _ (≗ p)))
-    go (inj₂ f)       rec _
-      (≗ (xs , p)) = ≗ (xs , λ y y∉ → ≡˘ rec _ (conc≺ f y) _ (≡ (p y y∉)))
+    go x rec _ eq with x | eq
+    ... | inj₁ (` _) | ≡ ν≡
+        = ≡ ν≡
+    ... | inj₁ (l · m) | ≡ ξ≡ p q
+        = ≡ ξ≡ (≡˘ rec _ (l ·≺ˡ m) _ (≡ p)) (≡˘ rec _ (l ·≺ʳ m) _ (≡ q))
+    ... | inj₁ (ƛ f) | ≡ ζ≡ p
+        = ≡ ζ≡ ≗˘ go (inj₂ f) rec _ (≗ p)
+    ... | inj₂ f | ≗ (xs , p)
+        = ≗ (xs , λ y y∉ → ≡˘ rec _ (conc≺ f y) _ (≡ p y y∉))
 
 ≗α-sym : f ≗α g → g ≗α f
 ≗α-sym = ≗˘_ ∘ ≡α⊎-sym _ _ ∘ ≗_
@@ -144,7 +120,60 @@ mutual
 
 instance
   SetoidLaws-Term : Setoid-Laws Term
-  SetoidLaws-Term .isEquivalence = record
-    { refl = ≡α-refl _ ; sym = ≡α-sym ; trans = ≡α-trans }
+  SetoidLaws-Term .isEquivalence = record {refl = ≡α-refl _; sym = ≡α-sym; trans = ≡α-trans}
 
--- Equivariant _~_ = x ~ y → swap a b x ~ swap a b y
+  {-# TERMINATING #-}
+  SwapLaws-Term : SwapLaws Term
+  SwapLaws-Term .cong-swap = λ where
+    ν≡       → ν≡
+    (ξ≡ p q) → ξ≡ (cong-swap p) (cong-swap q)
+    (ζ≡ f≈g) → ζ≡ (cong-swap f≈g)
+  SwapLaws-Term .swap-id {a}{t} with t
+  ... | ` x   = ν≈ swap-id
+  ... | l · r = ξ≡ swap-id swap-id
+  ... | ƛ f   = ζ≡ swap-id
+  SwapLaws-Term .swap-rev {a}{b}{t} with t
+  ... | ` x   = ν≈ swap-rev
+  ... | l · r = ξ≡ swap-rev swap-rev
+  ... | ƛ f   = ζ≡ swap-rev
+  SwapLaws-Term .swap-sym {a}{b}{t} with t
+  ... | ` x   = ν≈ swap-sym
+  ... | l · r = ξ≡ swap-sym swap-sym
+  ... | ƛ f   = ζ≡ swap-sym
+  SwapLaws-Term .swap-swap {a}{b}{c}{d}{t} with t
+  ... | ` x   = ν≈ swap-swap
+  ... | l · r = ξ≡ swap-swap swap-swap
+  ... | ƛ f   = ζ≡ swap-swap
+
+open ≈-Reasoning
+
+cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
+cong-ƛ t≡ = ζ≡ ([] , λ _ _ → cong-swap t≡)
+
+fin-ƛ : ∀ (t : Term) → FinSupp t → (∀ x → FinSupp (ƛ x ⇒ t))
+fin-ƛ t (sup , p) x = x ∷ sup , λ a b a∉ b∉ →
+  begin
+    ⦅ b ↔ a ⦆ (ƛ x ⇒ t)
+  ≡⟨⟩
+    (ƛ ⦅ b ↔ a ⦆ x ⇒ ⦅ b ↔ a ⦆ t)
+  ≡⟨ cong (λ ◆ → ƛ ◆ ⇒ ⦅ b ↔ a ⦆ t)
+        $ swap-noop b a x (λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0) ⟩
+    (ƛ x ⇒ ⦅ b ↔ a ⦆ t)
+  ≈⟨ cong-ƛ $ p a b (a∉ ∘ there) (b∉ ∘ there) ⟩
+    (ƛ x ⇒ t)
+  ∎
+
+fin : ∀ (t : Term) → FinSupp t
+fin (` x) = [ x ] , λ a b a∉ b∉ →
+    ≈-reflexive $ cong `_ $
+      swap-noop b a x λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0
+fin (l · m) =
+    let supˡ , pˡ = fin l
+        supᵐ , pᵐ = fin m
+    in (supˡ ++ supᵐ) , λ a b a∉ b∉ →
+    ξ≡ (pˡ a b (a∉ ∘ ∈-++⁺ˡ) (b∉ ∘ ∈-++⁺ˡ))
+        (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
+fin (ƛ x ⇒ t) = fin-ƛ t (fin t) x
+
+fin-abs : ∀ (f : Abs Term) → FinSupp f
+fin-abs = ∀FinSupp-Abs fin

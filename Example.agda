@@ -2,18 +2,19 @@
 module Example where
 
 open import Prelude.Init
+open L.Mem
 open import Prelude.DecEq
 open import Prelude.Generics hiding (`_)
 open import Prelude.General
+open import Prelude.Lists
 
 -- ** instantiate atoms to be the natural numbers
 data Atom : Set where
   `_ : ℕ → Atom
 unquoteDecl DecEq-Atom = DERIVE DecEq [ quote Atom , DecEq-Atom ]
-open import Swap Atom ⦃ it ⦄
-open import Perm Atom ⦃ it ⦄
-open import Abs  Atom ⦃ it ⦄
-𝕒 = ` 0; 𝕓 = ` 1
+open import Nominal Atom ⦃ it ⦄
+
+𝕒 = ` 0; 𝕓 = ` 1; 𝕔 = ` 2
 
 -- ** swapping
 
@@ -44,27 +45,25 @@ _ = swap 𝕒 𝕓 (TEST ∋ ATOM 𝕒) ≡ ATOM 𝕓
 -- ** abstraction
 
 -- Input a name and output two local binding scopes using that name
-_ = (λ (a : Atom) → (abs {A = ℕ} a a , abs {A = ℕ} a a)) 𝕒 ≡ (abs 𝕒 𝕒 , abs 𝕒 𝕒)
+_ = (λ a → (abs a a , abs a a)) 𝕒 ≡ (abs 𝕒 𝕒 , abs 𝕒 𝕒)
   ∋ refl
 
 -- Unpack a pair of local scopes and concrete them at two names
-_ = (λ (x , y) → conc x 𝕒 , conc y 𝕓) ((λ a → abs {A = Atom} a a , abs {A = Atom} a a) 𝕒) ≡ (𝕒 , 𝕓)
+_ = (λ (x , y) → conc x 𝕒 , conc y 𝕓) ((λ a → abs a a , abs a a) 𝕒) ≡ (𝕒 , 𝕓)
   ∋ refl
 
-mutual
-  data Term : Set where
-    _-APP-_ : Op₂ Term
-    VAR : Atom → Term
-    LAM : Abs Term → Term
-  -- {-# TERMINATING #-}
-  -- unquoteDecl Swap-Term = DERIVE-SWAP (quote Swap ∙⟦_⟧) (quote Term) Swap-Term
-  instance
-    {-# TERMINATING #-}
-    Swap-Term : Swap Term
-    Swap-Term .swap 𝕒 𝕓 = λ where
-      (t -APP- t′) → swap 𝕒 𝕓 t -APP- swap 𝕒 𝕓 t′
-      (VAR x) → VAR (swap 𝕒 𝕓 x)
-      (LAM f) → LAM (swap 𝕒 𝕓 f)
+data Term : Set where
+  _-APP-_ : Op₂ Term
+  VAR : Atom → Term
+  LAM : Abs Term → Term
+-- unquoteDecl Swap-Term = DERIVE-SWAP (quote Swap ∙⟦_⟧) (quote Term) Swap-Term
+instance
+  {-# TERMINATING #-}
+  Swap-Term : Swap Term
+  Swap-Term .swap 𝕒 𝕓 = λ where
+    (t -APP- t′) → swap 𝕒 𝕓 t -APP- swap 𝕒 𝕓 t′
+    (VAR x) → VAR (swap 𝕒 𝕓 x)
+    (LAM f) → LAM (swap 𝕒 𝕓 f)
 
 _ = swap 𝕒 𝕓 (VAR 𝕒 -APP- VAR 𝕓) ≡ VAR 𝕓 -APP- VAR 𝕒
   ∋ refl
@@ -89,3 +88,54 @@ _ = swap 𝕒 𝕓 `id∙𝕒 ≢ LAM (abs 𝕒 (VAR 𝕒)) -APP- VAR 𝕓
 -- FUTURE: name restriction (e.g. used in iEUTxO instead of abstraction)
 _ = swap 𝕒 𝕓 `id∙𝕒 ≡ LAM (abs 𝕓 (VAR 𝕓)) -APP- VAR 𝕓
   ∋ refl
+
+
+-- ** freshness
+_ : 𝕒 # (VAR 𝕓 -APP- VAR 𝕔)
+_ = -, qed
+  where
+    qed : ∀ x → x ∉ 𝕓 ∷ 𝕔 ∷ [] → swap x 𝕒 (VAR 𝕓 -APP- VAR 𝕔) ≡ VAR 𝕓 -APP- VAR 𝕔
+    qed x x∉ with 𝕓 ≟ x
+    ... | yes refl = case x∉ (here refl) of λ ()
+    ... | no  _ with 𝕔 ≟ x
+    ... | yes refl = case x∉ (there $′ here refl) of λ ()
+    ... | no  _    = refl
+
+APP-injective : ∀ {L M L′ M′} → L -APP- M ≡ L′ -APP- M′ → (L ≡ L′) × (M ≡ M′)
+APP-injective refl = refl , refl
+
+VAR-injective : ∀ {x y} → VAR x ≡ VAR y → x ≡ y
+VAR-injective refl = refl
+
+f : ¬ 𝕓 # (VAR 𝕓 -APP- VAR 𝕔)
+f (xs , qed) = case absurd of λ ()
+  where
+    H : ∀ x → x ∉ xs → x ≡ 𝕓
+    H x x∉
+      with swap≡ ← APP-injective (qed x x∉) .proj₁
+      rewrite swapʳ x 𝕓
+      = VAR-injective swap≡
+
+    next : Op₁ Atom
+    next (` n) = ` suc n
+
+    `-injective : ∀ x y → ` x ≡ ` y → x ≡ y
+    `-injective _ _ refl = refl
+
+    toℕ : Atom → ℕ
+    toℕ (` n) = n
+
+    sumAtoms : List Atom → Atom
+    sumAtoms xs = ` sum (map toℕ xs)
+
+    x = next (sumAtoms xs)
+
+    -- holds by definition of `sum`
+    postulate x∉  : x ∉ xs
+              x∉′ : next x ∉ xs
+
+    next[x]≡x : next x ≡ x
+    next[x]≡x rewrite H _ x∉′ | H x x∉ = refl
+
+    absurd : ∃ λ n → suc n ≡ n
+    absurd = -, `-injective _ _ next[x]≡x

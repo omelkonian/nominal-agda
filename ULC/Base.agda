@@ -13,9 +13,9 @@ open import Nominal Atom
 
 -- ** ULC terms.
 data Term : Type where
+  `_  : Atom → Term
   _·_ : Op₂ Term
-  `_ : Atom → Term
-  ƛ_ : Abs Term → Term
+  ƛ_  : Abs Term → Term
 -- unquoteDecl Swap-Term = DERIVE Swap [ quote Term , Swap-Term ]
 
 instance

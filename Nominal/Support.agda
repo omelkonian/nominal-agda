@@ -1,18 +1,19 @@
 open import Prelude.Init
+open SetAsType
 open L.Mem
 open import Prelude.DecEq
+open import Prelude.Setoid
+open import Prelude.InfEnumerable
 
-module Nominal.Support (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom ⦃ it ⦄
 open import Nominal.Abs  Atom ⦃ it ⦄
 
-open import Prelude.Setoid
-
 private variable
   a b : Level
-  A : Set a
-  B : Set b
+  A : Type a
+  B : Type b
 
 instance
   Setoid-→ : ISetoid (A → B)
@@ -23,17 +24,55 @@ instance
   SetoidLaws-→ : Setoid-Laws (A → B)
   SetoidLaws-→ {A = A} {B = B} .isEquivalence = Setoid.isEquivalence (A PropEq.→-setoid B)
 
-module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ where
+module _ ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ where
   FinSupp : Pred A _
-  -- FinSupp x = И λ 𝕒 → И λ 𝕓 → swap 𝕓 𝕒 x ≈ x
   FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≈ x
+
+  ∀FinSupp = Unary.Universal FinSupp
 
   supp : ∀ x → FinSupp x → List Atom
   supp _ = proj₁
 
--- instance
---   Swap-Atom→Bool : Swap (Atom → Bool)
---   Swap-Atom→Bool .swap 𝕒 𝕓 f = f ∘ swap 𝕒 𝕓
+  infix 4 _♯_
+  _♯_ : Atom → A → Type _
+  𝕒 ♯ x = И λ 𝕓 → swap 𝕓 𝕒 x ≈ x
+
+  module _ ⦃ _ : Enumerable∞ Atom ⦄ (x : A) (finX : FinSupp x) where
+
+    ∃fresh : ∃ λ 𝕒 → ∃ λ 𝕓
+      → (𝕒 ♯ x)
+      × (𝕓 ♯ x)
+      × (swap 𝕓 𝕒 x ≈ x)
+    ∃fresh =
+      let xs , swap≈ = finX
+          -- ((a ∷ b ∷ []) , (a∉ V.All.∷ b∉ V.All.∷ V.All.[])) = (fresh^ 2) xs
+          a , a∉ = fresh xs
+          b , b∉ = fresh xs
+
+          p : a ♯ x
+          p = xs , λ y y∉ → swap≈ a y a∉ y∉
+
+          q : b ♯ x
+          q = xs , λ y y∉ → swap≈ b y b∉ y∉
+
+      in a , b , p , q , swap≈ a b a∉ b∉
+
+module _ {A : Type ℓ} ⦃ ls : Lawful-Setoid A ⦄ ⦃ _ : Lawful-Swap A ⦃ ls ⦄ ⦄ where
+  -- abstractions over finitely supported types are themselves finitely
+  ∀FinSupp-Abs : ∀FinSupp {A = A} ⦃ ls = ls ⦄ → ∀FinSupp {A = Abs A}
+  ∀FinSupp-Abs fin (abs x t) =
+    let xs , p = fin t
+    in x ∷ xs , λ y z y∉ z∉ →
+    begin
+      ⦅ z ↔ y ⦆ (abs x t)
+    ≡⟨⟩
+      abs (⦅ z ↔ y ⦆ x) (⦅ z ↔ y ⦆ t)
+    ≡⟨ cong (λ ◆ → abs ◆ (⦅ z ↔ y ⦆ t))
+          $ swap-noop z y x (λ where ♯0 → z∉ ♯0; ♯1 → y∉ ♯0) ⟩
+      abs x (⦅ z ↔ y ⦆ t)
+    ≈⟨ cong-abs $ p y z (y∉ ∘ there) (z∉ ∘ there) ⟩
+      abs x t
+    ∎ where open ≈-Reasoning
 
 private
 
@@ -41,7 +80,6 @@ private
 
   f : Atom → Bool
   f z = (z == x) ∨ (z == y)
-  -- supp(f) = {x,y}
   suppF = List Atom ∋ x ∷ y ∷ []
   -- fresh f = False
 
@@ -67,7 +105,6 @@ private
 
   g : Atom → Bool
   g z = (z ≠ x) ∧ (z ≠ y)
-  -- supp(g) = {x,y}
   suppG = List Atom ∋ x ∷ y ∷ []
   -- fresh g = True
   -- NB: g is infinite, but has finite support!
