@@ -1,13 +1,15 @@
 open import Prelude.Init
 open SetAsType
+open L.Mem
 open import Prelude.DecEq
-open import Prelude.Membership
 open import Prelude.Setoid
 open import Prelude.Bifunctor
+open import Prelude.InferenceRules
 
 module Nominal.Abs.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
+open import Nominal.Perm Atom
 
 -- T0D0: maybe this is broken, user has access to `atom`
 record Abs (A : Type ℓ) : Type ℓ where
@@ -34,12 +36,15 @@ open Abs public
 -- И³ φ = (И^ 3) λ where (x ∷ y ∷ z ∷ []) → φ x y z
 И³ φ = ∃ λ (xs : List Atom) → (∀ y z w → y ∉ xs → z ∉ xs → w ∉ xs → φ y z w)
 
+-- ** the co-finite construction leads to issues with universe levels.
+-- open import Cofinite.agda
+-- И : Pred (Pred Atom ℓ) (lsuc ℓ)
+-- И P = powᶜᵒᶠ P
+
 module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 
   conc : Abs A → Atom → A
   conc (abs 𝕒 x) 𝕓 = swap 𝕓 𝕒 x
-  -- T0D0: prove that conc is equivariant
-  -- ∀ (f : Abs A). conc (swap 𝕒 𝕓 f) 𝕔 ≈ swap 𝕒 𝕓 (conc f 𝕔)
 
   instance
     Swap-Abs : Swap (Abs A)
@@ -59,20 +64,40 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     _ : conc (abs 𝕒 x) 𝕓 ≡ swap 𝕓 𝕒 x
     _ = refl
 
-  -- ** the co-finite construction leads to issues with universe levels.
-  -- open import Cofinite.agda
-  -- И : Pred (Pred Atom ℓ) (lsuc ℓ)
-  -- И P = powᶜᵒᶠ P
+  module _ ⦃ is : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : SwapLaws A ⦄ where
+    swap-conc : ∀ (f : Abs A) →
+      ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
+    swap-conc _ = swap-swap
 
-  -- ** α-equivalence
-  module _ ⦃ _ : Lawful-Setoid A ⦄ where
-    _≈α_ : Rel (Abs A) relℓ
+  -- module _ ⦃ _ : Lawful-Setoid A ⦄ ⦃ _ : SwapLaws A ⦄ where
+
+    -- module _ {B : Set ℓ′} ⦃ _ : Swap B ⦄ where
+    --   mapAbs : (A → B) → (Abs A → Abs B)
+    --   mapAbs f x' = {!!}
+      -- fresh λ 𝕒 →
+      --   abs 𝕒 (f $ conc x' 𝕒)
+    --   -- mapAbs suc (abs 𝕒 0) ≡ abs ? 1
+
+    -- ** capture-avoiding substitution
+    -- _[_] : Abs A → Atom → A
+    -- f [ x ] = {!!}
+
+
+    -- ** equivariance
+    Equivariant¹ : Pred (Op₁ A) (ℓ ⊔ₗ is .relℓ)
+    Equivariant¹ f = ∀ x 𝕒 𝕓 → f (swap 𝕒 𝕓 x) ≈ swap 𝕒 𝕓 (f x)
+
+    Equivariant² : Pred (Rel A ℓ′) (ℓ ⊔ₗ ℓ′)
+    Equivariant² _~_ = ∀ x y → x ~ y → (∀ 𝕒 𝕓 → swap 𝕒 𝕓 x ~ swap 𝕒 𝕓 y)
+
+    -- ** α-equivalence
+    _≈α_ : Rel (Abs A) (is .relℓ)
     f ≈α g = И (λ 𝕩 → conc f 𝕩 ≈ conc g 𝕩)
 
     instance
       Setoid-Abs : ISetoid (Abs A)
       Setoid-Abs = λ where
-        .relℓ → relℓ
+        .relℓ → is .relℓ
         ._≈_  → _≈α_
 
     private variable f g h : Abs A
@@ -84,50 +109,102 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     ≈α-sym = map₂′ (≈-sym ∘₂_)
 
     ≈α-trans : f ≈α g → g ≈α h → f ≈α h
-    ≈α-trans (xs , f≈g) (ys , g≈h) =
-      (xs ++ ys) , λ y y∉ → ≈-trans (f≈g y (y∉ ∘ L.Mem.∈-++⁺ˡ)) (g≈h y (y∉ ∘ L.Mem.∈-++⁺ʳ xs))
+    ≈α-trans (xs , f≈g) (ys , g≈h) = (xs ++ ys) , λ y y∉ →
+      ≈-trans (f≈g y (y∉ ∘ L.Mem.∈-++⁺ˡ)) (g≈h y (y∉ ∘ L.Mem.∈-++⁺ʳ xs))
 
     instance
       SetoidLaws-Abs : Setoid-Laws (Abs A)
       SetoidLaws-Abs .isEquivalence = record
         { refl = ≈α-refl ; sym = ≈α-sym ; trans = ≈α-trans }
 
-  postulate
-    swap∘swap : ∀ a b c d (x : A) →
-      swap a b (swap c d x) ≡ swap c d (swap a b x)
-  -- swap∘swap a b c d x = {!!}
+    cong-abs : ∀ {t t′ : A} → t ≈ t′ → abs 𝕒 t ≈ abs 𝕒 t′
+    cong-abs t≈ = [] , λ _ _ → cong-swap t≈
 
-    swap∘swap∘swap : ∀ a b c d (x : A) →
-      swap a (swap b c d) (swap b c x) ≡ swap b c (swap a d x)
-  -- swap∘swap∘swap a b c d x
-  --   with d ≟ b
-  -- ... | yes refl
-  --   = begin
-  --     swap a c (swap b c x)
-  --   ≡⟨ {!!} ⟩
-  --     swap b c (swap a b x)
-  --   ∎ where open ≡-Reasoning
-  -- ... | no _
-  --   with d ≟ c
-  -- ... | yes refl
-  --   = begin
-  --     swap a b (swap b c x)
-  --   ≡⟨ {!!} ⟩
-  --     swap b c (swap a c x)
-  --   ∎ where open ≡-Reasoning
-  -- ... | no _ = swap∘swap _ _ _ _ x
+    open ≈-Reasoning
 
-  -- T0D0: pick И z, i.e. xs′ = x ∷ y ∷ xs
-  conc∘swap : ∀ x y z f → conc (swap x y f) z ≡ swap x y (conc f z)
-  conc∘swap x y z (abs 𝕩 t) =
-    begin
-      conc (swap x y (abs 𝕩 t)) z
-    ≡⟨⟩
-      conc (abs (swap x y 𝕩) (swap x y t)) z
-    ≡⟨⟩
-      swap z (swap x y 𝕩) (swap x y t)
-    ≡⟨ swap∘swap∘swap _ _ _ _ _ ⟩
-      swap x y (swap z 𝕩 t)
-    ≡⟨⟩
-      swap x y (conc (abs 𝕩 t) z)
-    ∎ where open ≡-Reasoning
+    instance
+      SwapLaws-Abs : SwapLaws (Abs A)
+      SwapLaws-Abs .cong-swap {a}{b}{f@(abs 𝕩 t)}{g@(abs 𝕪 t′)} (xs , f≈g)
+        = a ∷ b ∷ xs , λ x x∉  →
+          begin
+            conc (⦅ a ↔ b ⦆ f) x
+          ≡⟨⟩
+            conc (abs (⦅ a ↔ b ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
+          ≡⟨⟩
+            ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
+          ≡˘⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t)
+                  $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩
+            ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
+          ≈˘⟨ swap-conc f ⟩
+            ⦅ a ↔ b ⦆ conc f x
+          ≈⟨ cong-swap $ f≈g x (x∉ ∘′ there ∘′ there) ⟩
+            ⦅ a ↔ b ⦆ conc g x
+          ≈⟨ swap-conc g ⟩
+            ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
+          ≡⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′)
+                $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩
+            ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
+          ≡⟨⟩
+            conc (abs (⦅ a ↔ b ⦆ 𝕪) (⦅ a ↔ b ⦆ t′)) x
+          ≡⟨⟩
+            conc (⦅ a ↔ b ⦆ g) x
+          ∎
+      SwapLaws-Abs .swap-id {a}{abs x t} =
+        begin
+          ⦅ a ↔ a ⦆ abs x t
+        ≡⟨⟩
+          abs (⦅ a ↔ a ⦆ x) (⦅ a ↔ a ⦆ t)
+        ≡⟨ cong (λ ◆ → abs ◆ (⦅ a ↔ a ⦆ t)) swap-id ⟩
+          abs x (⦅ a ↔ a ⦆ t)
+        ≈⟨ cong-abs swap-id ⟩
+          abs x t
+        ∎
+      SwapLaws-Abs .swap-rev {a}{b}{f@(abs 𝕩 t)} =
+        a ∷ b ∷ [] , λ x x∉ →
+        begin
+          conc (⦅ a ↔ b ⦆ f) x
+        ≡⟨⟩
+          conc (abs (⦅ a ↔ b ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
+        ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ t)) x) swap-rev ⟩
+          conc (abs (⦅ b ↔ a ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
+        ≈⟨ cong-abs swap-rev .proj₂ x (λ ()) ⟩
+          conc (abs (⦅ b ↔ a ⦆ 𝕩) (⦅ b ↔ a ⦆ t)) x
+        ≡⟨⟩
+          conc (⦅ b ↔ a ⦆ f) x
+        ∎
+      SwapLaws-Abs .swap-sym {a}{b}{f@(abs 𝕩 t)} =
+        a ∷ b ∷ [] , λ x x∉ →
+        begin
+          conc (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ f) x
+        ≡⟨⟩
+          conc (abs (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ 𝕩) (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x
+        ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x) swap-sym ⟩
+          conc (abs 𝕩 (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x
+        ≈⟨ cong-abs swap-sym .proj₂ x (λ ()) ⟩
+          conc (abs 𝕩 t) x
+        ≡⟨⟩
+          conc f x
+        ∎
+      SwapLaws-Abs .swap-swap {a}{b}{c}{d}{f@(abs 𝕩 t)} =
+        a ∷ b ∷ c ∷ d ∷ [] , λ x x∉ →
+        begin
+          conc (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ f) x
+        ≡⟨⟩
+          conc (abs (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ 𝕩) (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ t)) x
+        ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ t)) x) swap-swap ⟩
+          conc (abs (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ 𝕩)
+                    (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ t)) x
+        ≈⟨ cong-abs swap-swap .proj₂ x (λ ()) ⟩
+          conc (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ f) x
+        ∎
+
+    -- swap-conc : ∀ (f : Abs A) →
+    --   ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
+    -- swap-conc _ = swap-swap
+    -- module _ (𝕩 : Atom) where
+
+    --   concₓ : Abs A → A
+    --   concₓ = flip conc 𝕩
+
+    --   mor : Abs A —𝔾→ A
+    --   mor = record { f = concₓ ; equivariant = {!swap-swap!} }

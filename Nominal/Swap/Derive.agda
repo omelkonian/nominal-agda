@@ -1,5 +1,7 @@
-{- Here we derive the canonical swapping for every
-inductive datatype, i.e. the swapping the equivariantly distributes amongst constructors, a.k.a. constructors are equivariant.
+{-
+Here we derive the canonical swapping for every inductive datatype,
+i.e. the swapping the equivariantly distributes amongst constructors,
+a.k.a. constructors are equivariant.
 -}
 
 {-# OPTIONS -v nominal:100 #-}
