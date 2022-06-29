@@ -12,6 +12,8 @@ open import Nominal.Swap Atom
 -- ** permutations
 Perm = Atom × Atom
 Perms = List Perm
+-- SwapList implements Perms
+-- ???      implements Perms
 
 module _ {ℓ} {A : Set ℓ} ⦃ _ : Swap A ⦄ where
 

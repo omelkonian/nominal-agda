@@ -84,12 +84,8 @@ record SwapLaws
     swap-id   : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕒 ⦆ x ≈ x
     swap-rev  : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ x
     swap-sym  : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕓 ↔ 𝕒 ⦆ x ≈ x
-    swap-swap : ∀ {x : A} →
-        ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x
-      ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
-
-    -- ** THESE DO NOT HOLD
-    -- swap-sym-cancel : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ x
+    swap-swap : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x
+                          ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
 
   -- ** derived properties
   swap-comm : ∀ {x : A} ⦃ _ : Swap A ⦄ →
@@ -101,55 +97,6 @@ record SwapLaws
     rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
           | swap-noop a b d $ ab♯cd ∘ (_, ♯1)
           = eq
-{-
-  SwapLaws-Atom .swap-comm {a}{b}{c}{d}{x} ab♯cd
-    with a ≟ b
-  ... | yes refl = begin
-    ⦅ a ↔ a ⦆ ⦅ c ↔ d ⦆ x ≈⟨ swap-id ⟩
-    ⦅ c ↔ d ⦆ x           ≈⟨ cong-swap $ ≈-sym swap-id ⟩
-    ⦅ c ↔ d ⦆ ⦅ a ↔ a ⦆ x ∎ where open ≈-Reasoning
-  ... | no a≢b
-    with c ≟ d
-  ... | yes refl = begin
-    ⦅ a ↔ b ⦆ ⦅ c ↔ c ⦆ x ≈⟨ cong-swap swap-id ⟩
-    ⦅ a ↔ b ⦆ x           ≈˘⟨ swap-id ⟩
-    ⦅ c ↔ c ⦆ ⦅ a ↔ b ⦆ x ∎ where open ≈-Reasoning
-  ... | no c≢d
-  -- ⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ x ≈ ⦅ c ↔ d ⦆ ⦅ a ↔ b ⦆ x
-    with x ≟ c
-  ... | yes refl
-  -- ⦅ a ↔ b ⦆ d ≈ ⦅ c ↔ d ⦆ ⦅ a ↔ b ⦆ c
-    rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
-          | swap-noop a b d $ ab♯cd ∘ (_, ♯1)
-          | ≟-refl c = refl
-  ... | no x≢c
-  -- ⦅ a ↔ b ⦆ ⦅ ≠c ↔ d ⦆ x ≈ ⦅ c ↔ d ⦆ ⦅ a ↔ b ⦆ x
-    with x ≟ a
-  ... | yes refl
-  -- ⦅ a ↔ b ⦆ ⦅ ≠c ↔ d ⦆ a ≈ ⦅ c ↔ d ⦆ b
-    rewrite dec-no (a ≟ d) (λ where refl → ab♯cd (♯0 , ♯1)) .proj₂
-          | swap-noop c d b $ ab♯cd ∘ (♯1 ,_)
-          | ≟-refl a = refl
-  ... | no x≢a
-  -- ⦅ a ↔ b ⦆ ⦅ ≠c ↔ d ⦆ x ≈ ⦅ c ↔ d ⦆ ⦅ ≠a ↔ b ⦆ x
-    with x ≟ d
-  ... | yes refl
-  -- ⦅ a ↔ b ⦆ c ≈ ⦅ c ↔ d ⦆ ⦅ ≠a ↔ b ⦆ d
-    rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
-          | dec-no (d ≟ b) (λ where refl → ab♯cd (♯1 , ♯1)) .proj₂
-          | swapʳ c d = refl
-  ... | no x≢d
-  -- ⦅ ≠a ↔ b ⦆ x ≈ ⦅ c ↔ d ⦆ ⦅ ≠a ↔ b ⦆ x
-    with x ≟ b
-  ... | yes refl
-  -- a ≈ ⦅ c ↔ d ⦆ a
-    rewrite swap-noop c d a $ ab♯cd ∘ (♯0 ,_)
-          | dec-no (x ≟ a) x≢a .proj₂ = refl
-  ... | no x≢b
-  -- x ≈ ⦅ c ↔ d ⦆ x
-    rewrite dec-no (x ≟ a) x≢a .proj₂
-    = ≈-sym $ swap-noop c d x (λ where ♯0 → x≢c refl; ♯1 → x≢d refl)
--}
 
 open SwapLaws ⦃...⦄ public
 

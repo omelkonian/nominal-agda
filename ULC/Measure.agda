@@ -10,14 +10,28 @@ open import Prelude.Setoid
 open import Prelude.Bifunctor
 open import Prelude.Measurable
 open import Prelude.Ord
+open import Prelude.InfEnumerable
 
 -- ** Sizes for λ-terms, to be used as termination measures.
-module ULC.Measure (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module ULC.Measure (Atom : Set) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import ULC.Base    Atom ⦃ it ⦄
-open import Nominal     Atom ⦃ it ⦄
+open import ULC.Base Atom
+open import Nominal  Atom
 
 private variable A : Set ℓ
+
+instance
+  Measurable-Abs : ⦃ Measurable A ⦄ → Measurable (Abs A)
+  Measurable-Abs .∣_∣ (abs _ t) = suc ∣ t ∣
+
+-- module _ {A : Type}
+--          ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄
+--          ⦃ _ : FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄
+--          ⦃ _ : Measurable A ⦄ where
+--   mapAbs′ : (x' : Abs A) → ((x : A) → x ≺ᵐ x' → A) → Abs A
+--   mapAbs′ x' f =
+--     let a = fresh-var x'
+--     in abs a (f (conc x' a) {!!})
 
 instance
   Measurable-Term : Measurable Term
@@ -27,8 +41,8 @@ instance
   ... | ƛ _ ⇒ t = suc ∣ t ∣
 
   -- Measurable-Abs : ⦃ Measurable A ⦄ → Measurable (Abs A)
-  Measurable-Abs : Measurable (Abs Term)
-  Measurable-Abs .∣_∣ f = suc ∣ f .term ∣
+  -- Measurable-Abs : Measurable (Abs Term)
+  -- Measurable-Abs .∣_∣ f = suc ∣ f .term ∣
 
 -- swapping does not alter the size of a term
 swap≡ : ∀ x y (t : Term) → ∣ swap x y t ∣ ≡ ∣ t ∣

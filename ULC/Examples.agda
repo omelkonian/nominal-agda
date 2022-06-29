@@ -7,13 +7,20 @@ open import Prelude.Nary
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.General
+open import Prelude.InfEnumerable
+open import Prelude.Semigroup
 
 -- ** instantiate atoms to be the natural numbers
-data Atom : Set where
-  $_ : ℕ → Atom
+record Atom : Set where
+  constructor $_
+  field un$ : ℕ
+open Atom public
 unquoteDecl DecEq-Atom = DERIVE DecEq [ quote Atom , DecEq-Atom ]
-open import Nominal Atom ⦃ it ⦄
-open import ULC     Atom ⦃ it ⦄
+instance
+  Enum-Atom : Enumerable∞ Atom
+  Enum-Atom .enum = Fun.mk↔ {f = un$} {$_} ((λ _ → refl) , (λ _ → refl))
+open import Nominal Atom
+open import ULC     Atom
 
 s = $ 0; z = $ 1; m = $ 2; n = $ 3
 a = $ 10; b = $ 11; c = $ 12; d = $ 13; e = $ 14
@@ -62,17 +69,17 @@ _ = ζ≡ (-, qed)
 
         absurd : swap a c _t ≡α swap a c _t′
         absurd = p _t _t′ a c eq
+
+  _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≡α (ƛ c ⇒ ƛ b ⇒ ` c · ` b)
+  _ = ζ≡ (-, qed)
+    where
+      qed : ∀ y → y L.Mem.∉ [ a ]
+          → swap y c (ƛ a ⇒ ` c · ` a) ≡α swap y c (ƛ b ⇒ ` c · ` b)
+      qed y _ rewrite swapʳ y a | swapʳ y b = {!h!}
+
+  _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≡α (ƛ d ⇒ ƛ b ⇒ ` d · ` b)
+  _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≢α (ƛ d ⇒ ƛ b ⇒ ` c · ` b)
 -}
-
--- _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≡α (ƛ c ⇒ ƛ b ⇒ ` c · ` b)
--- _ = ζ≡ (-, qed)
---   where
---     qed : ∀ y → y L.Mem.∉ [ a ]
---         → swap y c (ƛ a ⇒ ` c · ` a) ≡α swap y c (ƛ b ⇒ ` c · ` b)
---     qed y _ rewrite swapʳ y a | swapʳ y b = {!h!}
-
--- _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≡α (ƛ d ⇒ ƛ b ⇒ ` d · ` b)
--- _ : (ƛ c ⇒ ƛ a ⇒ ` c · ` a) ≢α (ƛ d ⇒ ƛ b ⇒ ` c · ` b)
 
 -- ** finite support
 
@@ -90,34 +97,58 @@ finEx = -, go
       rewrite swap-noop 𝕓 𝕒 a (λ where ♯0 → 𝕓∉ auto; ♯1 → 𝕒∉ auto)
             = ≡α-refl _
 
-_ = supp ex finEx ≡ suppEx⁺
+_ = finEx .proj₁ ≡ suppEx⁺
   ∋ refl
 
 finEx′ : FinSupp ex
-finEx′ = fin ex
+finEx′ = ∀fin ex
 
--- _ = supp ex finEx′ ≡ suppEx
---   ∋ refl
+_ = finEx′ .proj₁ ≢ suppEx
+  ∋ λ ()
 
 -- ** substitution
 
--- _ = (` a) [ a ↝ ` b ] ≡ ` b
---   ∋ refl
+_ = (` a) [ a / ` b ] ≡ ` b
+  ∋ refl
 
--- _ = (` a) [ a ↝ ` b · ` b ] ≡ ` b · ` b
---   ∋ refl
+_ = (` a) [ a / ` b · ` b ] ≡ ` b · ` b
+  ∋ refl
 
--- _ = (` a · ` a) [ a ↝ ` b ] ≡ ` b · ` b
---   ∋ refl
+_ = (` a · ` a) [ a / ` b ] ≡ ` b · ` b
+  ∋ refl
 
--- _ = (` a · ` a) [ a ↝ ` b · ` b ]
---   ≡ (` b · ` b) · (` b · ` b)
---   ∋ refl
+_ = (` a · ` a) [ a / ` b · ` b ] ≡ (` b · ` b) · (` b · ` b)
+  ∋ refl
 
--- -- _ = (` a · (ƛ a ⇒ ` a)) [ a ↝ ` b ]
--- --   ≡ ` b · (ƛ a ⇒ ` a)
--- --   ∋ {!!}
+a' = $ 22 -- a + b
 
--- -- _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a ↝ ` b ]
--- --   ≡ (` b · (ƛ c ⇒ ` c · ` b))
--- --   ∋ {!!}
+_ = (ƛ a ⇒ ` a) [ a / ` b ] ≡ (ƛ a' ⇒ ` a')
+  ∋ refl
+
+_ = (` a · (ƛ a ⇒ ` a)) [ a / ` b ] ≡ ` b · (ƛ a' ⇒ ` a')
+  ∋ refl
+
+b' = $ 24 -- b + c
+
+_ = (ƛ b ⇒ ` b) [ b / ` c ] ≡ (ƛ b' ⇒ ` b')
+  ∋ refl
+
+c' = $ 34 -- a + b + c
+
+_ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` b ] ≡ (` b · (ƛ c' ⇒ ` c' · ` b))
+  ∋ refl
+
+_ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≢ (` c' · (ƛ c' ⇒ ` c' · ` c'))
+  ∋ λ ()
+
+c'' = $ 57 -- a + c + c'
+
+_ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≡ (` c' · (ƛ c'' ⇒ ` c'' · ` c'))
+  ∋ refl
+
+-- ** barendregt
+
+a'' = $ 21
+-- oops...
+_ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a'' ⇒ ` a'') · (ƛ a'' ⇒ ` a''))
+  ∋ refl

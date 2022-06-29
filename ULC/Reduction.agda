@@ -1,20 +1,24 @@
 open import Prelude.Init
+open import Prelude.DecEq
+open import Prelude.InfEnumerable
 open import Prelude.InferenceRules
 open import Prelude.Closures
 open import Prelude.Decidable
 
-module ULC.Reduction {- ⋯ -} where
+module ULC.Reduction (Atom : Set) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import ULC.Base
-open import ULC.Substitution
-open import Nominal Atom
+open import ULC.Base         Atom ⦃ it ⦄
+-- open import ULC.Measure
+-- open import ULC.Alpha
+open import ULC.Substitution Atom ⦃ it ⦄
+open import Nominal          Atom ⦃ it ⦄
 
 -- ** Reduction rules.
 infix 0 _—→_
 data _—→_ : Rel₀ Term where
   β :
       ──────────────────────────────
-      (ƛ x ⇒ t) · t′ —→ t [ x ↝ t′ ]
+      (ƛ x ⇒ t) · t′ —→ t [ x / t′ ]
 
   ζ_ :
       t —→ t′
@@ -55,6 +59,8 @@ abs-cong (M ∎) = ƛ _ ⇒ M ∎
 abs-cong (L —→⟨ r ⟩ rs) = ƛ _ ⇒ L —→⟨ ζ r ⟩ abs-cong rs
 
 private
+  postulate s z n m : Atom
+
   zeroᶜ = ƛ s ⇒ ƛ z ⇒ ` z
   sucᶜ  = ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ ` s · (` n · ` s · ` z)
 
@@ -68,6 +74,7 @@ private
   plusᶜ = ƛ m ⇒ ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z))
   2+2ᶜ  = plusᶜ · twoᶜ · twoᶜ
 
+  _ = {!plusᶜ · twoᶜ!}
 {-
   _ : 2+2ᶜ —↠ fourᶜ
   _ =
@@ -163,7 +170,7 @@ data _⇛_ : Rel₀ Term where
     ∙ N ⇛ N′
     ∙ M ⇛ M′
       ─────────────────────────────
-      (ƛ x ⇒ N) · M ⇛ N′ [ x ↝ M′ ]
+      (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
 
 open ReflexiveTransitiveClosure _⇛_
   renaming ( _—→⟨_⟩_ to _⇛⟨_⟩_; _∎ to _⇛∎; _—↠_ to _⇛∗_
@@ -215,7 +222,7 @@ par-betas {(ƛ x ⇒ N) · M} (β⇛ {N′ = N′}{M′ = M′} p₁ p₂) =
   begin (ƛ x ⇒ N) · M   —↠⟨ appL-cong (abs-cong (par-betas p₁)) ⟩
         (ƛ x ⇒ N′) · M  —↠⟨ appR-cong (par-betas p₂) ⟩
         (ƛ x ⇒ N′) · M′ —→⟨ β ⟩
-        N′ [ x ↝ M′ ]   ∎
+        N′ [ x / M′ ]   ∎
 
 pars-betas :
   M ⇛∗ N
@@ -236,7 +243,7 @@ _⁺ : Op₁ Term
 _⁺ = λ where
   (` x)           → ` x
   (ƛ x ⇒ M)       → ƛ x ⇒ (M ⁺)
-  ((ƛ x ⇒ N) · M) → N ⁺ [ x ↝ M ⁺ ]
+  ((ƛ x ⇒ N) · M) → N ⁺ [ x / M ⁺ ]
   (L · M)         → (L ⁺) · (M ⁺)
 
 par-⦊ :

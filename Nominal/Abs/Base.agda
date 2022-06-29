@@ -69,21 +69,12 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
       ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
     swap-conc _ = swap-swap
 
-  -- module _ ⦃ _ : Lawful-Setoid A ⦄ ⦃ _ : SwapLaws A ⦄ where
-
-    -- module _ {B : Set ℓ′} ⦃ _ : Swap B ⦄ where
-    --   mapAbs : (A → B) → (Abs A → Abs B)
-    --   mapAbs f x' = {!!}
-      -- fresh λ 𝕒 →
-      --   abs 𝕒 (f $ conc x' 𝕒)
-    --   -- mapAbs suc (abs 𝕒 0) ≡ abs ? 1
-
-    -- ** capture-avoiding substitution
-    -- _[_] : Abs A → Atom → A
-    -- f [ x ] = {!!}
-
-
     -- ** equivariance
+
+    -- T0D0: alternative definitions of equivariance:
+    --    * equivariant(x) := supp(x) = ∅
+    --    * in the case of _→_, this is equivalent to Equivariant¹
+
     Equivariant¹ : Pred (Op₁ A) (ℓ ⊔ₗ is .relℓ)
     Equivariant¹ f = ∀ x 𝕒 𝕓 → f (swap 𝕒 𝕓 x) ≈ swap 𝕒 𝕓 (f x)
 

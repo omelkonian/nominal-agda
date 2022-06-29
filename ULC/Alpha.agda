@@ -10,10 +10,10 @@ open import Prelude.Setoid
 open import Prelude.Bifunctor
 open import Prelude.Measurable
 open import Prelude.Ord
-
+open import Prelude.InfEnumerable
 
 -- ** α-equivalence.
-module ULC.Alpha (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module ULC.Alpha (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
 open import ULC.Base    Atom ⦃ it ⦄
 open import ULC.Measure Atom ⦃ it ⦄
@@ -145,35 +145,31 @@ instance
   ... | l · r = ξ≡ swap-swap swap-swap
   ... | ƛ f   = ζ≡ swap-swap
 
-open ≈-Reasoning
+  FinSupp-Term : FinitelySupported Term
+  FinSupp-Term .∀fin = λ where
+    (` x) → [ x ] , λ a b a∉ b∉ →
+      ≈-reflexive $ cong `_ $
+        swap-noop b a x λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0
+    (l · m) →
+      let supˡ , pˡ = ∀fin l
+          supᵐ , pᵐ = ∀fin m
+      in (supˡ ++ supᵐ) , λ a b a∉ b∉ →
+      ξ≡ (pˡ a b (a∉ ∘ ∈-++⁺ˡ) (b∉ ∘ ∈-++⁺ˡ))
+          (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
+    (ƛ x ⇒ t) → fin-ƛ t (∀fin t) x
+     where
+      cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
+      cong-ƛ t≡ = ζ≡ ([] , λ _ _ → cong-swap t≡)
 
-cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
-cong-ƛ t≡ = ζ≡ ([] , λ _ _ → cong-swap t≡)
-
-fin-ƛ : ∀ (t : Term) → FinSupp t → (∀ x → FinSupp (ƛ x ⇒ t))
-fin-ƛ t (sup , p) x = x ∷ sup , λ a b a∉ b∉ →
-  begin
-    ⦅ b ↔ a ⦆ (ƛ x ⇒ t)
-  ≡⟨⟩
-    (ƛ ⦅ b ↔ a ⦆ x ⇒ ⦅ b ↔ a ⦆ t)
-  ≡⟨ cong (λ ◆ → ƛ ◆ ⇒ ⦅ b ↔ a ⦆ t)
-        $ swap-noop b a x (λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0) ⟩
-    (ƛ x ⇒ ⦅ b ↔ a ⦆ t)
-  ≈⟨ cong-ƛ $ p a b (a∉ ∘ there) (b∉ ∘ there) ⟩
-    (ƛ x ⇒ t)
-  ∎
-
-fin : ∀ (t : Term) → FinSupp t
-fin (` x) = [ x ] , λ a b a∉ b∉ →
-    ≈-reflexive $ cong `_ $
-      swap-noop b a x λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0
-fin (l · m) =
-    let supˡ , pˡ = fin l
-        supᵐ , pᵐ = fin m
-    in (supˡ ++ supᵐ) , λ a b a∉ b∉ →
-    ξ≡ (pˡ a b (a∉ ∘ ∈-++⁺ˡ) (b∉ ∘ ∈-++⁺ˡ))
-        (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
-fin (ƛ x ⇒ t) = fin-ƛ t (fin t) x
-
-fin-abs : ∀ (f : Abs Term) → FinSupp f
-fin-abs = ∀FinSupp-Abs fin
+      fin-ƛ : ∀ (t : Term) → FinSupp t → (∀ x → FinSupp (ƛ x ⇒ t))
+      fin-ƛ t (sup , p) x = x ∷ sup , λ a b a∉ b∉ →
+        begin
+          ⦅ b ↔ a ⦆ (ƛ x ⇒ t)
+        ≡⟨⟩
+          (ƛ ⦅ b ↔ a ⦆ x ⇒ ⦅ b ↔ a ⦆ t)
+        ≡⟨ cong (λ ◆ → ƛ ◆ ⇒ ⦅ b ↔ a ⦆ t)
+              $ swap-noop b a x (λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0) ⟩
+          (ƛ x ⇒ ⦅ b ↔ a ⦆ t)
+        ≈⟨ cong-ƛ $ p a b (a∉ ∘ there) (b∉ ∘ there) ⟩
+          (ƛ x ⇒ t)
+        ∎ where open ≈-Reasoning
