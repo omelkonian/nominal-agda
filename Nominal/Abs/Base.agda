@@ -9,7 +9,6 @@ open import Prelude.InferenceRules
 module Nominal.Abs.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
-open import Nominal.Perm Atom
 
 -- T0D0: maybe this is broken, user has access to `atom`
 record Abs (A : Type ℓ) : Type ℓ where
@@ -115,7 +114,7 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 
     instance
       SwapLaws-Abs : SwapLaws (Abs A)
-      SwapLaws-Abs .cong-swap {a}{b}{f@(abs 𝕩 t)}{g@(abs 𝕪 t′)} (xs , f≈g)
+      SwapLaws-Abs .cong-swap {f@(abs 𝕩 t)}{g@(abs 𝕪 t′)}{a}{b} (xs , f≈g)
         = a ∷ b ∷ xs , λ x x∉  →
           begin
             conc (⦅ a ↔ b ⦆ f) x

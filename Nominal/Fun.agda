@@ -4,14 +4,14 @@ open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Setoid
-open import Prelude.InferenceRules
 
 module Nominal.Fun (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
 
+module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ where
 
-module _ {A B : Type} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ where
+  open ≈-Reasoning
 
   instance
     Swap-Fun : Swap (A → B)
@@ -19,22 +19,22 @@ module _ {A B : Type} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ where
 
     Setoid-Fun : ⦃ ISetoid B ⦄ → ISetoid (A → B)
     Setoid-Fun = λ where
-      .relℓ → relℓ {A = B}
+      .relℓ → ℓ ⊔ₗ relℓ {A = B}
       ._≈_  f g → ∀ x → f x ≈ g x
 
-    SetoidLaws-Fun : ⦃ _ : ISetoid B ⦄ → ⦃ Setoid-Laws B ⦄
-                   → Setoid-Laws (A → B)
+    SetoidLaws-Fun :
+      ⦃ _ : ISetoid B ⦄ → ⦃ Setoid-Laws B ⦄
+      → Setoid-Laws (A → B)
     SetoidLaws-Fun .isEquivalence = record
       { refl  = λ {f} x → ≈-refl
       ; sym   = λ f∼g x → ≈-sym (f∼g x)
       ; trans = λ f∼g g∼h x → ≈-trans (f∼g x) (g∼h x)
       }
 
-    open ≈-Reasoning
-
-    SwapLaws-Fun : ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : CongSetoid A ⦄ ⦃ _ : SwapLaws A ⦄
-                   ⦃ _ : ISetoid B ⦄ ⦃ _ : Setoid-Laws B ⦄ ⦃ _ : SwapLaws B ⦄
-                 → SwapLaws (A → B)
+    SwapLaws-Fun :
+      ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : CongSetoid A ⦄ ⦃ _ : SwapLaws A ⦄
+      ⦃ _ : ISetoid B ⦄ ⦃ _ : Setoid-Laws B ⦄ ⦃ _ : SwapLaws B ⦄
+      → SwapLaws (A → B)
     SwapLaws-Fun .cong-swap {f}{g}{a}{b} f≗g x =
     -- ∀ {f g : A → B} → x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ f ≈ ⦅ 𝕒 ↔ 𝕓 ⦆ g
       cong-swap (f≗g _)
@@ -115,7 +115,6 @@ private
   justAtom′ : Atom → Maybe Atom
   justAtom′ = ⦅ 𝕒 ↔ 𝕓 ⦆ justAtom
 
-
   test-𝕒 : justAtom 𝕒 ≡ just 𝕒
   test-𝕒 rewrite ≟-refl 𝕒 = refl
 
@@ -134,120 +133,3 @@ private
                 | ≟-refl 𝕒
                 | ≟-refl 𝕒
                 = refl
-
-open import Prelude.InfEnumerable
-open import Prelude.Membership
-module _ ⦃ _ : Enumerable∞ Atom ⦄ where
-  open import Nominal.Support Atom
-  open import Nominal.Abs     Atom
-
-
-  module _ {A : Type}
-    ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : SwapLaws A ⦄
-    ⦃ _ : FinitelySupported A ⦄ where
-
-    Equivariant¹′ : (A → A) → Type _
-    Equivariant¹′ f = ∃ λ (fin-f : FinSupp f) → fin-f .proj₁ ≡ []
-
-    equivariant-equiv : ∀ {f : A → A} →
-      Equivariant¹ f
-      ═══════════════════
-      Equivariant¹′ f
-    equivariant-equiv {f = f} = ↝ , ↜
-        where
-          open ≈-Reasoning
-
-          ↝ : Equivariant¹ f
-              ───────────────────
-              Equivariant¹′ f
-          ↝ equiv-f = fin-f , refl
-            where
-              fin-f : FinSupp f
-              fin-f = [] , λ x y _ _ a →
-                begin
-                  ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
-                ≈⟨ cong-swap $ equiv-f _ _ _ ⟩
-                  ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
-                ≈⟨ swap-sym′ ⟩
-                  f a
-                ∎
-
-          ↜ : Equivariant¹′ f
-              ───────────────────
-              Equivariant¹ f
-          ↜ (fin-f , refl) x a b =
-            begin
-              f (⦅ a ↔ b ⦆ x)
-            ≈˘⟨ swap-sym′ ⟩
-              ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
-            ≈⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
-              ⦅ a ↔ b ⦆ f x
-            ∎
-
-    -- module _ ⦃ _ : CongSetoid A ⦄ where
-    --   equivariant-equiv : ∀ {f : A → A} {fin-f : FinSupp f} {min-fin-f : MinSupp fin-f} →
-    --     Equivariant¹ f
-    --     ═══════════════════
-    --     Equivariant¹′ fin-f
-    --   equivariant-equiv {f = f}{fin-f}{min-fin-f} = ↝ , ↜
-    --     where
-    --       open ≈-Reasoning
-
-    --       ↝ : Equivariant¹ f
-    --           ───────────────────
-    --           Equivariant¹′ fin-f
-    --       ↝ equiv-f with ⟫ fin-f | ⟫ min-fin-f
-    --       ... | ⟫ []    , _ | _         = refl
-    --       ... | ⟫ x ∷ [] , p | ⟫ min =
-    --         let y , y∉ = fresh [ x ]
-    --         in ⊥-elim $ min y (y∉ ∘ here) λ a →
-    --              ≈-trans (cong-swap $ equiv-f a x y) swap-sym′
-    --       ... | ⟫ x ∷ y ∷ _ , p | ⟫ ((x≢y ∷ _) ∷ _) , min =
-    --         ⊥-elim $ min x y (here refl) (there $′ here refl) x≢y λ a →
-    --           begin
-    --             swap x y (f $ swap x y a)
-    --           ≈⟨ cong-swap $ equiv-f a x y ⟩
-    --             ⦅ x ↔ y ⦆ ⦅ x ↔ y ⦆ f a
-    --           ≈⟨ swap-sym′ ⟩
-    --             f a
-    --           ∎
-
-    --       ↜ : Equivariant¹′ fin-f
-    --           ───────────────────
-    --           Equivariant¹ f
-    --       ↜ refl x a b =
-    --         begin
-    --           f (swap a b x)
-    --         ≈˘⟨ swap-sym′ ⟩
-    --           swap a b (swap a b (f $ swap a b x))
-    --         ≈⟨ cong-swap $ fin-f .proj₂ b a (λ ()) (λ ()) x ⟩
-    --           swap a b (f x)
-    --         ∎
-
-
-    private
-      f : A → A
-      f = id
-
-      suppF = Atoms ∋ []
-
-      g : A → A
-      g x = x
-
-      f≗g : f ≗ g
-      f≗g _ = refl
-
-      f≈g : f ≈ g
-      f≈g _ = ≈-refl
-
-      fin-f : FinSupp f
-      fin-f = suppF , λ _ _ _ _ _ → swap-sym′
-
-      min-fin-f : MinSupp fin-f
-      min-fin-f = Lvl.lift tt
-
-      equiv-f : Equivariant¹ f
-      equiv-f _ _ _ = ≈-refl
-
-      equiv-f′ : Equivariant¹′ f
-      equiv-f′ = fin-f , refl

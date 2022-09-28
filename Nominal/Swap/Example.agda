@@ -2,16 +2,17 @@
 module Nominal.Swap.Example where
 
 open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 
 -- ** instantiate atoms to be the natural numbers
-data Atom : Set where
+data Atom : Type where
   `_ : ℕ → Atom
 unquoteDecl DecEq-Atom = DERIVE DecEq [ quote Atom , DecEq-Atom ]
 open import Nominal.Swap Atom
 𝕒 = ` 0; 𝕓 = ` 1
 
-data λTerm : Set where
+data λTerm : Type where
   _-APP-_ : λTerm → λTerm → λTerm
   VAR : Atom → λTerm
 -- {-# TERMINATING #-}
@@ -27,7 +28,7 @@ _ = swap 𝕒 𝕓 (VAR 𝕒 -APP- VAR 𝕓) ≡ VAR 𝕓 -APP- VAR 𝕒
   ∋ refl
 
 -- ** derive and check ad-hoc example datatypes
-record TESTR : Set where
+record TESTR : Type where
   field atom : Atom
 open TESTR
 
@@ -39,7 +40,7 @@ instance
 
 _ = swap 𝕒 𝕓 (record {atom = 𝕒}) ≡ record {atom = 𝕓} ∋ refl
 
-data TEST : Set where
+data TEST : Type where
   ATOM : Atom → TEST
 -- unquoteDecl TEST↔ = DERIVE Swap [ quote TEST , TEST↔ ]
 instance

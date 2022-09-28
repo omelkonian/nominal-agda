@@ -4,10 +4,12 @@ open L.Mem
 open import Prelude.DecEq
 open import Prelude.Setoid
 open import Prelude.InfEnumerable
+open import Prelude.InferenceRules
 
 module Nominal.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
 open import Nominal.Swap Atom
+open import Nominal.Fun  Atom
 open import Nominal.Abs  Atom
 
 private variable A : Type ℓ
@@ -20,6 +22,14 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 
   FinSupp : Pred A _
   FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≈ x
+
+  MinSupp : ∀ {a : A} → Pred (FinSupp a) _
+  MinSupp {a = a} (xs , ∀x∉) =
+    case xs of λ where
+      [] → Lvl.Lift _ ⊤
+      (x ∷ []) → ∀ y → y ≢ x → swap x y a ≉ a
+      (xs@(_ ∷ _ ∷ _)) →
+        Unique xs × ∀ x y → x ∈ xs → y ∈ xs → x ≢ y → swap x y a ≉ a
 
 record FinitelySupported (A : Type ℓ)
   ⦃ ls : Lawful-Setoid A ⦄ ⦃ _ : Lawful-Swap A ⦃ ls ⦄ ⦄ : Setω where
@@ -75,6 +85,72 @@ open FinitelySupported ⦃...⦄ public
 
 module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄ where
 
+  -- alternative definition of equivariance based on (finite) support
+  Equivariant¹′ : (A → A) → Type _
+  Equivariant¹′ f = ∃ λ (fin-f : FinSupp f) → fin-f .proj₁ ≡ []
+
+  equivariant-equiv : ∀ {f : A → A} →
+    Equivariant¹ f
+    ═══════════════════
+    Equivariant¹′ f
+  equivariant-equiv {f = f} = ↝ , ↜
+      where
+        open ≈-Reasoning
+
+        ↝ : Equivariant¹ f
+            ───────────────────
+            Equivariant¹′ f
+        ↝ equiv-f = fin-f , refl
+          where
+            fin-f : FinSupp f
+            fin-f = [] , λ x y _ _ a →
+              begin
+                ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
+              ≈⟨ cong-swap $ equiv-f _ _ _ ⟩
+                ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
+              ≈⟨ swap-sym′ ⟩
+                f a
+              ∎
+
+        ↜ : Equivariant¹′ f
+            ───────────────────
+            Equivariant¹ f
+        ↜ (fin-f , refl) x a b =
+          begin
+            f (⦅ a ↔ b ⦆ x)
+          ≈˘⟨ swap-sym′ ⟩
+            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
+          ≈⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
+            ⦅ a ↔ b ⦆ f x
+          ∎
+
+  private
+    f : A → A
+    f = id
+
+    suppF = Atoms ∋ []
+
+    g : A → A
+    g x = x
+
+    f≗g : f ≗ g
+    f≗g _ = refl
+
+    f≈g : f ≈ g
+    f≈g _ = ≈-refl
+
+    fin-f : FinSupp f
+    fin-f = suppF , λ _ _ _ _ _ → swap-sym′
+
+    min-fin-f : MinSupp fin-f
+    min-fin-f = Lvl.lift tt
+
+    equiv-f : Equivariant¹ f
+    equiv-f _ _ _ = ≈-refl
+
+    equiv-f′ : Equivariant¹′ f
+    equiv-f′ = fin-f , refl
+
   -- abstractions over finitely supported types are themselves finite
   instance
     FinSupp-abs : ⦃ FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄ → FinitelySupported (Abs A)
@@ -119,13 +195,13 @@ private
   private variable B : Type ℓ′
 
   instance
-    Setoid-→ : ISetoid (A → B)
-    Setoid-→ = λ where
-      .relℓ → _
-      ._≈_  → _≗_
+    Setoid-Bool : ISetoid Bool
+    Setoid-Bool = λ where
+      .relℓ → 0ℓ
+      ._≈_  → _≡_
 
-    SetoidLaws-→ : Setoid-Laws (A → B)
-    SetoidLaws-→ {A = A} {B = B} .isEquivalence = Setoid.isEquivalence (A PropEq.→-setoid B)
+    SetoidLaws-Bool : Setoid-Laws Bool
+    SetoidLaws-Bool .isEquivalence = PropEq.isEquivalence
 
   postulate x y : Atom
 

@@ -1,11 +1,12 @@
 open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 open import Prelude.Semigroup
 open import Prelude.Monoid
 open import Prelude.Group
 open import Prelude.Setoid
 
-module Nominal.Perm (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Perm (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
 
@@ -15,7 +16,7 @@ Perms = List Perm
 -- SwapList implements Perms
 -- ???      implements Perms
 
-module _ {ℓ} {A : Set ℓ} ⦃ _ : Swap A ⦄ where
+module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 
   permute : Perm → A → A
   permute = uncurry swap

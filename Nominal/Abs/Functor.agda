@@ -1,7 +1,8 @@
 open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 
-module Nominal.Abs.Functor (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Abs.Functor (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap     Atom
 open import Nominal.Abs.Base Atom

@@ -2,6 +2,7 @@
 module Example where
 
 open import Prelude.Init
+open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.Generics hiding (`_)
@@ -9,7 +10,7 @@ open import Prelude.General
 open import Prelude.Lists
 
 -- ** instantiate atoms to be the natural numbers
-data Atom : Set where
+data Atom : Type where
   `_ : ℕ → Atom
 unquoteDecl DecEq-Atom = DERIVE DecEq [ quote Atom , DecEq-Atom ]
 open import Nominal Atom ⦃ it ⦄
@@ -18,7 +19,7 @@ open import Nominal Atom ⦃ it ⦄
 
 -- ** swapping
 
-record TESTR : Set where
+record TESTR : Type where
   constructor ATOM
   field atom : Atom
 open TESTR
@@ -31,7 +32,7 @@ unquoteDecl TESTR↔ = DERIVE-SWAP (quote Swap ∙⟦_⟧) (quote TESTR) TESTR�
 _ = swap 𝕒 𝕓 (ATOM 𝕒) ≡ ATOM 𝕓
   ∋ refl
 
-data TEST : Set where
+data TEST : Type where
   ATOM : Atom → TEST
 -- unquoteDecl TEST↔ = DERIVE Swap [ quote TEST , TEST↔ ]
 unquoteDecl TEST↔ = DERIVE-SWAP (quote Swap ∙⟦_⟧) (quote TEST) TEST↔
@@ -52,7 +53,7 @@ _ = (λ a → (abs a a , abs a a)) 𝕒 ≡ (abs 𝕒 𝕒 , abs 𝕒 𝕒)
 _ = (λ (x , y) → conc x 𝕒 , conc y 𝕓) ((λ a → abs a a , abs a a) 𝕒) ≡ (𝕒 , 𝕓)
   ∋ refl
 
-data Term : Set where
+data Term : Type where
   _-APP-_ : Op₂ Term
   VAR : Atom → Term
   LAM : Abs Term → Term

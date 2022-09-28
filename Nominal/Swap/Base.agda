@@ -1,17 +1,18 @@
 {- MOTTO: permutations distribute over everything -}
 open import Prelude.Init
+open SetAsType
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.InferenceRules
 
-module Nominal.Swap.Base (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module Nominal.Swap.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 Atoms = List Atom
 
 -- T0D0: use sized types to enforce size-preserving swap
-record Swap (A : Set ℓ) : Set ℓ where
+record Swap (A : Type ℓ) : Type ℓ where
   field swap : Atom → Atom → A → A
   -- T0D0: ++ swap forms a group action by the group of atom permutations
   -- i.e. ∙ id x = x
@@ -34,17 +35,17 @@ instance
     else if a == a₂ then a₁
     else                 a
 
-private variable
-  A : Set ℓ
-  𝕒 𝕓 𝕔 𝕕 : Atom
-  x y : A
-
 -- T0D0: permutations as bijections on `Atom` (infinite variant)
 
 -- T0D0: to connect everything with the group theory behind
 -- π∘π′ = (π′^π)∘π, where _^_ is the group conjugation action
 --      = (π∘π′∘π⁻¹)∘π
 --      = (π·π′)∘π
+
+record CongSetoid (A : Set ℓ) ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ : Setω where
+  field ≈-cong : ∀ {B : Set ℓ′} ⦃ _ : ISetoid B ⦄ ⦃ _ : Setoid-Laws B ⦄ →
+                 ∀ (f : A → B) → Congruent _≈_ _≈_ f
+open CongSetoid ⦃...⦄ public
 
 instance
   Setoid-Atom : ISetoid Atom
@@ -54,6 +55,9 @@ instance
 
   SetoidLaws-Atom : Setoid-Laws Atom
   SetoidLaws-Atom .isEquivalence = PropEq.isEquivalence
+
+  CongSetoid-Atom : CongSetoid Atom
+  CongSetoid-Atom .≈-cong _ refl = ≈-refl
 
 swapˡ : ∀ 𝕒 𝕓 → ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕒 ≡ 𝕓
 swapˡ 𝕒 𝕓 rewrite ≟-refl 𝕒 = refl
@@ -76,35 +80,58 @@ swap-noop 𝕒 𝕓 x x∉ with x ≟ 𝕒
 pattern ♯0 = here refl
 pattern ♯1 = there (here refl)
 
-record SwapLaws
-  (A : Set ℓ) ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ : Set (ℓ ⊔ₗ relℓ)
-  where
-  field
-    cong-swap : ∀ {x y : A} → x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕒 ↔ 𝕓 ⦆ y
-    swap-id   : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕒 ⦆ x ≈ x
-    swap-rev  : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ x
-    swap-sym  : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕓 ↔ 𝕒 ⦆ x ≈ x
-    swap-swap : ∀ {x : A} → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x
-                          ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
+module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ where
 
-  -- ** derived properties
-  swap-comm : ∀ {x : A} ⦃ _ : Swap A ⦄ →
-    Disjoint (𝕒 ∷ 𝕓 ∷ []) (𝕔 ∷ 𝕕 ∷ [])
-    ─────────────────────────────────────────────
-    ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x ≈ ⦅ 𝕔 ↔ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
-  swap-comm {𝕒 = a}{b}{c}{d}{x} ab♯cd
-    with eq ← swap-swap {𝕒 = a}{b}{c}{d}{x}
-    rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
-          | swap-noop a b d $ ab♯cd ∘ (_, ♯1)
-          = eq
+  private variable
+    x y : A
+    𝕒 𝕓 𝕔 𝕕 : Atom
+
+  record SwapLaws : Type (ℓ ⊔ₗ relℓ) where
+    field
+      cong-swap : x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕒 ↔ 𝕓 ⦆ y
+      swap-id   : ⦅ 𝕒 ↔ 𝕒 ⦆ x ≈ x
+      swap-rev  : ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ x
+      swap-sym  : ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕓 ↔ 𝕒 ⦆ x ≈ x
+      swap-swap : ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x
+                ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
+
+    -- ** derived properties
+    swap-comm :
+      Disjoint (𝕒 ∷ 𝕓 ∷ []) (𝕔 ∷ 𝕕 ∷ [])
+      ─────────────────────────────────────────────
+      ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x ≈ ⦅ 𝕔 ↔ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
+    swap-comm {𝕒 = a}{b}{c}{d}{x} ab♯cd
+      with eq ← swap-swap {𝕒 = a}{b}{c}{d}{x}
+      rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
+            | swap-noop a b d $ ab♯cd ∘ (_, ♯1)
+            = eq
+
+    swap-sym′ : ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ x
+    swap-sym′ = ≈-trans (cong-swap swap-rev) swap-sym
+
+    swap-id≈ : x ≈ y → ⦅ 𝕒 ↔ 𝕒 ⦆ x ≈ y
+    swap-id≈ x≈y = ≈-trans (cong-swap x≈y) swap-id
+
+    swap-rev≈ : x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ y
+    swap-rev≈ x≈y = ≈-trans swap-rev (cong-swap x≈y)
+
+    swap-sym≈ : x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕓 ↔ 𝕒 ⦆ x ≈ y
+    swap-sym≈ x≈y = ≈-trans swap-sym x≈y
+
+    swap-swap≈ : x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x
+                       ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ y
+    swap-swap≈ x≈y = ≈-trans swap-swap (cong-swap $ cong-swap x≈y)
+
 
 open SwapLaws ⦃...⦄ public
 
-record Lawful-Swap (A : Set ℓ) ⦃ ls : Lawful-Setoid A ⦄ : Setω where
+record Lawful-Swap (A : Type ℓ) ⦃ ls : Lawful-Setoid A ⦄ : Setω where
   field
     ⦃ isSwap ⦄ : Swap A
     ⦃ hasSwapLaws ⦄ : SwapLaws A ⦃ ls = ls ⦄
 open Lawful-Swap ⦃...⦄ using () public
+
+private variable A : Type ℓ
 
 instance
   mkLawful-Swap : ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ → ⦃ SwapLaws A ⦃ ls = ls ⦄ ⦄ →
@@ -249,7 +276,7 @@ instance
 swapId : Atom → Atom → A → A
 swapId _ _ = id
 
-mkNameless : (A : Set) → Swap A
+mkNameless : (A : Type) → Swap A
 mkNameless A = λ where .swap → swapId
 
 instance
