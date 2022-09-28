@@ -1,11 +1,12 @@
 open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 open import Prelude.InfEnumerable
 open import Prelude.InferenceRules
 open import Prelude.Closures
 open import Prelude.Decidable
 
-module ULC.Reduction (Atom : Set) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
+module ULC.Reduction (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
 open import ULC.Base         Atom ⦃ it ⦄
 -- open import ULC.Measure

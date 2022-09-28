@@ -14,4 +14,4 @@ jobs:
           libraries: omelkonian/formal-prelude#6ab9
           main: Main
           token: ${{ secrets.GITHUB_TOKEN }}
-	  ribbon: true
+          ribbon: true

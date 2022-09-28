@@ -1,6 +1,7 @@
 module ULC.Examples where
 
 open import Prelude.Init
+open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.Nary
@@ -11,7 +12,7 @@ open import Prelude.InfEnumerable
 open import Prelude.Semigroup
 
 -- ** instantiate atoms to be the natural numbers
-record Atom : Set where
+record Atom : Type where
   constructor $_
   field un$ : ℕ
 open Atom public

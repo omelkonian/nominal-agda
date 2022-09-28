@@ -13,12 +13,12 @@ open import Prelude.Ord
 open import Prelude.InfEnumerable
 
 -- ** Sizes for λ-terms, to be used as termination measures.
-module ULC.Measure (Atom : Set) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
+module ULC.Measure (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
 open import ULC.Base Atom
 open import Nominal  Atom
 
-private variable A : Set ℓ
+private variable A : Type ℓ
 
 instance
   Measurable-Abs : ⦃ Measurable A ⦄ → Measurable (Abs A)

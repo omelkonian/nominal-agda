@@ -1,4 +1,5 @@
 open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 open import Prelude.DecLists
 open import Prelude.Measurable
@@ -6,7 +7,7 @@ open import Prelude.InfEnumerable
 open import Prelude.Setoid
 
 -- ** Substitution.
-module ULC.Substitution (Atom : Set) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
+module ULC.Substitution (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
 open import ULC.Base    Atom
 open import ULC.Measure Atom

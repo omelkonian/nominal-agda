@@ -1,6 +1,8 @@
+open import Prelude.Init
+open SetAsType
 open import Prelude.DecEq
 
-module ULC (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module ULC (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import ULC.Base         Atom public
 open import ULC.Measure      Atom public

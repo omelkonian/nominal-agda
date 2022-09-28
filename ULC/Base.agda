@@ -7,7 +7,7 @@ open import Prelude.InferenceRules
 open import Prelude.Decidable
 open import Prelude.Membership
 
-module ULC.Base (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
+module ULC.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal Atom
 
