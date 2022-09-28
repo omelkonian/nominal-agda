@@ -7,10 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.1
-      - uses: omelkonian/setup-agda@v0
+      - uses: omelkonian/setup-agda@master
         with:
           agda-version: 2.6.2.1
           stdlib-version: 1.7
-          libraries: omelkonian/formal-prelude#f4f5
+          libraries: omelkonian/formal-prelude#6ab9
           main: Main
           token: ${{ secrets.GITHUB_TOKEN }}
+	  ribbon: true
