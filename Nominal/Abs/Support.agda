@@ -20,8 +20,8 @@ module _ {A : Type ℓ}
 
   -- abstractions over finitely supported types are themselves finite
   instance
-    FinSupp-abs : FinitelySupported (Abs A)
-    FinSupp-abs .∀fin (abs x t) =
+    FinSupp-Abs : FinitelySupported (Abs A)
+    FinSupp-Abs .∀fin (abs x t) =
       let xs , p = ∀fin t
       in x ∷ xs , λ y z y∉ z∉ →
       begin
