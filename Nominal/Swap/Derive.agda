@@ -23,7 +23,7 @@ open Debug ("nominal" , 100)
 
 module Nominal.Swap.Derive (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
-open import Nominal.Swap.Base Atom ⦃ it ⦄
+open import Nominal.Swap.Base Atom
 
 {-# TERMINATING #-}
 derive↔ : Definition → TC Term
@@ -202,7 +202,9 @@ unquoteDecl List↔ = DERIVE Swap [ quote List , List↔ ]
 private
   -- ** record types
   record R⁰ : Set where
-  instance R∅ = mkNameless R⁰
+  instance
+    R∅ : Swap R⁰
+    R∅ = mkNameless R⁰
 
   record R¹ : Set where
     field x : ℕ
@@ -228,7 +230,9 @@ private
   -- ** inductive datatypes
 
   data X⁰ : Set where
-  instance X⁰∅ = mkNameless X⁰
+  instance
+    X⁰∅ : Swap X⁰
+    X⁰∅ = mkNameless X⁰
 
   data X¹ : Set where
     x : X¹

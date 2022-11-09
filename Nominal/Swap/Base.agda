@@ -1,6 +1,5 @@
 {- MOTTO: permutations distribute over everything -}
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
@@ -20,12 +19,20 @@ record Swap (A : Type ℓ) : Type ℓ where
 
   infixr 10 ⦅_↔_⦆_
   ⦅_↔_⦆_ = swap
-
   -- NB: equivariant functions commute with this group action
+
+  -- ** equivariance
+  module _ ⦃ _ : ISetoid A ⦄ where
+    Equivariant¹ : Pred (Op₁ A) (ℓ ⊔ₗ relℓ)
+    Equivariant¹ f = ∀ x 𝕒 𝕓 → f (swap 𝕒 𝕓 x) ≈ swap 𝕒 𝕓 (f x)
+
+    Equivariant² : Pred (Rel A ℓ′) (ℓ ⊔ₗ ℓ′)
+    Equivariant² _~_ = ∀ x y → x ~ y → (∀ 𝕒 𝕓 → swap 𝕒 𝕓 x ~ swap 𝕒 𝕓 y)
 
   swaps : List (Atom × Atom) → A → A
   swaps []             = id
   swaps ((x , y) ∷ as) = swap x y ∘ swaps as
+
 open Swap ⦃...⦄ public
 
 instance
@@ -80,7 +87,7 @@ swap-noop 𝕒 𝕓 x x∉ with x ≟ 𝕒
 pattern ♯0 = here refl
 pattern ♯1 = there (here refl)
 
-module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ where
+module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : Lawful-Setoid A ⦄ where
 
   private variable
     x y : A
@@ -125,18 +132,7 @@ module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ where
 
 open SwapLaws ⦃...⦄ public
 
-record Lawful-Swap (A : Type ℓ) ⦃ ls : Lawful-Setoid A ⦄ : Setω where
-  field
-    ⦃ isSwap ⦄ : Swap A
-    ⦃ hasSwapLaws ⦄ : SwapLaws A ⦃ ls = ls ⦄
-open Lawful-Swap ⦃...⦄ using () public
-
 private variable A : Type ℓ
-
-instance
-  mkLawful-Swap : ⦃ _ : Swap A ⦄ ⦃ ls : Lawful-Setoid A ⦄ → ⦃ SwapLaws A ⦃ ls = ls ⦄ ⦄ →
-    Lawful-Swap A
-  mkLawful-Swap = record {}
 
 instance
   SwapLaws-Atom : SwapLaws Atom

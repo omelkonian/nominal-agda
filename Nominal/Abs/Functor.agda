@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 
 module Nominal.Abs.Functor (Atom : Type) ⦃ _ : DecEq Atom ⦄ where

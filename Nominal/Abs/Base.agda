@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.Setoid
@@ -8,7 +7,9 @@ open import Prelude.InferenceRules
 
 module Nominal.Abs.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
-open import Nominal.Swap Atom
+open import Nominal.New     Atom
+open import Nominal.Swap    Atom
+open import Nominal.Support Atom
 
 -- T0D0: maybe this is broken, user has access to `atom`
 record Abs (A : Type ℓ) : Type ℓ where
@@ -17,30 +18,7 @@ record Abs (A : Type ℓ) : Type ℓ where
         term : A
 open Abs public
 
--- ** The И quantifier.
-И : Pred (Pred Atom ℓ) ℓ
-И φ = ∃ λ (xs : List Atom) → (∀ y → y ∉ xs → φ y)
-
--- И∗ : Pred (Pred (List Atom) ℓ) ℓ
--- И∗ φ = ∃ λ (xs : List Atom) → (∀ ys → All (_∉ xs) ys → φ ys)
-
-И^_ : (n : ℕ) → Pred (Pred (Vec Atom n) ℓ) ℓ
-(И^ n) φ = ∃ λ (xs : List Atom) → (∀ ys → V.All.All (_∉ xs) ys → φ ys)
-
-И² : Pred (Atom → Atom → Type ℓ) ℓ
--- И² φ = (И^ 2) λ where (x ∷ y ∷ []) → φ x y
-И² φ = ∃ λ (xs : List Atom) → (∀ y z → y ∉ xs → z ∉ xs → φ y z)
-
-И³ : Pred (Atom → Atom → Atom → Type ℓ) ℓ
--- И³ φ = (И^ 3) λ where (x ∷ y ∷ z ∷ []) → φ x y z
-И³ φ = ∃ λ (xs : List Atom) → (∀ y z w → y ∉ xs → z ∉ xs → w ∉ xs → φ y z w)
-
--- ** the co-finite construction leads to issues with universe levels.
--- open import Cofinite.agda
--- И : Pred (Pred Atom ℓ) (lsuc ℓ)
--- И P = powᶜᵒᶠ P
-
-module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
+module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 
   conc : Abs A → Atom → A
   conc (abs 𝕒 x) 𝕓 = swap 𝕓 𝕒 x
@@ -67,18 +45,6 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     swap-conc : ∀ (f : Abs A) →
       ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
     swap-conc _ = swap-swap
-
-    -- ** equivariance
-
-    -- T0D0: alternative definitions of equivariance:
-    --    * equivariant(x) := supp(x) = ∅
-    --    * in the case of _→_, this is equivalent to Equivariant¹
-
-    Equivariant¹ : Pred (Op₁ A) (ℓ ⊔ₗ is .relℓ)
-    Equivariant¹ f = ∀ x 𝕒 𝕓 → f (swap 𝕒 𝕓 x) ≈ swap 𝕒 𝕓 (f x)
-
-    Equivariant² : Pred (Rel A ℓ′) (ℓ ⊔ₗ ℓ′)
-    Equivariant² _~_ = ∀ x y → x ~ y → (∀ 𝕒 𝕓 → swap 𝕒 𝕓 x ~ swap 𝕒 𝕓 y)
 
     -- ** α-equivalence
     _≈α_ : Rel (Abs A) (is .relℓ)
@@ -187,11 +153,6 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
         ≈⟨ cong-abs swap-swap .proj₂ x (λ ()) ⟩
           conc (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ f) x
         ∎
-
-    -- swap-conc : ∀ (f : Abs A) →
-    --   ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
-    -- swap-conc _ = swap-swap
-    -- module _ (𝕩 : Atom) where
 
     --   concₓ : Abs A → A
     --   concₓ = flip conc 𝕩

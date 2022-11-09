@@ -1,8 +1,7 @@
 {-# OPTIONS -v nominal:100 #-}
 module Nominal.Swap.Example where
 
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 
 -- ** instantiate atoms to be the natural numbers

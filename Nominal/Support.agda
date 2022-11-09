@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.Setoid
@@ -8,10 +7,8 @@ open import Prelude.InferenceRules
 
 module Nominal.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import Nominal.Swap    Atom
-open import Nominal.Fun     Atom
-open import Nominal.Product Atom
-open import Nominal.Abs     Atom
+open import Nominal.New  Atom
+open import Nominal.Swap Atom
 
 private variable A : Type ℓ; B : Type ℓ′
 
@@ -23,6 +20,11 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 
   FinSupp : Pred A _
   FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≈ x
+
+  -- alternative definition of equivariance based on (finite) support
+  --  * equivariant(x) := supp(x) = ∅
+  Equivariant′ : Pred A _
+  Equivariant′ x = ∃ λ (fin-x : FinSupp x) → fin-x .proj₁ ≡ []
 
   MinSupp : Pred (List Atom × A) _
   MinSupp (xs , a) =
@@ -41,7 +43,9 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 -- λ x → (x == 𝕒) ∨ (x == 𝕓)
 
 record FinitelySupported (A : Type ℓ)
-  ⦃ ls : Lawful-Setoid A ⦄ ⦃ _ : Lawful-Swap A ⦃ ls ⦄ ⦄ : Setω where
+  ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄
+  ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω
+  where
 
   field ∀fin : Unary.Universal FinSupp
 
@@ -89,204 +93,9 @@ record FinitelySupported (A : Type ℓ)
   -- T0D0: meta-programming tactic `fresh-in-context` (big sister to `deriveSwap`)
   -- NB: these tactics correspond to two fundamental axioms/notions in nominal sets
   -- (c.f. EZFA)
-
 open FinitelySupported ⦃...⦄ public
 
--- unquoteDecl Swap-× = DERIVE Swap [ quote _×_ , Swap-× ]
-
-module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄
-         ⦃ ls′ : Lawful-Setoid B ⦄ ⦃ lsw′ : Lawful-Swap B ⦃ ls′ ⦄ ⦄ where
-  instance
-    _ = SwapLaws-×
-
-    FinSupp-× : ⦃ FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄
-              → ⦃ FinitelySupported B ⦃ ls′ ⦄ ⦃ lsw′ ⦄ ⦄
-              → FinitelySupported (A × B)
-    FinSupp-× .∀fin (a , b) =
-      let xs , p = ∀fin a
-          ys , q = ∀fin b
-      in xs ++ ys , λ y z y∉ z∉ →
-          p y z (y∉ ∘ L.Mem.∈-++⁺ˡ) (z∉ ∘ L.Mem.∈-++⁺ˡ)
-        , q y z (y∉ ∘ L.Mem.∈-++⁺ʳ _) (z∉ ∘ L.Mem.∈-++⁺ʳ _)
-
-module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄ where
-
-  -- alternative definition of equivariance based on (finite) support
-  Equivariant¹′ : (A → A) → Type _
-  Equivariant¹′ f = ∃ λ (fin-f : FinSupp f) → fin-f .proj₁ ≡ []
-
-  equivariant-equiv : ∀ {f : A → A} →
-    Equivariant¹ f
-    ═══════════════════
-    Equivariant¹′ f
-  equivariant-equiv {f = f} = ↝ , ↜
-      where
-        open ≈-Reasoning
-
-        ↝ : Equivariant¹ f
-            ───────────────────
-            Equivariant¹′ f
-        ↝ equiv-f = fin-f , refl
-          where
-            fin-f : FinSupp f
-            fin-f = [] , λ x y _ _ a →
-              begin
-                ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
-              ≈⟨ cong-swap $ equiv-f _ _ _ ⟩
-                ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
-              ≈⟨ swap-sym′ ⟩
-                f a
-              ∎
-
-        ↜ : Equivariant¹′ f
-            ───────────────────
-            Equivariant¹ f
-        ↜ (fin-f , refl) x a b =
-          begin
-            f (⦅ a ↔ b ⦆ x)
-          ≈˘⟨ swap-sym′ ⟩
-            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
-          ≈⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
-            ⦅ a ↔ b ⦆ f x
-          ∎
-
-  private
-    f : A → A
-    f = id
-
-    suppF = Atoms ∋ []
-
-    g : A → A
-    g x = x
-
-    f≗g : f ≗ g
-    f≗g _ = refl
-
-    f≈g : f ≈ g
-    f≈g _ = ≈-refl
-
-    fin-f : FinSupp f
-    fin-f = suppF , λ _ _ _ _ _ → swap-sym′
-
-    min-fin-f : MinFinSupp fin-f
-    min-fin-f _ _ ()
-
-    equiv-f : Equivariant¹ f
-    equiv-f _ _ _ = ≈-refl
-
-    equiv-f′ : Equivariant¹′ f
-    equiv-f′ = fin-f , refl
-
-  -- abstractions over finitely supported types are themselves finite
-  instance
-    FinSupp-abs : ⦃ FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄ → FinitelySupported (Abs A)
-    FinSupp-abs .∀fin (abs x t) =
-      let xs , p = ∀fin t
-      in x ∷ xs , λ y z y∉ z∉ →
-      begin
-        ⦅ z ↔ y ⦆ (abs x t)
-      ≡⟨⟩
-        -- ⦅ 𝕒 ↔ 𝕓 ⦆ (f 𝕔) ≈ (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
-        abs (⦅ z ↔ y ⦆ x) (⦅ z ↔ y ⦆ t)
-      ≡⟨ cong (λ ◆ → abs ◆ (⦅ z ↔ y ⦆ t))
-            $ swap-noop z y x (λ where ♯0 → z∉ ♯0; ♯1 → y∉ ♯0) ⟩
-        abs x (⦅ z ↔ y ⦆ t)
-      ≈⟨ cong-abs $ p y z (y∉ ∘ there) (z∉ ∘ there) ⟩
-        abs x t
-      ∎ where open ≈-Reasoning
-
-  module _ ⦃ _ : FinitelySupported A ⦄ where
-    -- Two ways to fix functoriality:
-      -- 1. require that (f : A → A) is equivariant
-    --   2. ...or that it at least has finite support
-    mapAbs : Op₁ A → Op₁ (Abs A)
-        -- ≈ (A → A) → (Abs A → Abs A)
-    -- T0D0: In order to resolve termination issues (via well-founded recursion),
-    -- we need a more restrainted version of mapAbs with type:
-    -- mapAbs : (x' : Abs A) → (f : (a : A) → a ≺ f → A) → Abs A
-    -- NB: a generalisation would be to say that the size behaviour of
-    --     `mapAbs f` corresponds to that of `f`
-    mapAbs f x' =
-      let a = fresh-var x' -- T0D0: ++ supp?? f
-      in abs a (f $ conc x' a)
-
-    freshen : Op₁ (Abs A)
-    freshen f@(abs a t) =
-      let xs , _ = ∀fin f
-          b , b∉ = minFresh xs
-      in abs b (conc f b)
-
-private
-
-  instance
-    Setoid-Bool : ISetoid Bool
-    Setoid-Bool = λ where
-      .relℓ → 0ℓ
-      ._≈_  → _≡_
-
-    SetoidLaws-Bool : Setoid-Laws Bool
-    SetoidLaws-Bool .isEquivalence = PropEq.isEquivalence
-
-  postulate x y : Atom
-
-  f : Atom → Bool
-  f z = (z == x) ∨ (z == y)
-  suppF = List Atom ∋ x ∷ y ∷ []
-  -- fresh f = False
-
-  finF : FinSupp f
-  finF = -, go
-    where
-      ∀x∉suppF : ∀ {z} → z ∉ suppF → f z ≡ false
-      ∀x∉suppF {z} z∉ with z ≟ x
-      ... | yes refl = ⊥-elim $ z∉ $ here refl
-      ... | no _ with z ≟ y
-      ... | yes refl = ⊥-elim $ z∉ $ there $′ here refl
-      ... | no _ = refl
-
-      go : ∀ 𝕒 𝕓 → 𝕒 ∉ suppF → 𝕓 ∉ suppF → f ∘ swap 𝕓 𝕒 ≗ f
-      go 𝕒 𝕓 𝕒∉ 𝕓∉ z with z ≟ 𝕓
-      ... | yes refl rewrite ∀x∉suppF 𝕒∉ | ∀x∉suppF 𝕓∉ = refl
-      ... | no _ with z ≟ 𝕒
-      ... | yes refl rewrite ∀x∉suppF 𝕒∉ | ∀x∉suppF 𝕓∉ = refl
-      ... | no _ = refl
-
-  _ = finF .proj₁ ≡ suppF
-    ∋ refl
-
-  g : Atom → Bool
-  g z = (z ≠ x) ∧ (z ≠ y)
-  suppG = List Atom ∋ x ∷ y ∷ []
-  -- fresh g = True
-  -- NB: g is infinite, but has finite support!
-
-  finG : FinSupp g
-  finG = -, go
-    where
-      ∀x∉suppG : ∀ {z} → z ∉ suppG → g z ≡ true
-      ∀x∉suppG {z} z∉ with z ≟ x
-      ... | yes refl = ⊥-elim $ z∉ $ here refl
-      ... | no _ with z ≟ y
-      ... | yes refl = ⊥-elim $ z∉ $ there $′ here refl
-      ... | no _ = refl
-
-      go : ∀ 𝕒 𝕓 → 𝕒 ∉ suppG → 𝕓 ∉ suppG → g ∘ swap 𝕓 𝕒 ≗ g
-      go 𝕒 𝕓 𝕒∉ 𝕓∉ z with z ≟ 𝕓
-      ... | yes refl rewrite ∀x∉suppG 𝕒∉ | ∀x∉suppG 𝕓∉ = refl
-      ... | no _ with z ≟ 𝕒
-      ... | yes refl rewrite ∀x∉suppG 𝕒∉ | ∀x∉suppG 𝕓∉ = refl
-      ... | no _ = refl
-
-  -- T0D0: example where _≗_ is not the proper notion of equality
-
-  -- module _ ⦃ _ : Toℕ Atom ⦄ where
-
-  --   h : Atom → Bool
-  --   h z = even? (toℕ z)
-  --   -- ∄ supp h ⇔ ∄ fresh h
-
--- Find the non-finSupp swappable example.
--- ∙ ZFA ↝ ZFA+choice
--- ∙ the set of all total orderings on atoms
--- (empty support on the outside, infinite support inside each order)
--- ∙ FOL: ultra-filter construction
+instance
+  FinSupp-Atom : FinitelySupported Atom
+  FinSupp-Atom .∀fin 𝕒 = [ 𝕒 ] , λ _ _ y∉ z∉ →
+    swap-noop _ _ _ λ where ♯0 → z∉ ♯0; ♯1 → y∉ ♯0

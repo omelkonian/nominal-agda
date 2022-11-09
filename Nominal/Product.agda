@@ -1,13 +1,14 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Setoid
+open import Prelude.InfEnumerable
 
 module Nominal.Product (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
+open import Nominal.Support Atom
 
 module _
   {A : Type ℓ} {B : Type ℓ′}
@@ -31,15 +32,26 @@ module _
       ; trans = λ (i , j) (k , l) → ≈-trans i k , ≈-trans j l
       }
 
-  -- do not export, as it creates problems with instance resolution wrt Abs
-  SwapLaws-× : SwapLaws (A × B)
-  SwapLaws-× = record
-    { cong-swap = λ (x , y) → cong-swap x , cong-swap y
-    ; swap-id = swap-id , swap-id
-    ; swap-rev = swap-rev , swap-rev
-    ; swap-sym = swap-sym , swap-sym
-    ; swap-swap = swap-swap , swap-swap
-    }
+    SwapLaws-× : SwapLaws (A × B)
+    SwapLaws-× = record
+      { cong-swap = λ (x , y) → cong-swap x , cong-swap y
+      ; swap-id = swap-id , swap-id
+      ; swap-rev = swap-rev , swap-rev
+      ; swap-sym = swap-sym , swap-sym
+      ; swap-swap = swap-swap , swap-swap
+      }
+
+  module _ ⦃ _ : Enumerable∞ Atom ⦄ where
+    instance
+      FinSupp-× : ⦃ FinitelySupported A ⦄
+                → ⦃ FinitelySupported B ⦄
+                → FinitelySupported (A × B)
+      FinSupp-× .∀fin (a , b) =
+        let xs , p = ∀fin a
+            ys , q = ∀fin b
+        in xs ++ ys , λ y z y∉ z∉ →
+            p y z (y∉ ∘ L.Mem.∈-++⁺ˡ) (z∉ ∘ L.Mem.∈-++⁺ˡ)
+          , q y z (y∉ ∘ L.Mem.∈-++⁺ʳ _) (z∉ ∘ L.Mem.∈-++⁺ʳ _)
 
 private
   postulate
