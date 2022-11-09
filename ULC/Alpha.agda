@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.General
@@ -17,7 +16,7 @@ module ULC.Alpha (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom
 
 open import ULC.Base    Atom ⦃ it ⦄
 open import ULC.Measure Atom ⦃ it ⦄
-open import Nominal     Atom ⦃ it ⦄
+open import Nominal     Atom
 
 private variable A : Type ℓ; f g h : Abs A
 
@@ -173,3 +172,12 @@ instance
         ≈⟨ cong-ƛ $ p a b (a∉ ∘ there) (b∉ ∘ there) ⟩
           (ƛ x ⇒ t)
         ∎ where open ≈-Reasoning
+
+supp-var : supp (` x) ≡ [ x ]
+supp-var = refl
+
+supp-ξ : supp (L · M) ≡ supp L ++ supp M
+supp-ξ = refl
+
+supp-ƛ : supp (ƛ x ⇒ N) ≡ x ∷ supp N
+supp-ƛ = refl

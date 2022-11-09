@@ -1,7 +1,6 @@
 module ULC.Examples where
 
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
 open import Prelude.Nary
@@ -147,9 +146,11 @@ c'' = $ 57 -- a + c + c'
 _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≡ (` c' · (ƛ c'' ⇒ ` c'' · ` c'))
   ∋ refl
 
+{-
 -- ** barendregt
-
 a'' = $ 21
+
 -- oops...
 _ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a'' ⇒ ` a'') · (ƛ a'' ⇒ ` a''))
   ∋ refl
+-}

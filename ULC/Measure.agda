@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.General
 open import Prelude.Closures
@@ -25,8 +24,8 @@ instance
   Measurable-Abs .∣_∣ (abs _ t) = suc ∣ t ∣
 
 -- module _ {A : Type}
---          ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄
---          ⦃ _ : FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄
+--          ⦃ _ : Lawful-Setoid A ⦄ ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
+--          ⦃ _ : FinitelySupported A ⦄
 --          ⦃ _ : Measurable A ⦄ where
 --   mapAbs′ : (x' : Abs A) → ((x : A) → x ≺ᵐ x' → A) → Abs A
 --   mapAbs′ x' f =

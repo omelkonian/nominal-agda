@@ -1,5 +1,4 @@
-open import Prelude.Init
-open SetAsType
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.General
 open import Prelude.Closures
@@ -35,3 +34,4 @@ pattern ƛ_⇒_ x y = ƛ abs x y
 variable
   x y 𝕩 𝕪 𝕫 : Atom
   t t′ t″ w w′ w″ L L′ M M′ N N′ M₁ M₂ : Term
+  t̂ t̂′ t̂″ ŵ ŵ′ ŵ″ : Abs Term
