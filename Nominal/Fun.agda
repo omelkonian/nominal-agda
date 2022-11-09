@@ -21,6 +21,7 @@ module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ 
     Setoid-Fun = λ where
       .relℓ → ℓ ⊔ₗ relℓ {A = B}
       ._≈_  f g → ∀ x → f x ≈ g x
+      -- ._≈_  f g → ∀ x y → x ≈ y → f x ≈ g y
 
     SetoidLaws-Fun :
       ⦃ _ : ISetoid B ⦄ → ⦃ Setoid-Laws B ⦄
@@ -81,6 +82,7 @@ module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ 
       ≈⟨ swap-swap ⟩
         ⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆
           (f $ ⦅ c ↔ d ⦆ ⦅ a ↔ b ⦆ x)
+      --                ↑ NB: note the change of ordering on swappings
       ≈⟨ cong-swap $ cong-swap $ ≈-cong f
        $ begin
            ⦅ c ↔ d ⦆ ⦅ a ↔ b ⦆ x
@@ -115,21 +117,21 @@ private
   justAtom′ : Atom → Maybe Atom
   justAtom′ = ⦅ 𝕒 ↔ 𝕓 ⦆ justAtom
 
-  test-𝕒 : justAtom 𝕒 ≡ just 𝕒
-  test-𝕒 rewrite ≟-refl 𝕒 = refl
+  _ : justAtom 𝕒 ≡ just 𝕒
+  _ rewrite ≟-refl 𝕒 = refl
 
-  test-𝕓 : justAtom 𝕓 ≡ nothing
-  test-𝕓 rewrite dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂ = refl
+  _ : justAtom 𝕓 ≡ nothing
+  _ rewrite dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂ = refl
 
-  test-𝕒′ : justAtom′ 𝕒 ≡ nothing
-  test-𝕒′ rewrite dec-no (𝕒 ≟ 𝕓) 𝕒≢𝕓 .proj₂
-                | ≟-refl 𝕒
-                | dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂
-                = refl
+  _ : justAtom′ 𝕒 ≡ nothing
+  _ rewrite dec-no (𝕒 ≟ 𝕓) 𝕒≢𝕓 .proj₂
+          | ≟-refl 𝕒
+          | dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂
+          = refl
 
-  test-𝕓′ : justAtom′ 𝕓 ≡ just 𝕓
-  test-𝕓′ rewrite ≟-refl 𝕓
-                | dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂
-                | ≟-refl 𝕒
-                | ≟-refl 𝕒
-                = refl
+  _ : justAtom′ 𝕓 ≡ just 𝕓
+  _ rewrite ≟-refl 𝕓
+          | dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≢𝕓) .proj₂
+          | ≟-refl 𝕒
+          | ≟-refl 𝕒
+          = refl

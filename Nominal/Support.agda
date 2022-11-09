@@ -8,11 +8,12 @@ open import Prelude.InferenceRules
 
 module Nominal.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import Nominal.Swap Atom
-open import Nominal.Fun  Atom
-open import Nominal.Abs  Atom
+open import Nominal.Swap    Atom
+open import Nominal.Fun     Atom
+open import Nominal.Product Atom
+open import Nominal.Abs     Atom
 
-private variable A : Type ℓ
+private variable A : Type ℓ; B : Type ℓ′
 
 module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 
@@ -23,13 +24,21 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
   FinSupp : Pred A _
   FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≈ x
 
-  MinSupp : ∀ {a : A} → Pred (FinSupp a) _
-  MinSupp {a = a} (xs , ∀x∉) =
-    case xs of λ where
-      [] → Lvl.Lift _ ⊤
-      (x ∷ []) → ∀ y → y ≢ x → swap x y a ≉ a
-      (xs@(_ ∷ _ ∷ _)) →
-        Unique xs × ∀ x y → x ∈ xs → y ∈ xs → x ≢ y → swap x y a ≉ a
+  MinSupp : Pred (List Atom × A) _
+  MinSupp (xs , a) =
+    (∀ x y → x ∉ xs → y ∉ xs → swap x y a ≈ a)
+    ×
+    (∀ x y → x ∈ xs → y ∉ xs → swap x y a ≉ a)
+
+  -- И⅁ λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≉ x
+
+  MinFinSupp : ∀ {a : A} → Pred (FinSupp a) _
+  MinFinSupp {a = a} (xs , p) =
+    -- MinSupp (xs , a)
+    (∀ x y → x ∈ xs → y ∉ xs → swap x y a ≉ a)
+
+-- counter-example
+-- λ x → (x == 𝕒) ∨ (x == 𝕓)
 
 record FinitelySupported (A : Type ℓ)
   ⦃ ls : Lawful-Setoid A ⦄ ⦃ _ : Lawful-Swap A ⦃ ls ⦄ ⦄ : Setω where
@@ -53,8 +62,8 @@ record FinitelySupported (A : Type ℓ)
   -- T0D0: find a characterization of this decidable sub-space
 
   fresh∉ : (a : A) → ∃ (_∉ supp a)
-  fresh∉ = fresh ∘ supp
-  -- T0D0: optimize fresh to generates the *least* element (not `1 + ∑ support`)
+  fresh∉ = minFresh ∘ supp
+  -- NB: optimized fresh that generates the *least* element
 
   fresh-var : A → Atom
   fresh-var = proj₁ ∘ fresh∉
@@ -66,8 +75,8 @@ record FinitelySupported (A : Type ℓ)
   ∃fresh x =
     let xs , swap≈ = ∀fin x
         -- ((a ∷ b ∷ []) , (a∉ V.All.∷ b∉ V.All.∷ V.All.[])) = (fresh^ 2) xs
-        a , a∉ = fresh xs
-        b , b∉ = fresh xs
+        a , a∉ = minFresh xs
+        b , b∉ = minFresh xs
 
         p : a ♯ x
         p = xs , λ y y∉ → swap≈ a y a∉ y∉
@@ -82,6 +91,23 @@ record FinitelySupported (A : Type ℓ)
   -- (c.f. EZFA)
 
 open FinitelySupported ⦃...⦄ public
+
+-- unquoteDecl Swap-× = DERIVE Swap [ quote _×_ , Swap-× ]
+
+module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄
+         ⦃ ls′ : Lawful-Setoid B ⦄ ⦃ lsw′ : Lawful-Swap B ⦃ ls′ ⦄ ⦄ where
+  instance
+    _ = SwapLaws-×
+
+    FinSupp-× : ⦃ FinitelySupported A ⦃ ls ⦄ ⦃ lsw ⦄ ⦄
+              → ⦃ FinitelySupported B ⦃ ls′ ⦄ ⦃ lsw′ ⦄ ⦄
+              → FinitelySupported (A × B)
+    FinSupp-× .∀fin (a , b) =
+      let xs , p = ∀fin a
+          ys , q = ∀fin b
+      in xs ++ ys , λ y z y∉ z∉ →
+          p y z (y∉ ∘ L.Mem.∈-++⁺ˡ) (z∉ ∘ L.Mem.∈-++⁺ˡ)
+        , q y z (y∉ ∘ L.Mem.∈-++⁺ʳ _) (z∉ ∘ L.Mem.∈-++⁺ʳ _)
 
 module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄ where
 
@@ -142,8 +168,8 @@ module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄ whe
     fin-f : FinSupp f
     fin-f = suppF , λ _ _ _ _ _ → swap-sym′
 
-    min-fin-f : MinSupp fin-f
-    min-fin-f = Lvl.lift tt
+    min-fin-f : MinFinSupp fin-f
+    min-fin-f _ _ ()
 
     equiv-f : Equivariant¹ f
     equiv-f _ _ _ = ≈-refl
@@ -187,12 +213,10 @@ module _ ⦃ ls : Lawful-Setoid A ⦄ ⦃ lsw : Lawful-Swap A ⦃ ls ⦄ ⦄ whe
     freshen : Op₁ (Abs A)
     freshen f@(abs a t) =
       let xs , _ = ∀fin f
-          b , b∉ = fresh xs
+          b , b∉ = minFresh xs
       in abs b (conc f b)
 
 private
-
-  private variable B : Type ℓ′
 
   instance
     Setoid-Bool : ISetoid Bool
