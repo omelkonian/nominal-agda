@@ -1,3 +1,4 @@
+{-# OPTIONS --v equivariance:100 #-}
 open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
@@ -42,9 +43,10 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     _ = refl
 
   module _ ⦃ is : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SwapLaws A ⦄ where
-    swap-conc : ∀ (f : Abs A) →
-      ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
-    swap-conc _ = swap-swap
+    -- swap-conc : ∀ (f : Abs A) →
+    --   ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
+    swap-conc : Equivariant conc
+    swap-conc _ _ = swap-swap
 
     -- ** α-equivalence
     _≈α_ : Rel (Abs A) (is .relℓ)
@@ -106,11 +108,11 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           ≡˘⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t)
                   $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩
             ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
-          ≈˘⟨ swap-conc f ⟩
+          ≈˘⟨ swap-conc _ _ ⟩
             ⦅ a ↔ b ⦆ conc f x
           ≈⟨ cong-swap $ f≈g x (x∉ ∘′ there ∘′ there) ⟩
             ⦅ a ↔ b ⦆ conc g x
-          ≈⟨ swap-conc g ⟩
+          ≈⟨ swap-conc _ _ ⟩
             ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
           ≡⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′)
                 $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩

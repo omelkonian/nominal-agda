@@ -145,16 +145,16 @@ module _
   ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
   where
 
-  --  * in the case of _→_, Equivariant′ is equivalent to Equivariant¹
+  --  * in the case of _→_, Equivariant′ is equivalent to Equivariant
   equivariant-equiv : ∀ {f : A → A} →
-    Equivariant¹ f
+    Equivariant f
     ══════════════
     Equivariant′ f
   equivariant-equiv {f = f} = ↝ , ↜
       where
         open ≈-Reasoning
 
-        ↝ : Equivariant¹ f
+        ↝ : Equivariant f
             ───────────────────
             Equivariant′ f
         ↝ equiv-f = fin-f , refl
@@ -163,7 +163,7 @@ module _
             fin-f = [] , λ x y _ _ a →
               begin
                 ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
-              ≈⟨ cong-swap $ equiv-f _ _ _ ⟩
+              ≈˘⟨ cong-swap $ equiv-f _ _ ⟩
                 ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
               ≈⟨ swap-sym′ ⟩
                 f a
@@ -171,14 +171,14 @@ module _
 
         ↜ : Equivariant′ f
             ───────────────────
-            Equivariant¹ f
-        ↜ (fin-f , refl) x a b =
+            Equivariant f
+        ↜ (fin-f , refl) a b {x} =
           begin
-            f (⦅ a ↔ b ⦆ x)
-          ≈˘⟨ swap-sym′ ⟩
-            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
-          ≈⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
             ⦅ a ↔ b ⦆ f x
+          ≈˘⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
+            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
+          ≈⟨ swap-sym′ ⟩
+            f (⦅ a ↔ b ⦆ x)
           ∎
 
   private
@@ -202,8 +202,8 @@ module _
     min-fin-f : MinFinSupp fin-f
     min-fin-f _ _ ()
 
-    equiv-f : Equivariant¹ f′
-    equiv-f _ _ _ = ≈-refl
+    equiv-f : Equivariant f′
+    equiv-f _ _ = ≈-refl
 
     equiv-f′ : Equivariant′ f′
     equiv-f′ = fin-f , refl
