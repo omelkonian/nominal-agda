@@ -27,8 +27,8 @@ module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ 
       -- ._≈_  f g → ∀ x y → x ≈ y → f x ≈ g y
 
     SetoidLaws-Fun :
-      ⦃ _ : ISetoid B ⦄ → ⦃ Setoid-Laws B ⦄
-      → Setoid-Laws (A → B)
+      ⦃ _ : ISetoid B ⦄ → ⦃ SetoidLaws B ⦄
+      → SetoidLaws (A → B)
     SetoidLaws-Fun .isEquivalence = record
       { refl  = λ {f} x → ≈-refl
       ; sym   = λ f∼g x → ≈-sym (f∼g x)
@@ -36,8 +36,8 @@ module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ 
       }
 
     SwapLaws-Fun :
-      ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : CongSetoid A ⦄ ⦃ _ : SwapLaws A ⦄
-      ⦃ _ : ISetoid B ⦄ ⦃ _ : Setoid-Laws B ⦄ ⦃ _ : SwapLaws B ⦄
+      ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : CongSetoid A ⦄ ⦃ _ : SwapLaws A ⦄
+      ⦃ _ : ISetoid B ⦄ ⦃ _ : SetoidLaws B ⦄ ⦃ _ : SwapLaws B ⦄
       → SwapLaws (A → B)
     SwapLaws-Fun .cong-swap {f}{g}{a}{b} f≗g x =
     -- ∀ {f g : A → B} → x ≈ y → ⦅ 𝕒 ↔ 𝕓 ⦆ f ≈ ⦅ 𝕒 ↔ 𝕓 ⦆ g
@@ -141,7 +141,7 @@ private
 
 module _
   ⦃ _ : Enumerable∞ Atom ⦄
-  {A : Type ℓ} ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄
+  {A : Type ℓ} ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄
   ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
   where
 
@@ -214,7 +214,7 @@ module _
         .relℓ → 0ℓ
         ._≈_  → _≡_
 
-      SetoidLaws-Bool : Setoid-Laws Bool
+      SetoidLaws-Bool : SetoidLaws Bool
       SetoidLaws-Bool .isEquivalence = PropEq.isEquivalence
 
     postulate x y : Atom

@@ -7,3 +7,4 @@ open import Nominal.Abs.Base Atom public
 open import Nominal.Abs.Lift Atom public
 -- open import Nominal.Abs.Functor Atom public
 open import Nominal.Abs.Support Atom public
+open import Nominal.Abs.Product Atom public

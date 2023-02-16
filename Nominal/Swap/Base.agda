@@ -37,10 +37,10 @@ open Swap ⦃...⦄ public
 
 instance
   Swap-Atom : Swap Atom
-  Swap-Atom .swap a₁ a₂ a =
-    if      a == a₁ then a₂
-    else if a == a₂ then a₁
-    else                 a
+  Swap-Atom .swap x y z =
+    if      z == x then y
+    else if z == y then x
+    else                z
 
 -- T0D0: permutations as bijections on `Atom` (infinite variant)
 
@@ -49,8 +49,8 @@ instance
 --      = (π∘π′∘π⁻¹)∘π
 --      = (π·π′)∘π
 
-record CongSetoid (A : Set ℓ) ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ : Setω where
-  field ≈-cong : ∀ {B : Set ℓ′} ⦃ _ : ISetoid B ⦄ ⦃ _ : Setoid-Laws B ⦄ →
+record CongSetoid (A : Set ℓ) ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ : Setω where
+  field ≈-cong : ∀ {B : Set ℓ′} ⦃ _ : ISetoid B ⦄ ⦃ _ : SetoidLaws B ⦄ →
                  ∀ (f : A → B) → Congruent _≈_ _≈_ f
 open CongSetoid ⦃...⦄ public
 
@@ -60,7 +60,7 @@ instance
     .relℓ → 0ℓ
     ._≈_  → _≡_
 
-  SetoidLaws-Atom : Setoid-Laws Atom
+  SetoidLaws-Atom : SetoidLaws Atom
   SetoidLaws-Atom .isEquivalence = PropEq.isEquivalence
 
   CongSetoid-Atom : CongSetoid Atom
@@ -87,7 +87,7 @@ swap-noop 𝕒 𝕓 x x∉ with x ≟ 𝕒
 pattern ♯0 = here refl
 pattern ♯1 = there (here refl)
 
-module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : Lawful-Setoid A ⦄ where
+module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : LawfulSetoid A ⦄ where
 
   private variable
     x y : A
@@ -282,3 +282,30 @@ instance
   ℤ∅ = mkNameless ℤ
   Char∅   = mkNameless Char
   String∅ = mkNameless String
+
+swap-≢ : ∀ {z w x y} → z ≢ w → swap x y z ≢ swap x y w
+swap-≢ {z}{w}{x}{y} z≢w
+  with z ≟ x
+swap-≢ {z}{w}{x}{y} z≢w | yes refl
+  rewrite dec-no (w ≟ z) (≢-sym z≢w) .proj₂
+  with w ≟ y
+... | yes refl = ≢-sym z≢w
+... | no w≢y = ≢-sym w≢y
+swap-≢ {z}{w}{x}{y} z≢w | no z≢x
+  with z ≟ y
+... | yes refl
+  = QED
+  where
+  QED : x ≢ swap x z w
+  QED with w ≟ x
+  ... | yes refl = ≢-sym z≢x
+  ... | no w≢x
+    rewrite dec-no (w ≟ z) (≢-sym z≢w) .proj₂
+    = ≢-sym w≢x
+... | no z≢y
+  with w ≟ x
+... | yes refl = z≢y
+... | no _
+  with w ≟ y
+... | yes refl = z≢x
+... | no _     = z≢w

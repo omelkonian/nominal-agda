@@ -72,7 +72,7 @@ derive↔ d with d
   print $ "  tel: " ◇ show tel
   ctx ← getContext
   print $ "  ctx: " ◇ show ctx
-  inContext (L.reverse (map proj₂ tel) ++ ctx) $ do
+  inContext (L.reverse tel) $ do
     t′@(def n as) ← normalise t
       where _ → error "[not supported] rhs does not refer to another definition"
     print $ "  t′: " ◇ show t′
@@ -84,12 +84,6 @@ derive↔ d with d
 ... | prim-fun    = error "[not supported] primitive functions"
 
 private variable A : Set ℓ
-
-dropFront : ⦃ DecEq A ⦄ → List A → List A → List A
-dropFront xs ys =
-  let ysˡ , ysʳ = L.splitAt (length xs) ys
-  in if ysˡ == xs then ysʳ
-    else ys
 
 addHypotheses : Type → Type
 addHypotheses = λ where
@@ -129,8 +123,8 @@ addHypotheses′ Swap∙ = λ where
   ty → ty
 
 instance
-  Derivable-Swap : Derivable Swap
-  Derivable-Swap .DERIVE' args = do
+  Derivable-Swap : DERIVABLE Swap 1
+  Derivable-Swap .derive args = do
     print "********************************************************"
     (record-type `swap _) ← getDefinition (quote Swap)
       where _ → _IMPOSSIBLE_
@@ -148,12 +142,12 @@ instance
     print $ "  argTys: " ◇ show (argTys T)
 
     print $ "  Parameters: " ◇ show (parameters d)
-    let is = dropFront (L.reverse ctx) (argTys T)
-    print $ "  Indices: " ◇ show is
-    let n′ = apply⋯ is n
+    let tel = tyTele T
+    print $ "  Indices: " ◇ show (unzip tel .proj₂)
+    let n′ = apply⋯ tel n
     print $ "  n′: " ◇ show n′
     let T′ = addHypotheses
-           $ ∀indices⋯ is
+           $ ∀indices⋯ tel
            $ quote Swap ∙⟦ n′ ⟧
     print $ "  T′: " ◇ show T′
     let T″ = externalizeSwap T′
@@ -171,26 +165,6 @@ instance
     t ← derive↔ d
     print $ "t: " ◇ show t
     defineFun f [ clause mtel pc (`swap ◆⟦ t ⟧) ]
-
--- Version to explicitly pass the quoting of `Swap` in case you have instantiated the module parameters.
-DERIVE-SWAP : (Type → Type) → Name → Name → TC ⊤
-DERIVE-SWAP Swap∙ n f = do
-  print "********************************************************"
-  (record-type ∙swap= _) ← getDefinition (quote Swap)
-    where _ → _IMPOSSIBLE_
-  T   ← getType n
-  ctx ← getContext
-
-  let is = dropFront (L.reverse ctx) (argTys T)
-      T′ = addHypotheses′ Swap∙
-         $ ∀indices⋯ is
-         $ Swap∙ (apply⋯ is n)
-  declareDef (iArg f) T′
-  let mctx = argTys T′
-      mtel = map ("_" ,_) mctx
-      pc   = map (λ where (i , a) → fmap (const (` (length mctx ∸ suc (toℕ i)))) a) (enumerate mctx)
-  t ← derive↔ =<< getDefinition n
-  defineFun f [ clause mtel pc (∙swap= ◆⟦ t ⟧) ]
 
 -- ** deriving examples
 unquoteDecl ⊎↔ = DERIVE Swap [ quote _⊎_ , ⊎↔ ]

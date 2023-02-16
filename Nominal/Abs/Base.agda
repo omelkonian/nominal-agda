@@ -41,7 +41,7 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     _ : conc (abs 𝕒 x) 𝕓 ≡ swap 𝕓 𝕒 x
     _ = refl
 
-  module _ ⦃ is : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : SwapLaws A ⦄ where
+  module _ ⦃ is : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SwapLaws A ⦄ where
     swap-conc : ∀ (f : Abs A) →
       ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
     swap-conc _ = swap-swap
@@ -69,12 +69,27 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
       ≈-trans (f≈g y (y∉ ∘ L.Mem.∈-++⁺ˡ)) (g≈h y (y∉ ∘ L.Mem.∈-++⁺ʳ xs))
 
     instance
-      SetoidLaws-Abs : Setoid-Laws (Abs A)
+      SetoidLaws-Abs : SetoidLaws (Abs A)
       SetoidLaws-Abs .isEquivalence = record
         { refl = ≈α-refl ; sym = ≈α-sym ; trans = ≈α-trans }
 
     cong-abs : ∀ {t t′ : A} → t ≈ t′ → abs 𝕒 t ≈ abs 𝕒 t′
     cong-abs t≈ = [] , λ _ _ → cong-swap t≈
+
+    cong-conc : ∀ {t̂ t̂′ : Abs A} →
+      ∀ (eq : t̂ ≈ t̂′) →
+      ∙ 𝕒 ∉ eq .proj₁
+        ────────────────────
+        conc t̂  𝕒
+      ≈ conc t̂′ 𝕒
+    cong-conc (_ , eq) = eq _
+
+    cong-conc∘abs : ∀ {t t′ : A} →
+      ∀ (eq : t ≈ t′) →
+        ────────────────────
+        conc (abs 𝕓 t)  𝕒
+      ≈ conc (abs 𝕓 t′) 𝕒
+    cong-conc∘abs eq = cong-conc (cong-abs eq) λ ()
 
     open ≈-Reasoning
 

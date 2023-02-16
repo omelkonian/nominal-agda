@@ -14,7 +14,7 @@ open import Nominal.Support  Atom
 open import Nominal.Abs.Base Atom
 
 module _ {A : Type ℓ}
-  ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄
+  ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄
   ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
   ⦃ _ : FinitelySupported A ⦄ where
 

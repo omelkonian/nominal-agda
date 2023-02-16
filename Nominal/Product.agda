@@ -13,7 +13,7 @@ open import Nominal.Support Atom
 module _
   {A : Type ℓ} {B : Type ℓ′}
   ⦃ _ : ISetoid A ⦄ ⦃ _ : ISetoid B ⦄
-  ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : Setoid-Laws B ⦄
+  ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SetoidLaws B ⦄
   ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄
   ⦃ _ : SwapLaws A ⦄ ⦃ _ : SwapLaws B ⦄ where
 
@@ -25,7 +25,7 @@ module _
       .relℓ → _
       ._≈_ (a , b) (a′ , b′) → (a ≈ a′) × (b ≈ b′)
 
-    SetoidLaws-× : Setoid-Laws (A × B)
+    SetoidLaws-× : SetoidLaws (A × B)
     SetoidLaws-× .isEquivalence = record
       { refl  = ≈-refl , ≈-refl
       ; sym   = λ (i , j) → ≈-sym i , ≈-sym j

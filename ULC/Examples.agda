@@ -21,6 +21,8 @@ instance
   Enum-Atom .enum = Fun.mk↔ {f = un$} {$_} ((λ _ → refl) , (λ _ → refl))
 open import Nominal Atom
 open import ULC     Atom
+  as ULC
+  hiding (z)
 
 s = $ 0; z = $ 1; m = $ 2; n = $ 3
 a = $ 10; b = $ 11; c = $ 12; d = $ 13; e = $ 14
@@ -120,7 +122,7 @@ _ = (` a · ` a) [ a / ` b ] ≡ ` b · ` b
 _ = (` a · ` a) [ a / ` b · ` b ] ≡ (` b · ` b) · (` b · ` b)
   ∋ refl
 
-a' = $ 22 -- a + b
+a' = $ 0 -- fresh in [a, b]
 
 _ = (ƛ a ⇒ ` a) [ a / ` b ] ≡ (ƛ a' ⇒ ` a')
   ∋ refl
@@ -128,12 +130,12 @@ _ = (ƛ a ⇒ ` a) [ a / ` b ] ≡ (ƛ a' ⇒ ` a')
 _ = (` a · (ƛ a ⇒ ` a)) [ a / ` b ] ≡ ` b · (ƛ a' ⇒ ` a')
   ∋ refl
 
-b' = $ 24 -- b + c
+b' = $ 0 -- fresh in [b, c]
 
 _ = (ƛ b ⇒ ` b) [ b / ` c ] ≡ (ƛ b' ⇒ ` b')
   ∋ refl
 
-c' = $ 34 -- a + b + c
+c' = $ 0 -- fresh in [a, b, c]
 
 _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` b ] ≡ (` b · (ƛ c' ⇒ ` c' · ` b))
   ∋ refl
@@ -141,16 +143,36 @@ _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` b ] ≡ (` b · (ƛ c' ⇒ ` c' · ` 
 _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≢ (` c' · (ƛ c' ⇒ ` c' · ` c'))
   ∋ λ ()
 
-c'' = $ 57 -- a + c + c'
+c'' = $ 1 -- fresh in [a, c, c']
 
 _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≡ (` c' · (ƛ c'' ⇒ ` c'' · ` c'))
   ∋ refl
 
-{-
--- ** barendregt
-a'' = $ 21
+-- ** grown-up substitution
 
--- oops...
-_ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a'' ⇒ ` a'') · (ƛ a'' ⇒ ` a''))
+_ = (abs a $ ` a) ULC.[ ` b ] ≡ (` b)
   ∋ refl
--}
+
+_ = (abs b $ ` b) ULC.[ ` c ] ≡ (` c)
+  ∋ refl
+
+_ = (abs c $ ` c · ` a) ULC.[ ` b ] ≡ (` b · ` a)
+  ∋ refl
+
+_ = (abs b $ ` a) ULC.[ ` b ] ≡ (` a)
+  ∋ refl
+
+_ = (abs b $ ` a · ` b) ULC.[ ` c ] ≡ (` a · ` c)
+  ∋ refl
+
+_ = (abs b $ ƛ a ⇒ ` a) ULC.[ ` b ] ≡ (ƛ c'' ⇒ ` c'')
+  ∋ refl
+
+-- ** barendregt
+a'' = $ 1 -- fresh in [a]
+
+_ = barendregt (ƛ a ⇒ ƛ a ⇒ ` a · ` a) ≡ (ƛ a' ⇒ ƛ a'' ⇒ ` a'' · ` a'')
+  ∋ refl
+
+_ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a' ⇒ ` a') · (ƛ a' ⇒ ` a'))
+  ∋ refl

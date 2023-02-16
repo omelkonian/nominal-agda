@@ -43,7 +43,7 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 -- λ x → (x == 𝕒) ∨ (x == 𝕓)
 
 record FinitelySupported (A : Type ℓ)
-  ⦃ _ : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄
+  ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄
   ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω
   where
 
@@ -72,6 +72,13 @@ record FinitelySupported (A : Type ℓ)
   fresh-var : A → Atom
   fresh-var = proj₁ ∘ fresh∉
 
+  swap-fresh : ∀ {𝕒 𝕓} (x : A) →
+    ∙ 𝕒 ∉ supp x
+    ∙ 𝕓 ∉ supp x
+      ────────────────
+      ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ x
+  swap-fresh x = flip (∀fin x .proj₂ _ _)
+
   ∃fresh : ∀ (x : A) → ∃ λ 𝕒 → ∃ λ 𝕓 →
       (𝕒 ♯ x)
     × (𝕓 ♯ x)
@@ -93,9 +100,44 @@ record FinitelySupported (A : Type ℓ)
   -- T0D0: meta-programming tactic `fresh-in-context` (big sister to `deriveSwap`)
   -- NB: these tactics correspond to two fundamental axioms/notions in nominal sets
   -- (c.f. EZFA)
+
+{-
+  supp-swap : ∀ {𝕒 𝕓} (t : A) → supp (swap 𝕒 𝕓 t) ⊆ 𝕒 ∷ 𝕓 ∷ t ∷ []
+  -- ≡ swap 𝕒 𝕓 (supp t) -- [swap 𝕒 𝕓 x₁, swap 𝕒 𝕓 x₂, ...]
+  supp-swap {x}{a}{b} x∉ = ?
+
+  swap-∉ : ∀ {x 𝕒 𝕓} (t : A) → x ∉ supp t → swap 𝕒 𝕓 x ∉ supp (swap 𝕒 𝕓 t)
+  -- T0D0: add hypothesis `x ∉ [a, b]`
+  swap-∉ {x}{a}{b} x∉
+    with x ≟ a
+  ... | yes refl
+    -- b ∉ supp (swap a b t)
+    = ?
+  ... | no x≢a
+    with x ≟ b
+  ... | yes refl
+    -- a ∉ supp (swap a b t)
+    = ?
+  ... | no x≢b
+    -- x ∉ supp (swap a b t)
+    = ?
+-}
 open FinitelySupported ⦃...⦄ public
 
 instance
   FinSupp-Atom : FinitelySupported Atom
   FinSupp-Atom .∀fin 𝕒 = [ 𝕒 ] , λ _ _ y∉ z∉ →
     swap-noop _ _ _ λ where ♯0 → z∉ ♯0; ♯1 → y∉ ♯0
+
+private pattern 𝟘 = here refl; pattern 𝟙 = there 𝟘; pattern 𝟚 = there 𝟙
+
+-- T0D0: generalize this to more complex types than Atom (c.f. supp-swap above)
+supp-swap-atom : ∀ {𝕒 𝕓} (t : Atom) → supp (swap 𝕒 𝕓 t) ⊆ 𝕒 ∷ 𝕓 ∷ t ∷ []
+-- supp (swap 𝕒 𝕓 t) ≡ swap 𝕒 𝕓 (supp t)
+supp-swap-atom {a}{b} t
+  with t ≟ a
+... | yes refl = λ where 𝟘 → 𝟙
+... | no _
+  with t ≟ b
+... | yes refl = λ where 𝟘 → 𝟘
+... | no _     = λ where 𝟘 → 𝟚

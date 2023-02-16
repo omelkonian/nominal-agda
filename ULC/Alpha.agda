@@ -118,7 +118,7 @@ mutual
   ≡α-trans (ζ≡ f≈g) (ζ≡ g≈h) = ζ≡ ≗α-trans f≈g g≈h
 
 instance
-  SetoidLaws-Term : Setoid-Laws Term
+  SetoidLaws-Term : SetoidLaws Term
   SetoidLaws-Term .isEquivalence = record {refl = ≡α-refl _; sym = ≡α-sym; trans = ≡α-trans}
 
   {-# TERMINATING #-}
@@ -154,7 +154,7 @@ instance
           supᵐ , pᵐ = ∀fin m
       in (supˡ ++ supᵐ) , λ a b a∉ b∉ →
       ξ≡ (pˡ a b (a∉ ∘ ∈-++⁺ˡ) (b∉ ∘ ∈-++⁺ˡ))
-          (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
+         (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
     (ƛ x ⇒ t) → fin-ƛ t (∀fin t) x
      where
       cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
@@ -181,3 +181,8 @@ supp-ξ = refl
 
 supp-ƛ : supp (ƛ x ⇒ N) ≡ x ∷ supp N
 supp-ƛ = refl
+
+-- T0D0: this does not hold in the current setting I believe
+postulate
+  supp-abs⊆ : ∀ (t̂ : Abs Term) {a b} (a∉ : a ∉ supp t̂) (b∉ : b ∉ supp t̂) →
+    (∀fin t̂ .proj₂ a b) a∉ b∉ .proj₁ ⊆ supp t̂

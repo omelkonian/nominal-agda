@@ -67,7 +67,7 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 -}
 
 
-  module _ ⦃ setoidA : ISetoid A ⦄ ⦃ _ : Setoid-Laws A ⦄ ⦃ _ : SwapLaws A ⦄ where
+  module _ ⦃ setoidA : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SwapLaws A ⦄ where
 
     open Actionˡ
 

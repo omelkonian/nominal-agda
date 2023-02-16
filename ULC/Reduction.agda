@@ -1,5 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-open import Prelude.Init; open SetAsType
+open import Prelude.Init hiding ([_]); open SetAsType
 open import Prelude.DecEq
 open import Prelude.InfEnumerable
 open import Prelude.InferenceRules
@@ -12,7 +11,7 @@ open import Prelude.Setoid
 
 module ULC.Reduction (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import ULC.Base         Atom ⦃ it ⦄
+open import ULC.Base         Atom ⦃ it ⦄ hiding (z)
 open import ULC.Measure      Atom ⦃ it ⦄
 open import ULC.Alpha        Atom ⦃ it ⦄
 open import ULC.Substitution Atom ⦃ it ⦄
@@ -175,6 +174,7 @@ data _⇛_ : Rel₀ Term where
     ∙ N ⇛ N′
     ∙ M ⇛ M′
       ─────────────────────────────
+      -- (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
       (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
 
 open ReflexiveTransitiveClosure _⇛_
@@ -255,13 +255,46 @@ sub-swap :
   N ⇛ N′
   ──────────────────────────
   swap x y N ⇛ swap x y N′
-sub-swap p = {!!}
+sub-swap ν⇛ = ν⇛
+sub-swap (ζ⇛ p) = ζ⇛ (sub-swap p)
+sub-swap (ξ⇛ p q) = ξ⇛ (sub-swap p) (sub-swap q)
+sub-swap {x = 𝕒}{𝕓} (β⇛ {N}{N′}{M}{M′}{x} p q) = -- {!ξ⇛ ? (sub-swap q)!}
+  -- β⇛ :
+  --   ∙ N ⇛ N′
+  --   ∙ M ⇛ M′
+  --     ─────────────────────────────
+  --     (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
+  qed
+  where
+    a↔b = swap 𝕒 𝕓
+    a↔b↓ = (Atom → Atom) ∋ swap 𝕒 𝕓
 
-sub-conc : ∀ {f f′ : Abs Term} →
-  ƛ f ⇛ ƛ f′
-  ────────────────────
-  conc f x ⇛ conc f′ x
-sub-conc (ζ⇛ p) = sub-swap p
+    -- ƛN⇛ : (ƛ x ⇒ N) ⇛ (ƛ x ⇒ N′)
+    -- ƛN⇛ = ζ⇛ p
+
+    -- N⇛ : a↔b (ƛ x ⇒ N) ⇛ a↔b (ƛ x ⇒ N′)
+    -- N⇛ = sub-swap ƛN⇛
+
+    N⇛ : a↔b N ⇛ a↔b N′
+    N⇛ = sub-swap p
+
+    M⇛ : a↔b M ⇛ a↔b M′
+    M⇛ = sub-swap q
+
+    H : a↔b (ƛ x ⇒ N) · a↔b M ⇛ a↔b N′ [ a↔b↓ x / a↔b M′ ]
+    H = β⇛ N⇛ M⇛
+
+    qed : a↔b (ƛ x ⇒ N) · a↔b M ⇛ a↔b (N′ [ x / M′ ])
+    -- ≡ (ƛ a↔b x ⇒ a↔b N) · a↔b M
+    -- ⇛⟨ β⇛ N⇛ M⇛ ⟩ a↔b N′ [ a↔b x / a↔b M′ ]
+    -- ≡⟨ ? ⟩ a↔b (N′ [ x / M′ ])
+    qed = {!!}
+
+-- sub-conc : ∀ {f f′ : Abs Term} →
+--   ƛ f ⇛ ƛ f′
+--   ────────────────────
+--   conc f x ⇛ conc f′ x
+-- sub-conc (ζ⇛ p) = sub-swap p
 
 {-# TERMINATING #-}
 sub-par :
@@ -357,106 +390,106 @@ sub-par {M = X}{X′}{𝕒} (β⇛ {N}{N′}{M}{M′}{x} p q) pq =
     qed = subst (_ ⇛_) eq qed′
 -}
 
-_⁺ : Op₁ Term
-_⁺ = λ where
-  (` x)           → ` x
-  (ƛ x ⇒ M)       → ƛ x ⇒ (M ⁺)
-  ((ƛ x ⇒ N) · M) → N ⁺ [ x / M ⁺ ]
-  (L · M)         → (L ⁺) · (M ⁺)
+-- _⁺ : Op₁ Term
+-- _⁺ = λ where
+--   (` x)           → ` x
+--   (ƛ x ⇒ M)       → ƛ x ⇒ (M ⁺)
+--   ((ƛ x ⇒ N) · M) → N ⁺ [ x / M ⁺ ]
+--   (L · M)         → (L ⁺) · (M ⁺)
 
-par-⦊ :
-  M ⇛ N
-  ───────
-  N ⇛ M ⁺
-par-⦊ ν⇛ = ν⇛
-par-⦊ (ζ⇛ p) = ζ⇛ (par-⦊ p)
-par-⦊ (β⇛ p p′) = sub-par (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {_ · _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {` _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {ƛ _} (ζ⇛ p) p′) = β⇛ (par-⦊ p) (par-⦊ p′)
+-- par-⦊ :
+--   M ⇛ N
+--   ───────
+--   N ⇛ M ⁺
+-- par-⦊ ν⇛ = ν⇛
+-- par-⦊ (ζ⇛ p) = ζ⇛ (par-⦊ p)
+-- par-⦊ (β⇛ p p′) = sub-par (par-⦊ p) (par-⦊ p′)
+-- par-⦊ (ξ⇛ {_ · _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
+-- par-⦊ (ξ⇛ {` _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
+-- par-⦊ (ξ⇛ {ƛ _} (ζ⇛ p) p′) = β⇛ (par-⦊ p) (par-⦊ p′)
 
-par-⦉ = par-⦊
+-- par-⦉ = par-⦊
 
-par-◇ :
-  ∙ M ⇛ N
-  ∙ M ⇛ N′
-    ──────────────────────────
-    ∃ λ L → (N ⇛ L) × (N′ ⇛ L)
-par-◇ {M = M} p p′ = M ⁺ , par-⦉ p , par-⦊ p′
+-- par-◇ :
+--   ∙ M ⇛ N
+--   ∙ M ⇛ N′
+--     ──────────────────────────
+--     ∃ λ L → (N ⇛ L) × (N′ ⇛ L)
+-- par-◇ {M = M} p p′ = M ⁺ , par-⦉ p , par-⦊ p′
 
-strip :
-  ∙ M ⇛ N
-  ∙ M ⇛∗ N′
-    ──────────────────────────
-    ∃ λ L → (N ⇛∗ L) × (N′ ⇛ L)
-strip mn (_ ⇛∎) = -, (_ ⇛∎) , mn
-strip mn (_ ⇛⟨ mm' ⟩ m'n') =
-  let _ , ll' , n'l' = strip (par-⦊ mm') m'n'
-  in  -, (_ ⇛⟨ par-⦊ mn ⟩ ll') , n'l'
+-- strip :
+--   ∙ M ⇛ N
+--   ∙ M ⇛∗ N′
+--     ──────────────────────────
+--     ∃ λ L → (N ⇛∗ L) × (N′ ⇛ L)
+-- strip mn (_ ⇛∎) = -, (_ ⇛∎) , mn
+-- strip mn (_ ⇛⟨ mm' ⟩ m'n') =
+--   let _ , ll' , n'l' = strip (par-⦊ mm') m'n'
+--   in  -, (_ ⇛⟨ par-⦊ mn ⟩ ll') , n'l'
 
-par-confluence :
-  ∙ L ⇛∗ M₁
-  ∙ L ⇛∗ M₂
-    ──────────────────────────
-    ∃ λ N → (M₁ ⇛∗ N) × (M₂ ⇛∗ N)
-par-confluence (_ ⇛∎) p = -, p , (_ ⇛∎)
-par-confluence (_ ⇛⟨ L⇛M₁ ⟩ M₁⇛*M₁′) L⇛*M₂ =
-  let _ , M₁⇛*N , M₂⇛N    = strip L⇛M₁ L⇛*M₂
-      _ , M₁′⇛*N′ , N⇛*N′ = par-confluence M₁⇛*M₁′ M₁⇛*N
-   in -, M₁′⇛*N′ , (_ ⇛⟨ M₂⇛N ⟩ N⇛*N′)
+-- par-confluence :
+--   ∙ L ⇛∗ M₁
+--   ∙ L ⇛∗ M₂
+--     ──────────────────────────
+--     ∃ λ N → (M₁ ⇛∗ N) × (M₂ ⇛∗ N)
+-- par-confluence (_ ⇛∎) p = -, p , (_ ⇛∎)
+-- par-confluence (_ ⇛⟨ L⇛M₁ ⟩ M₁⇛*M₁′) L⇛*M₂ =
+--   let _ , M₁⇛*N , M₂⇛N    = strip L⇛M₁ L⇛*M₂
+--       _ , M₁′⇛*N′ , N⇛*N′ = par-confluence M₁⇛*M₁′ M₁⇛*N
+--    in -, M₁′⇛*N′ , (_ ⇛⟨ M₂⇛N ⟩ N⇛*N′)
 
-confluence :
-  ∙ L —↠ M₁
-  ∙ L —↠ M₂
-    ─────────────────────────────
-    ∃ λ N → (M₁ —↠ N) × (M₂ —↠ N)
-confluence L↠M₁ L↠M₂ =
-  let _ , M₁⇛N , M₂⇛N = par-confluence (betas-pars L↠M₁) (betas-pars L↠M₂)
-  in -, pars-betas M₁⇛N , pars-betas M₂⇛N
+-- confluence :
+--   ∙ L —↠ M₁
+--   ∙ L —↠ M₂
+--     ─────────────────────────────
+--     ∃ λ N → (M₁ —↠ N) × (M₂ —↠ N)
+-- confluence L↠M₁ L↠M₂ =
+--   let _ , M₁⇛N , M₂⇛N = par-confluence (betas-pars L↠M₁) (betas-pars L↠M₂)
+--   in -, pars-betas M₁⇛N , pars-betas M₂⇛N
 
-{- Version working with an abstract `Atom` type and rewriting with decidable equalitx′.
-  open import Relation.Nullarx′.Decidable using (isYes≗does)
-  private
-    postulate
-      𝕒 𝕓 𝕔 : Atom
-      b≢a : 𝕓 ≢ 𝕒
+-- {- Version working with an abstract `Atom` type and rewriting with decidable equalitx′.
+--   open import Relation.Nullarx′.Decidable using (isYes≗does)
+--   private
+--     postulate
+--       𝕒 𝕓 𝕔 : Atom
+--       b≢a : 𝕓 ≢ 𝕒
 
-    rw₁ : isYes (𝕒 ≟ 𝕒) ≡ true
-    rw₁ rewrite ≟-refl 𝕒 = refl
-    {-` REWRITE rw₁ `-}
-    rw₂ : isYes (𝕓 ≟ 𝕓) ≡ true
-    rw₂ rewrite ≟-refl 𝕓 = refl
-    {-` REWRITE rw₂ `-}
-    rw₃ : isYes (𝕓 ≟ 𝕒) ≡ false
-    rw₃ rewrite isYes≗does (𝕓 ≟ 𝕒) | dec-false (𝕓 ≟ 𝕒) b≢a = refl
-    {-` REWRITE rw₃ `-}
-    rw₄ : isYes (𝕒 ≟ 𝕓) ≡ false
-    rw₄ rewrite isYes≗does (𝕒 ≟ 𝕓) | dec-false (𝕒 ≟ 𝕓) (b≢a ∘ sym) = refl
-    {-` REWRITE rw₄ `-}
+--     rw₁ : isYes (𝕒 ≟ 𝕒) ≡ true
+--     rw₁ rewrite ≟-refl 𝕒 = refl
+--     {-` REWRITE rw₁ `-}
+--     rw₂ : isYes (𝕓 ≟ 𝕓) ≡ true
+--     rw₂ rewrite ≟-refl 𝕓 = refl
+--     {-` REWRITE rw₂ `-}
+--     rw₃ : isYes (𝕓 ≟ 𝕒) ≡ false
+--     rw₃ rewrite isYes≗does (𝕓 ≟ 𝕒) | dec-false (𝕓 ≟ 𝕒) b≢a = refl
+--     {-` REWRITE rw₃ `-}
+--     rw₄ : isYes (𝕒 ≟ 𝕓) ≡ false
+--     rw₄ rewrite isYes≗does (𝕒 ≟ 𝕓) | dec-false (𝕒 ≟ 𝕓) (b≢a ∘ sym) = refl
+--     {-` REWRITE rw₄ `-}
 
-    -- ** example swapping in a λ-term
-    _ : swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
-    _ = refl
+--     -- ** example swapping in a λ-term
+--     _ : swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
+--     _ = refl
 
-    _ = swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
-      ∋ refl
+--     _ = swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
+--       ∋ refl
 
-    `id = ƛ abs 𝕒 (` 𝕒)
+--     `id = ƛ abs 𝕒 (` 𝕒)
 
-    _ = swap 𝕒 𝕓 `id ≡ ƛ (abs 𝕓 (` 𝕓))
-      ∋ refl
+--     _ = swap 𝕒 𝕓 `id ≡ ƛ (abs 𝕓 (` 𝕓))
+--       ∋ refl
 
-    -- this is the expected behaviour, doesn't matter denotationallx′
-    -- onlx′ need a smarter `swap` for efficiencx′ (e.g. using support indices)
-    -- e.g. in `swap a b (\{⋯a⋯b⋯}. x₁ * a * ⋯ xᵢ ⋯ * (b + ⋯))`
-    --      do not go inside the term as an optimix′ation
-    -- FUTURE: name restriction (e.g. used in iEUTxO instead of abstraction)
-    _ = swap 𝕒 𝕓 ((ƛ abs 𝕒 (` 𝕒)) · ` 𝕒)
-                ≡ (ƛ abs 𝕓 (` 𝕓)) · ` 𝕓
-      ∋ refl
+--     -- this is the expected behaviour, doesn't matter denotationallx′
+--     -- onlx′ need a smarter `swap` for efficiencx′ (e.g. using support indices)
+--     -- e.g. in `swap a b (\{⋯a⋯b⋯}. x₁ * a * ⋯ xᵢ ⋯ * (b + ⋯))`
+--     --      do not go inside the term as an optimix′ation
+--     -- FUTURE: name restriction (e.g. used in iEUTxO instead of abstraction)
+--     _ = swap 𝕒 𝕓 ((ƛ abs 𝕒 (` 𝕒)) · ` 𝕒)
+--                 ≡ (ƛ abs 𝕓 (` 𝕓)) · ` 𝕓
+--       ∋ refl
 
-    _ : (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —↠ ` 𝕒 · ` 𝕓
-    _ = begin (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —→⟨ β ⟩
-              (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) · ` 𝕒                   —→⟨ β ⟩
-              ` 𝕒 · ` 𝕓                                     ∎
--}
+--     _ : (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —↠ ` 𝕒 · ` 𝕓
+--     _ = begin (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —→⟨ β ⟩
+--               (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) · ` 𝕒                   —→⟨ β ⟩
+--               ` 𝕒 · ` 𝕓                                     ∎
+-- -}
