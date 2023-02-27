@@ -1,4 +1,6 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Prelude.Init hiding ([_]); open SetAsType
+open L.Mem
 open import Prelude.DecEq
 open import Prelude.InfEnumerable
 open import Prelude.InferenceRules
@@ -11,7 +13,7 @@ open import Prelude.Setoid
 
 module ULC.Reduction (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
-open import ULC.Base         Atom ⦃ it ⦄ hiding (z)
+open import ULC.Base         Atom ⦃ it ⦄ hiding (z; x′)
 open import ULC.Measure      Atom ⦃ it ⦄
 open import ULC.Alpha        Atom ⦃ it ⦄
 open import ULC.Substitution Atom ⦃ it ⦄
@@ -64,7 +66,49 @@ abs-cong (M ∎) = ƛ _ ⇒ M ∎
 abs-cong (L —→⟨ r ⟩ rs) = ƛ _ ⇒ L —→⟨ ζ r ⟩ abs-cong rs
 
 private
-  postulate s z n m : Atom
+  postulate
+    s z n m : Atom
+    s≠z : s ≢ z
+
+  infixr 2 _≡⟨_⟩_ _≡⟨⟩_
+  _≡⟨_⟩_ : (t : Term) → t ≡ t′ → t′ —↠ t″ → t —↠ t″
+  _ ≡⟨ refl ⟩ p = p
+
+  _≡⟨⟩_ : (t : Term) → t —↠ t′ → t —↠ t′
+  _ ≡⟨⟩ p = _ ≡⟨ refl ⟩ p
+
+  open import Prelude.General
+
+  _ : (ƛ s ⇒ ` s) · ` z —↠ ` z
+  _ = begin
+      (ƛ s ⇒ ` s) · ` z
+    —→⟨ β ⟩
+      (` s) [ s / ` z ]
+    ≡⟨⟩
+      (if s == s then ` z else ` s)
+    ≡⟨ if-true $ cong isYes $ ≟-refl s ⟩
+      ` z
+    ∎
+
+  $z = freshAtom (s ∷ z ∷ s ∷ z ∷ [])
+
+  _ : (ƛ s ⇒ ƛ z ⇒ ` s) · ` z —↠ (ƛ $z ⇒ ` z)
+  _ =
+    begin
+      (ƛ s ⇒ ƛ z ⇒ ` s) · ` z
+    —→⟨ β ⟩
+      (ƛ z ⇒ ` s) [ s / ` z ]
+    ≡⟨⟩
+      (ƛ $z ⇒ conc (abs z $ ` s) $z [ s / ` z ])
+    ≡⟨⟩
+      (ƛ $z ⇒ swap $z z (` s) [ s / ` z ])
+    ≡⟨ cong (λ ◆ → ƛ $z ⇒ (` ◆) [ s / ` z ]) $ swap-noop $z z s (λ where
+         (here eq) → freshAtom∉ $ here $′ sym eq
+         (there (here eq)) → s≠z eq) ⟩
+      (ƛ $z ⇒ ` s [ s / ` z ])
+    ≡⟨ cong (λ ◆ → ƛ $z ⇒ ◆) $ if-true $ cong isYes $ ≟-refl s ⟩
+      (ƛ $z ⇒ ` z)
+    ∎
 
   zeroᶜ = ƛ s ⇒ ƛ z ⇒ ` z
   sucᶜ  = ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ ` s · (` n · ` s · ` z)
@@ -77,26 +121,44 @@ private
   twoᶜ  = ƛ s ⇒ ƛ z ⇒ ` s · (` s · ` z)
   fourᶜ = ƛ s ⇒ ƛ z ⇒ ` s · (` s · (` s · (` s · ` z)))
   plusᶜ = ƛ m ⇒ ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z))
-  2+2ᶜ  = plusᶜ · twoᶜ · twoᶜ
+  2+2ᶜ : Term
+  2+2ᶜ = plusᶜ · twoᶜ · twoᶜ
 
 {-
   _ : 2+2ᶜ —↠ fourᶜ
   _ =
     begin
       (plusᶜ · twoᶜ) · twoᶜ
+    ≡⟨⟩
+      ( (ƛ m ⇒ ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z)))
+      · (ƛ s ⇒ ƛ z ⇒ ` s · (` s · ` z))
+      ) · twoᶜ
     —→⟨ ξ₁ β ⟩
-      (ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ twoᶜ · ` s · (` n · ` s · ` z)) · twoᶜ
-    —→⟨ β ⟩
-      ƛ s ⇒ ƛ z ⇒ twoᶜ · ` s · (twoᶜ · ` s · ` z)
-    —→⟨ ζ ζ ξ₁ β ⟩
-      ƛ s ⇒ ƛ z ⇒ (ƛ z ⇒ ` s · (` s · ` z)) · (twoᶜ · ` s · ` z)
-    —→⟨ ζ ζ β ⟩
-      ƛ s ⇒ ƛ z ⇒ ` s · (` s · (twoᶜ · ` s · ` z))
-    —→⟨ ζ ζ ξ₂ ξ₂ ξ₁ β ⟩
-      ƛ s ⇒ ƛ z ⇒ ` s · (` s · ((ƛ z ⇒ ` s · (` s · ` z)) · ` z))
-    —→⟨ ζ ζ ξ₂ ξ₂ β ⟩
+      let
+        n′ = freshAtom (m ∷ n ∷ supp (ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z))) ++ supp (ƛ s ⇒ ƛ z ⇒ ` s · (` s · ` z)))
+        s′ = freshAtom (m ∷ {!n ∷ ?!})
+        z′ = freshAtom (m ∷ {!!})
+      in
+      ( ƛ n′ ⇒ ƛ s′ ⇒ ƛ z′ ⇒ {!!}
+          -- ((ƛ s′ ⇒ ƛ z′ ⇒ ` s′ · (` s′ · ` z′)) · ` s′ · (` n′ · ` s′ · ` z′))
+      ) · twoᶜ
+    —→⟨ {!!} ⟩
+    -- —→⟨ ξ₁ β ⟩
+    --   ( (ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ (` m · ` s · (` n · ` s · ` z))) [ m / twoᶜ ]
+    --   ) · twoᶜ
+    --   (ƛ n ⇒ ƛ s ⇒ ƛ z ⇒ twoᶜ · ` s · (` n · ` s · ` z)) · twoᶜ
+    -- —→⟨ β ⟩
+    --   ƛ s ⇒ ƛ z ⇒ twoᶜ · ` s · (twoᶜ · ` s · ` z)
+    -- —→⟨ ζ ζ ξ₁ β ⟩
+    --   ƛ s ⇒ ƛ z ⇒ (ƛ z ⇒ ` s · (` s · ` z)) · (twoᶜ · ` s · ` z)
+    -- —→⟨ ζ ζ β ⟩
+    --   ƛ s ⇒ ƛ z ⇒ ` s · (` s · (twoᶜ · ` s · ` z))
+    -- —→⟨ ζ ζ ξ₂ ξ₂ ξ₁ β ⟩
+    --   ƛ s ⇒ ƛ z ⇒ ` s · (` s · ((ƛ z ⇒ ` s · (` s · ` z)) · ` z))
+    -- —→⟨ ζ ζ ξ₂ ξ₂ β ⟩
       ƛ s ⇒ ƛ z ⇒ ` s · (` s · (` s · (` s · ` z)))
-      -- fourᶜ
+    ≡⟨⟩
+      fourᶜ
     ∎
 -}
 
@@ -288,7 +350,7 @@ sub-swap {x = 𝕒}{𝕓} (β⇛ {N}{N′}{M}{M′}{x} p q) = -- {!ξ⇛ ? (sub-
     -- ≡ (ƛ a↔b x ⇒ a↔b N) · a↔b M
     -- ⇛⟨ β⇛ N⇛ M⇛ ⟩ a↔b N′ [ a↔b x / a↔b M′ ]
     -- ≡⟨ ? ⟩ a↔b (N′ [ x / M′ ])
-    qed = {!!}
+    qed = {!!} -- subst (λ ◆ → a↔b (ƛ x ⇒ N) · a↔b M ⇛ ◆) (swap-conc 𝕒 𝕓) H
 
 -- sub-conc : ∀ {f f′ : Abs Term} →
 --   ƛ f ⇛ ƛ f′
@@ -316,8 +378,6 @@ sub-par (ξ⇛ L→ M→) p =
   --     ──────────────────
   --     ƛ x ⇒ N ⇛ ƛ x ⇒ N′
 sub-par {M = M}{M′}{𝕒} (ζ⇛ {N}{N′}{x} p) q =
-  {!!}
-{-
   qed
   where
     x′ x′′ : Atom
@@ -347,7 +407,7 @@ sub-par {M = M}{M′}{𝕒} (ζ⇛ {N}{N′}{x} p) q =
     qed : (ƛ x ⇒ N) [ 𝕒 / M ] ⇛ (ƛ x ⇒ N′) [ 𝕒 / M′ ]
     -- qed : (ƛ N̂) [ 𝕒 / M ] ⇛ (ƛ N̂′) [ 𝕒 / M′ ]
     qed = {!!} -- ƛs↔p′
--}
+
   -- β⇛ :
   --   ∙ N ⇛ N′
   --   ∙ M ⇛ M′
