@@ -1,5 +1,6 @@
 {- MOTTO: permutations distribute over everything -}
 open import Prelude.Init; open SetAsType
+open L.Mem
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
@@ -77,7 +78,7 @@ swapʳ 𝕒 𝕓 with 𝕓 ≟ 𝕒
         | ≟-refl 𝕓
         = refl
 
-swap-noop : ∀ 𝕒 𝕓 x → x L.Mem.∉ 𝕒 ∷ 𝕓 ∷ []  → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≡ x
+swap-noop : ∀ 𝕒 𝕓 x → x ∉ 𝕒 ∷ 𝕓 ∷ []  → ⦅ 𝕒 ↔ 𝕓 ⦆ x ≡ x
 swap-noop 𝕒 𝕓 x x∉ with x ≟ 𝕒
 ... | yes refl = ⊥-elim $ x∉ $ here refl
 ... | no _ with x ≟ 𝕓

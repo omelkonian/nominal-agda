@@ -10,6 +10,12 @@ module Nominal.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable�
 open import Nominal.New  Atom
 open import Nominal.Swap Atom
 
+freshAtom : Atoms → Atom
+freshAtom = proj₁ ∘ minFresh
+
+freshAtom∉ : ∀ {xs : Atoms} → freshAtom xs ∉ xs
+freshAtom∉ {xs} = minFresh xs .proj₂
+
 private variable A : Type ℓ; B : Type ℓ′
 
 module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
