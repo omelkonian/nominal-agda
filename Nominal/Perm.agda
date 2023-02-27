@@ -93,5 +93,5 @@ module _ {ℓ} {A : Type ℓ} ⦃ _ : Swap A ⦄ where
       .setoidX → setoidA
       .action′ → Perms-Action
 
-    open GSet-Morphisms Perms public
+    open GSet-Morphisms Perms public renaming (equivariant to gset-equiv)
     -- equivariant maps betweens G-sets X and Y are denoted X —𝔾→ Y.
