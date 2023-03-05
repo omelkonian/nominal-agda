@@ -9,8 +9,9 @@ open import Prelude.InfEnumerable
 
 module Nominal.Fun (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
-open import Nominal.Swap    Atom
+open import Nominal.Swap Atom
 open import Nominal.Support Atom
+open import Nominal.MinSupport Atom
 
 module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ where
 
@@ -181,6 +182,41 @@ module _
             f (⦅ a ↔ b ⦆ x)
           ∎
 
+  equivariant-equiv-min : ∀ {f : A → A} →
+    Equivariant f
+    ═════════════════
+    MinEquivariant′ f
+  equivariant-equiv-min {f = f} = ↝ , ↜
+      where
+        open ≈-Reasoning
+
+        ↝ : Equivariant f
+            ───────────────────
+            MinEquivariant′ f
+        ↝ equiv-f = fin-f , refl
+          where
+            fin-f : MinFinSupp f
+            fin-f = [] , (λ x y _ _ a →
+              begin
+                ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
+              ≈˘⟨ cong-swap $ equiv-f _ _ ⟩
+                ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
+              ≈⟨ swap-sym′ ⟩
+                f a
+              ∎) , λ _ _ ()
+
+        ↜ : MinEquivariant′ f
+            ───────────────────
+            Equivariant f
+        ↜ (fin-f , refl) a b {x} =
+          begin
+            ⦅ a ↔ b ⦆ f x
+          ≈˘⟨ cong-swap $ fin-f .proj₂ .proj₁ _ _ (λ ()) (λ ()) _ ⟩
+            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
+          ≈⟨ swap-sym′ ⟩
+            f (⦅ a ↔ b ⦆ x)
+          ∎
+
   private
     f′ : A → A
     f′ = id
@@ -199,8 +235,8 @@ module _
     fin-f : FinSupp f′
     fin-f = suppF′ , λ _ _ _ _ _ → swap-sym′
 
-    min-fin-f : MinFinSupp fin-f
-    min-fin-f _ _ ()
+    min-fin-f : MinFinSupp f′
+    min-fin-f = suppF′ , (λ _ _ _ _ _ → swap-sym′) , (λ _ _ ())
 
     equiv-f : Equivariant f′
     equiv-f _ _ = ≈-refl

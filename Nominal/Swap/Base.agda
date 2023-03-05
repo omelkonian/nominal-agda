@@ -85,8 +85,10 @@ swap-noop 𝕒 𝕓 x x∉ with x ≟ 𝕒
 ... | yes refl = ⊥-elim $ x∉ $ there $′ here refl
 ... | no _ = refl
 
-pattern ♯0 = here refl
-pattern ♯1 = there (here refl)
+pattern 𝟘 = here refl
+pattern 𝟙 = there 𝟘
+pattern 𝟚 = there 𝟙
+pattern 𝟛 = there 𝟚
 
 module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : LawfulSetoid A ⦄ where
 
@@ -110,8 +112,8 @@ module _ (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : LawfulSetoid A ⦄ where
       ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕔 ↔ 𝕕 ⦆ x ≈ ⦅ 𝕔 ↔ 𝕕 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x
     swap-comm {𝕒 = a}{b}{c}{d}{x} ab♯cd
       with eq ← swap-swap {𝕒 = a}{b}{c}{d}{x}
-      rewrite swap-noop a b c $ ab♯cd ∘ (_, ♯0)
-            | swap-noop a b d $ ab♯cd ∘ (_, ♯1)
+      rewrite swap-noop a b c $ ab♯cd ∘ (_, 𝟘)
+            | swap-noop a b d $ ab♯cd ∘ (_, 𝟙)
             = eq
 
     swap-sym′ : ⦅ 𝕒 ↔ 𝕓 ⦆ ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ x
@@ -212,11 +214,11 @@ instance
   ... | yes refl {-c≡b-} | yes refl {-d≡b-} {- 𝕓 ≈ ⦅ 𝕒 ↔ 𝕒 ⦆ 𝕓 -}
     rewrite swap-id {𝕒 = a} {x = b} = refl
   ... | yes refl {-c≡b-} | no d≢b {- 𝕓 ≈ ⦅ 𝕒 ↔ 𝕕 ⦆ 𝕓 -}
-    rewrite swap-noop a d b (λ where ♯0 → a≢b refl; ♯1 → d≢b refl) = refl
+    rewrite swap-noop a d b (λ where 𝟘 → a≢b refl; 𝟙 → d≢b refl) = refl
   ... | no c≢b | yes refl {-d≡b-} {- 𝕓 ≈ ⦅ 𝕔 ↔ 𝕒 ⦆ 𝕓 -}
-    rewrite swap-noop c a b (λ where ♯0 → c≢b refl; ♯1 → a≢b refl) = refl
+    rewrite swap-noop c a b (λ where 𝟘 → c≢b refl; 𝟙 → a≢b refl) = refl
   ... | no c≢b | no d≢b {- 𝕓 ≈ ⦅ 𝕔 ↔ 𝕕 ⦆ 𝕓 -}
-    rewrite swap-noop c d b (λ where ♯0 → c≢b refl; ♯1 → d≢b refl) = refl
+    rewrite swap-noop c d b (λ where 𝟘 → c≢b refl; 𝟙 → d≢b refl) = refl
   SwapLaws-Atom .swap-swap {𝕒 = a}{b}{c}{d}{x}
     | no a≢b | no c≢d | no x≢c | no x≢d | no x≢a
   {- ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ ⦅ ✓𝕒 ↔ 𝕓 ⦆ x -}
@@ -228,46 +230,46 @@ instance
   ... | yes refl {-c≡a-} | yes refl {-d≡a-} = ⊥-elim $ c≢d refl
   ... | yes refl {-c≡a-} | no d≢a {- 𝕒 ≈ ⦅ 𝕓 ↔ ⦅ ✓𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ 𝕒 -}
     rewrite dec-no (d ≟ b) (≢-sym b≢d) .proj₂
-          | swap-noop b d a (λ where ♯0 → a≢b refl; ♯1 → d≢a refl)
+          | swap-noop b d a (λ where 𝟘 → a≢b refl; 𝟙 → d≢a refl)
           = refl
   ... | no c≢a | yes refl {-d≡a-} {- 𝕒 ≈ ⦅ ⦅ ✓𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ 𝕓 ⦆ 𝕒 -}
     rewrite dec-no (c ≟ b) (≢-sym b≢c) .proj₂
-          | swap-noop c b a (λ where ♯0 → c≢a refl; ♯1 → a≢b refl)
+          | swap-noop c b a (λ where 𝟘 → c≢a refl; 𝟙 → a≢b refl)
           = refl
   ... | no c≢a | no d≢a {- 𝕒 ≈ ⦅ ⦅ ✓𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ ✓𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ 𝕒 -}
     rewrite dec-no (c ≟ b) (≢-sym b≢c) .proj₂
           | dec-no (d ≟ b) (≢-sym b≢d) .proj₂
-          | swap-noop c d a (λ where ♯0 → c≢a refl; ♯1 → d≢a refl)
+          | swap-noop c d a (λ where 𝟘 → c≢a refl; 𝟙 → d≢a refl)
           = refl
   SwapLaws-Atom .swap-swap {𝕒 = a}{b}{c}{d}{x}
     | no a≢b | no c≢d | no x≢c | no x≢d | no x≢a | no x≢b
   {- ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ x -}
-    rewrite swap-noop a b x (λ where ♯0 → x≢a refl; ♯1 → x≢b refl)
+    rewrite swap-noop a b x (λ where 𝟘 → x≢a refl; 𝟙 → x≢b refl)
   {- x ≈ ⦅ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔 ↔ ⦅ 𝕒 ↔ 𝕓 ⦆ 𝕕 ⦆ x -}
     with c ≟ a | c ≟ b | d ≟ a | d ≟ b
   ... | yes refl | _ | yes refl | _ = ⊥-elim $ c≢d refl
   ... | yes refl | _ | no d≢a   | yes refl
     {- x ≈ ⦅ 𝕓 ↔ 𝕒 ⦆ x -}
-    rewrite swap-noop b a x (λ where ♯0 → x≢b refl; ♯1 → x≢a refl) = refl
+    rewrite swap-noop b a x (λ where 𝟘 → x≢b refl; 𝟙 → x≢a refl) = refl
   ... | yes refl | _ | no d≢a   | no d≢b
     {- x ≈ ⦅ 𝕓 ↔ 𝕕 ⦆ x -}
-    rewrite swap-noop b d x (λ where ♯0 → x≢b refl; ♯1 → x≢d refl) = refl
+    rewrite swap-noop b d x (λ where 𝟘 → x≢b refl; 𝟙 → x≢d refl) = refl
   ... | _ | yes refl | _ | yes refl = ⊥-elim $ c≢d refl
   ... | no c≢a | yes refl | yes refl | _
     {- x ≈ ⦅ 𝕒 ↔ 𝕓 ⦆ x -}
-    rewrite swap-noop a b x (λ where ♯0 → x≢a refl; ♯1 → x≢b refl) = refl
+    rewrite swap-noop a b x (λ where 𝟘 → x≢a refl; 𝟙 → x≢b refl) = refl
   ... | no c≢a | yes refl | no d≢a | no d≢b
     {- x ≈ ⦅ 𝕒 ↔ d ⦆ x -}
-    rewrite swap-noop a d x (λ where ♯0 → x≢a refl; ♯1 → x≢d refl) = refl
+    rewrite swap-noop a d x (λ where 𝟘 → x≢a refl; 𝟙 → x≢d refl) = refl
   ... | no c≢a | no c≢b | yes refl | _
     {- x ≈ ⦅ 𝕔 ↔ 𝕓 ⦆ x -}
-    rewrite swap-noop c b x (λ where ♯0 → x≢c refl; ♯1 → x≢b refl) = refl
+    rewrite swap-noop c b x (λ where 𝟘 → x≢c refl; 𝟙 → x≢b refl) = refl
   ... | no c≢a | no c≢b | no d≢a | yes refl
     {- x ≈ ⦅ 𝕔 ↔ 𝕒 ⦆ x -}
-    rewrite swap-noop c a x (λ where ♯0 → x≢c refl; ♯1 → x≢a refl) = refl
+    rewrite swap-noop c a x (λ where 𝟘 → x≢c refl; 𝟙 → x≢a refl) = refl
   ... | no c≢a | no c≢b | no d≢a | no d≢b
     {- x ≈ ⦅ 𝕔 ↔ 𝕕 ⦆ x -}
-    rewrite swap-noop c d x (λ where ♯0 → x≢c refl; ♯1 → x≢d refl) = refl
+    rewrite swap-noop c d x (λ where 𝟘 → x≢c refl; 𝟙 → x≢d refl) = refl
 
 -- ** Nameless instances.
 swapId : Atom → Atom → A → A

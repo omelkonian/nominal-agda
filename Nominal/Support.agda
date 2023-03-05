@@ -32,19 +32,6 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
   Equivariant′ : Pred A _
   Equivariant′ x = ∃ λ (fin-x : FinSupp x) → fin-x .proj₁ ≡ []
 
-  MinSupp : Pred (List Atom × A) _
-  MinSupp (xs , a) =
-    (∀ x y → x ∉ xs → y ∉ xs → swap x y a ≈ a)
-    ×
-    (∀ x y → x ∈ xs → y ∉ xs → swap x y a ≉ a)
-
-  -- И⅁ λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≉ x
-
-  MinFinSupp : ∀ {a : A} → Pred (FinSupp a) _
-  MinFinSupp {a = a} (xs , p) =
-    -- MinSupp (xs , a)
-    (∀ x y → x ∈ xs → y ∉ xs → swap x y a ≉ a)
-
 -- counter-example
 -- λ x → (x == 𝕒) ∨ (x == 𝕓)
 
@@ -133,9 +120,7 @@ open FinitelySupported ⦃...⦄ public
 instance
   FinSupp-Atom : FinitelySupported Atom
   FinSupp-Atom .∀fin 𝕒 = [ 𝕒 ] , λ _ _ y∉ z∉ →
-    swap-noop _ _ _ λ where ♯0 → z∉ ♯0; ♯1 → y∉ ♯0
-
-private pattern 𝟘 = here refl; pattern 𝟙 = there 𝟘; pattern 𝟚 = there 𝟙
+    swap-noop _ _ _ λ where 𝟘 → z∉ 𝟘; 𝟙 → y∉ 𝟘
 
 -- T0D0: generalize this to more complex types than Atom (c.f. supp-swap above)
 supp-swap-atom : ∀ {𝕒 𝕓} (t : Atom) → supp (swap 𝕒 𝕓 t) ⊆ 𝕒 ∷ 𝕓 ∷ t ∷ []

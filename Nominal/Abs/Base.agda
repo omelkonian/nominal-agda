@@ -10,7 +10,6 @@ module Nominal.Abs.Base (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.New     Atom
 open import Nominal.Swap    Atom
-open import Nominal.Support Atom
 
 -- T0D0: maybe this is broken, user has access to `atom`
 record Abs (A : Type ℓ) : Type ℓ where
@@ -106,7 +105,7 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           ≡⟨⟩
             ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
           ≡˘⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t)
-                  $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩
+                  $ swap-noop a b x (λ where 𝟘 → x∉ 𝟘; 𝟙 → x∉ 𝟙) ⟩
             ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
           ≈˘⟨ swap-conc _ _ ⟩
             ⦅ a ↔ b ⦆ conc f x
@@ -115,7 +114,7 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           ≈⟨ swap-conc _ _ ⟩
             ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
           ≡⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′)
-                $ swap-noop a b x (λ where ♯0 → x∉ ♯0; ♯1 → x∉ ♯1) ⟩
+                $ swap-noop a b x (λ where 𝟘 → x∉ 𝟘; 𝟙 → x∉ 𝟙) ⟩
             ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
           ≡⟨⟩
             conc (abs (⦅ a ↔ b ⦆ 𝕪) (⦅ a ↔ b ⦆ t′)) x
