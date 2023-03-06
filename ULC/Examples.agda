@@ -96,17 +96,15 @@ finEx = -, go
   where
     go : ∀ 𝕒 𝕓 → 𝕒 ∉ suppEx⁺ → 𝕓 ∉ suppEx⁺ → swap 𝕓 𝕒 ex ≡α ex
     go 𝕒 𝕓 𝕒∉ 𝕓∉
-      rewrite swap-noop 𝕓 𝕒 a (λ where ♯0 → 𝕓∉ auto; ♯1 → 𝕒∉ auto)
+      rewrite swap-noop 𝕓 𝕒 a (λ where 𝟘 → 𝕓∉ auto; 𝟙 → 𝕒∉ auto)
             = ≡α-refl _
 
 _ = finEx .proj₁ ≡ suppEx⁺
   ∋ refl
 
-finEx′ : FinSupp ex
-finEx′ = ∀fin ex
-
-_ = finEx′ .proj₁ ≢ suppEx
-  ∋ λ ()
+_ = supp ex
+  ≡ (a ∷ a ∷ a ∷ [])
+  ∋ refl
 
 -- ** substitution
 
@@ -148,8 +146,17 @@ c'' = $ 1 -- fresh in [a, c, c']
 _ = (` a · (ƛ c ⇒ ` c · ` a)) [ a / ` c' ] ≡ (` c' · (ƛ c'' ⇒ ` c'' · ` c'))
   ∋ refl
 
--- ** grown-up substitution
+-- ** barendregt
+a'' = $ 1 -- fresh in [a]
 
+_ = barendregt (ƛ a ⇒ ƛ a ⇒ ` a · ` a) ≡ (ƛ a' ⇒ ƛ a'' ⇒ ` a'' · ` a'')
+  ∋ refl
+
+_ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a' ⇒ ` a') · (ƛ a' ⇒ ` a'))
+  ∋ refl
+
+-- ** grown-up substitution
+{-
 _ = (abs a $ ` a) ULC.[ ` b ] ≡ (` b)
   ∋ refl
 
@@ -167,12 +174,4 @@ _ = (abs b $ ` a · ` b) ULC.[ ` c ] ≡ (` a · ` c)
 
 _ = (abs b $ ƛ a ⇒ ` a) ULC.[ ` b ] ≡ (ƛ c'' ⇒ ` c'')
   ∋ refl
-
--- ** barendregt
-a'' = $ 1 -- fresh in [a]
-
-_ = barendregt (ƛ a ⇒ ƛ a ⇒ ` a · ` a) ≡ (ƛ a' ⇒ ƛ a'' ⇒ ` a'' · ` a'')
-  ∋ refl
-
-_ = barendregt ((ƛ a ⇒ ` a) · (ƛ a ⇒ ` a)) ≡ ((ƛ a' ⇒ ` a') · (ƛ a' ⇒ ` a'))
-  ∋ refl
+-}

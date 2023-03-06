@@ -10,6 +10,7 @@ open import Prelude.Bifunctor
 open import Prelude.Measurable
 open import Prelude.Ord
 open import Prelude.InfEnumerable
+open import Prelude.Lists.Dec
 
 -- ** α-equivalence.
 module ULC.Alpha (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
@@ -144,11 +145,17 @@ instance
   ... | l · r = ξ≡ swap-swap swap-swap
   ... | ƛ f   = ζ≡ swap-swap
 
+open ≈-Reasoning
+
+cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
+cong-ƛ t≡ = ζ≡ ([] , λ _ _ → cong-swap t≡)
+
+instance
   FinSupp-Term : FinitelySupported Term
   FinSupp-Term .∀fin = λ where
     (` x) → [ x ] , λ a b a∉ b∉ →
       ≈-reflexive $ cong `_ $
-        swap-noop b a x λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0
+        swap-noop b a x λ where 𝟘 → b∉ 𝟘; 𝟙 → a∉ 𝟘
     (l · m) →
       let supˡ , pˡ = ∀fin l
           supᵐ , pᵐ = ∀fin m
@@ -157,9 +164,6 @@ instance
          (pᵐ a b (a∉ ∘ ∈-++⁺ʳ _) (b∉ ∘ ∈-++⁺ʳ _))
     (ƛ x ⇒ t) → fin-ƛ t (∀fin t) x
      where
-      cong-ƛ : t ≡α t′ → (ƛ x ⇒ t) ≡α (ƛ x ⇒ t′)
-      cong-ƛ t≡ = ζ≡ ([] , λ _ _ → cong-swap t≡)
-
       fin-ƛ : ∀ (t : Term) → FinSupp t → (∀ x → FinSupp (ƛ x ⇒ t))
       fin-ƛ t (sup , p) x = x ∷ sup , λ a b a∉ b∉ →
         begin
@@ -167,22 +171,70 @@ instance
         ≡⟨⟩
           (ƛ ⦅ b ↔ a ⦆ x ⇒ ⦅ b ↔ a ⦆ t)
         ≡⟨ cong (λ ◆ → ƛ ◆ ⇒ ⦅ b ↔ a ⦆ t)
-              $ swap-noop b a x (λ where ♯0 → b∉ ♯0; ♯1 → a∉ ♯0) ⟩
+              $ swap-noop b a x (λ where 𝟘 → b∉ 𝟘; 𝟙 → a∉ 𝟘) ⟩
           (ƛ x ⇒ ⦅ b ↔ a ⦆ t)
         ≈⟨ cong-ƛ $ p a b (a∉ ∘ there) (b∉ ∘ there) ⟩
           (ƛ x ⇒ t)
-        ∎ where open ≈-Reasoning
+        ∎
+
+  MinFinSupp-Term : MinFinitelySupported Term
+  MinFinSupp-Term .∀minFin (` x) = xs , eq , ¬eq
+    where
+      xs = [ x ]
+
+      eq : ∀ a b → a ∉ xs → b ∉ xs → swap b a (` x) ≈ ` x
+      eq a b a∉ b∉ =
+        ≈-reflexive $ cong `_ $
+          swap-noop b a x λ where 𝟘 → b∉ 𝟘; 𝟙 → a∉ 𝟘
+
+      ¬eq : ∀ a b → a ∈ xs → b ∉ xs → swap b a (` x) ≉ ` x
+      ¬eq a b 𝟘 b∉ rewrite swapʳ b a = λ where ν≡ → b∉ 𝟘
+  MinFinSupp-Term .∀minFin (l · m)
+    with supˡ , pˡ , ¬pˡ ← ∀minFin l
+    with supᵐ , pᵐ , ¬pᵐ ← ∀minFin m
+    = xs , eq , ¬eq -- same as Nominal.Product
+    where
+      xs = nub (supˡ ++ supᵐ)
+
+      eq : ∀ a b → a ∉ xs → b ∉ xs → swap b a (l · m) ≈ l · m
+      eq a b a∉ b∉ =
+        ξ≡ (pˡ a b (a∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ˡ)   (b∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ˡ))
+           (pᵐ a b (a∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ʳ supˡ) (b∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ʳ supˡ))
+
+      postulate ¬eq : ∀ a b → a ∈ xs → b ∉ xs → swap b a (l · m) ≉ l · m
+  MinFinSupp-Term .∀minFin t̂@(ƛ x ⇒ t)
+    with xs , p , ¬p ← ∀minFin t
+    = xs′ , eq , ¬eq -- same as Nominal.Abs
+    where
+      xs′ = filter (¬? ∘ (_≟ x)) xs
+      postulate
+        eq : ∀ y z → y ∉ xs′ → z ∉ xs′ → swap z y t̂ ≈ t̂
+        ¬eq : ∀ y z → y ∈ xs′ → z ∉ xs′ → swap z y t̂ ≉ t̂
 
 supp-var : supp (` x) ≡ [ x ]
 supp-var = refl
 
+minSupp-var : supp (` x) ≡ [ x ]
+minSupp-var = refl
+
 supp-ξ : supp (L · M) ≡ supp L ++ supp M
 supp-ξ = refl
+
+minSupp-ξ : minSupp (L · M) ≡ nub (minSupp L ++ minSupp M)
+minSupp-ξ = refl
 
 supp-ƛ : supp (ƛ x ⇒ N) ≡ x ∷ supp N
 supp-ƛ = refl
 
--- T0D0: this does not hold in the current setting I believe
-postulate
-  supp-abs⊆ : ∀ (t̂ : Abs Term) {a b} (a∉ : a ∉ supp t̂) (b∉ : b ∉ supp t̂) →
-    (∀fin t̂ .proj₂ a b) a∉ b∉ .proj₁ ⊆ supp t̂
+minSupp-ƛ : minSupp (ƛ x ⇒ N) ≡ filter (¬? ∘ (_≟ x)) (minSupp N)
+minSupp-ƛ = refl
+
+supp-id : supp (ƛ x ⇒ ` x) ≡ x ∷ x ∷ []
+supp-id = refl
+
+minSupp-id : minSupp (ƛ x ⇒ ` x) ≡ []
+minSupp-id {x = x} rewrite ≟-refl x = refl
+
+-- postulate
+--   supp-abs⊆ : ∀ (t̂ : Abs Term) {a b} (a∉ : a ∉ supp t̂) (b∉ : b ∉ supp t̂) →
+--     (∀fin t̂ .proj₂ a b) a∉ b∉ .proj₁ ⊆ supp t̂
