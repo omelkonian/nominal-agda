@@ -9,6 +9,7 @@ open import Prelude.Show
 open import Prelude.Setoid
 open import Prelude.Lists
 open import Prelude.ToN
+open import Prelude.Tactics.PostulateIt
 
 open import Prelude.Generics
 open Meta
@@ -18,11 +19,21 @@ module Nominal.Swap.Equivariance (Atom : Set) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap.Base Atom
 
--- ** derive the statement of equivariance for given term of arbitrary arity,
--- be it a definition, constructor, or local variable
-
-deriveEquivarianceType : Term → TC Type
-deriveEquivarianceType t = do
+-- ** generically postulate the axiom scheme expressing distributivity of swapping:
+{- ∀ (𝕒 𝕓 : Atom).
+     ∙[n = 0]
+       ∀ (x : A).
+         swap 𝕒 𝕓 x ≈ swap 𝕒 𝕓 x
+     ∙[n = 1]
+       ∀ (f : A → B) (x : A).
+         swap 𝕒 𝕓 (f x) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 x)
+     ∙[n = 2]
+       ∀ (f : A → B → C) (x : A) (y : B).
+         swap 𝕒 𝕓 (f x y) → (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 x) (swap 𝕒 𝕓 y)
+     ⋮
+-}
+deriveSwapDistributiveType : Bool → Term → TC Type
+deriveSwapDistributiveType equiv? t = do
   ty ← inferType t
   print $ show t ◇ " : " ◇ show ty
   printCurrentContext
@@ -32,28 +43,39 @@ deriveEquivarianceType t = do
     as  = map (fmap $ mapVars (_+ 2)) as₀
     n = length as
 
-    headFn : Args Term → Term
-    headFn as = case t of λ where
+    mkSwaps : Args Term → Term
+    mkSwaps as = def (quote swap) $ map vArg ({-𝕒-} ♯ (suc n) ∷ {-𝕓-} ♯ n ∷ []) ++ as
+
+    mkSwap : Op₁ Term
+    mkSwap t = mkSwaps [ vArg t ]
+
+    mkHead : Args Term → Term
+    mkHead as = case t of λ where
       (def f as₀) → def f (as₀ ++ as)
       (con c as₀) → con c (as₀ ++ as)
       (var i as₀) → var (i + 2 + n) (as₀ ++ as)
       _           → unknown
 
-    mkSwap : Op₁ Term
-    mkSwap t = quote swap ∙⟦ {-𝕒-} ♯ (suc n) ∣ {-𝕓-} ♯ n ∣ t ⟧
+    mkSwapHead : Args Term → Term
+    mkSwapHead as =
+      let
+        a = case t of λ where
+          (def f as₀) → def f as₀
+          (con c as₀) → con c as₀
+          (var i as₀) → var (i + 2 + n) as₀
+          _           → unknown
+      in mkSwaps (vArg a ∷ as)
 
-    mkTerm : Op₁ Term → Term
-    mkTerm f = headFn $ flip map (enumerate as) λ where
-      (i , arg v _) →
-        arg v (f $ ♯ (n ∸ suc (toℕ i)))
+    mkTerm : Op₁ Term → Args Term
+    mkTerm mk = flip map (enumerate as) λ where
+      (i , arg v _) → arg v $ mk (♯ (n ∸ suc (toℕ i)))
 
-    lhs = mkTerm id
-    rhs = mkTerm mkSwap
+    lhs = mkSwap $ mkHead (mkTerm id)
+    rhs = (if equiv? then mkHead else mkSwapHead) (mkTerm mkSwap)
 
     equivTy = vΠ[ "𝕒" ∶ ♯ (length ctx ∸ 1) ]
               vΠ[ "𝕓" ∶ ♯ (length ctx) ]
-              -- ∀args as (quote _≡_ ∙⟦ mkSwap lhs ∣ rhs ⟧)
-              ∀args as (quote _≈_ ∙⟦ mkSwap lhs ∣ rhs ⟧)
+              ∀args as (quote _≈_ ∙⟦ lhs ∣ rhs ⟧)
   print $ "Equivariant " ◇ show t ◇ " := " ◇ show equivTy
   print "-------------------------------------------------"
   return equivTy
@@ -62,19 +84,39 @@ deriveEquivarianceType t = do
     ∀args [] = id
     ∀args (a ∷ as) t = hΠ[ "_" ∶ unArg a ] ∀args as t
 
-open import Prelude.Tactics.PostulateIt
+deriveSwap↔       = deriveSwapDistributiveType false
 
 macro
-  Equivariant : Term → Hole → TC ⊤
-  Equivariant t hole = deriveEquivarianceType t >>= unify hole
+  Swap↔ : Term → Hole → TC ⊤
+  Swap↔ t hole = deriveSwap↔ t >>= unify hole
 
-  equivariant : Term → Hole → TC ⊤
-  equivariant t hole = do
-    n ← genPostulate =<< deriveEquivarianceType t
+  swap↔ : Term → Hole → TC ⊤
+  swap↔ t hole = do
+    n ← genPostulate =<< deriveSwap↔ t
     unify hole (n ∙)
 
-private
+postulateSwap↔ : Name → Term → TC ⊤
+postulateSwap↔ f t = declarePostulate (vArg f) =<< deriveSwap↔ t
 
+-- ** derive the statement of equivariance for given term of arbitrary arity,
+-- be it a definition, constructor, or local variable
+{- ∀ (𝕒 𝕓 : Atom).
+     ∙[n = 0]
+       ∀ (x : A).
+         swap 𝕒 𝕓 x ≈ x
+     ∙[n = 1]
+       ∀ (f : A → B) (x : A).
+         swap 𝕒 𝕓 (f x) ≈ f (swap 𝕒 𝕓 x)
+     ∙[n = 2]
+       ∀ (f : A → B → C) (x : A) (y : B).
+         swap 𝕒 𝕓 (f x y) → f (swap 𝕒 𝕓 x) (swap 𝕒 𝕓 y)
+     ⋮
+-}
+macro
+  Equivariant : Term → Hole → TC ⊤
+  Equivariant t hole = deriveSwapDistributiveType true t >>= unify hole
+
+private
   data X : Set where
     mkX : ℕ → ℕ → X
 
@@ -89,74 +131,43 @@ private
       _ : ISetoid ℕ
       _ : ISetoid X
       _ : Swap X
+      _ : Swap (ℕ → ℕ)
+      _ : Swap (ℕ → ℕ → ℕ)
+      _ : Swap (ℕ → ℕ → X)
 
   module _ 𝕒 𝕓 where postulate
-    equiv-f : ∀ {n} → swap 𝕒 𝕓 (f n) ≈ f (swap 𝕒 𝕓 n)
-    equiv-g : ∀ {n m} → swap 𝕒 𝕓 (g n m) ≈ g (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
-    equiv-mkX : ∀ {n m} → swap 𝕒 𝕓 (mkX n m) ≈ mkX (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+    distr-f : ∀ {n} →
+      swap 𝕒 𝕓 (f n) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
+    equiv-f : ∀ {n} →
+      swap 𝕒 𝕓 (f n) ≈ f (swap 𝕒 𝕓 n)
+    distr-g : ∀ {n m} →
+      swap 𝕒 𝕓 (g n m) ≈ (swap 𝕒 𝕓 g) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+    equiv-g : ∀ {n m} →
+      swap 𝕒 𝕓 (g n m) ≈ g (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+    distr-mkX : ∀ {n m} →
+      swap 𝕒 𝕓 (mkX n m) ≈ (swap 𝕒 𝕓 mkX) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+    equiv-mkX : ∀ {n m} →
+      swap 𝕒 𝕓 (mkX n m) ≈ mkX (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
   module _ {f : ℕ → ℕ} 𝕒 𝕓 where postulate
+    distr-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
     equiv-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≈ f (swap 𝕒 𝕓 n)
 
+  _ = Swap↔ f ∋ distr-f
+  _ = Swap↔ f ∋ swap↔ f
   _ = Equivariant f ∋ equiv-f
-  _ = Equivariant f ∋ equivariant f
+  _ = Swap↔ g ∋ distr-g
+  _ = Swap↔ g ∋ swap↔ g
   _ = Equivariant g ∋ equiv-g
-  _ = Equivariant g ∋ equivariant g
+  _ = Swap↔ mkX ∋ distr-mkX
+  _ = Swap↔ mkX ∋ swap↔ mkX
   _ = Equivariant mkX ∋ equiv-mkX
-  _ = Equivariant mkX ∋ equivariant mkX
   module _ {f : ℕ → ℕ} where
-    _ = Equivariant f ∋ equivariant f
+    _ = Swap↔ f ∋ swap↔ f
+    _ = Swap↔ f ∋ distr-∀f
     _ = Equivariant f ∋ equiv-∀f
 
-  -- ** deriving ⊥ from non-equivariant function
-  module Contradiction (𝕒≠𝕓 : 𝕒 ≢ 𝕓) (𝕔≠𝕕 : 𝕔 ≢ 𝕕) (𝕔∉ : 𝕔 ∉ 𝕒 ∷ 𝕓 ∷ []) where
-    nonEq : Atom → Atom
-    nonEq x = if x == 𝕒 then 𝕔 else 𝕕
-
-    equiv-nonEq : Equivariant nonEq
-    equiv-nonEq = equivariant nonEq
-
-    equiv-nonEq-at : swap 𝕒 𝕓 (nonEq 𝕒) ≡ nonEq (swap 𝕒 𝕓 𝕒)
-    equiv-nonEq-at = equiv-nonEq 𝕒 𝕓
-
-    equiv-nonEq-at♯not : swap 𝕒 𝕓 (nonEq 𝕒) ≢ nonEq (swap 𝕒 𝕓 𝕒)
-    equiv-nonEq-at♯not
-    -- swap 𝕒 𝕓 (f x)
-    -- => swap 𝕒 𝕓 (f 𝕒)
-    -- => swap 𝕒 𝕓 𝕔
-    -- => 𝕔
-
-    -- f (swap 𝕒 𝕓 x)
-    -- => f (swap 𝕒 𝕓 𝕒)
-    -- => f 𝕓
-    -- => 𝕕
-      rewrite swapˡ 𝕒 𝕓
-            | dec-no (𝕓 ≟ 𝕒) (≢-sym 𝕒≠𝕓) .proj₂
-            | ≟-refl 𝕒
-            | swap-noop 𝕒 𝕓 𝕔 𝕔∉
-            = 𝕔≠𝕕
-
-    bottom : ⊥
-    bottom = equiv-nonEq-at♯not equiv-nonEq-at
-
-  -- ** simpler example for deriving ⊥
-  module SimpleContradiction (𝕒≠𝕓 : 𝕒 ≢ 𝕓) where
-    nonEq : Atom → Atom
-    nonEq _ = 𝕓
-
-    equiv-nonEq : Equivariant nonEq
-    equiv-nonEq = equivariant nonEq
-
-    equiv-nonEq-at : swap 𝕒 𝕓 (nonEq 𝕒) ≡ nonEq (swap 𝕒 𝕓 𝕒)
-    equiv-nonEq-at = equiv-nonEq 𝕒 𝕓 {𝕒}
-
-    equiv-nonEq-at♯not : swap 𝕒 𝕓 (nonEq 𝕒) ≢ nonEq (swap 𝕒 𝕓 𝕒)
-    equiv-nonEq-at♯not rewrite swapʳ 𝕒 𝕓 = 𝕒≠𝕓
-    -- swap 𝕒 𝕓 (f x)
-    -- => swap 𝕒 𝕓 𝕓
-    -- => 𝕒
-
-    -- f (swap 𝕒 𝕓 x)
-    -- => 𝕓
-
-    bottom : ⊥
-    bottom = equiv-nonEq-at♯not equiv-nonEq-at
+  unquoteDecl distr-f′ = postulateSwap↔ distr-f′ (quoteTerm f)
+  unquoteDecl distr-g′ = postulateSwap↔ distr-g′ (quoteTerm g)
+  unquoteDecl distr-mkX′ = postulateSwap↔ distr-mkX′ (quoteTerm mkX)
+  module _ {f : ℕ → ℕ} where
+    unquoteDecl distr-∀f′ = postulateSwap↔ distr-∀f′ (quoteTerm f)

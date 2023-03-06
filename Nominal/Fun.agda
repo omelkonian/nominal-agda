@@ -104,6 +104,30 @@ module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ 
         (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ f) x
       ∎
 
+  -- NB: swapping takes the conjugation action on functions
+  module _
+    ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SwapLaws A ⦄ ⦃ _ : CongSetoid A ⦄
+    ⦃ _ : ISetoid B ⦄ ⦃ _ : SetoidLaws B ⦄ ⦃ _ : SwapLaws B ⦄
+    where
+    conj : ∀ {𝕒 𝕓 : Atom} (f : A → B) (x : A) →
+      (swap 𝕒 𝕓 f) x ≈ swap 𝕒 𝕓 (f $ swap 𝕒 𝕓 x)
+    conj {𝕒} {𝕓} f x =
+      begin
+        (swap 𝕒 𝕓 f) x
+      ≡⟨⟩
+        (swap 𝕒 𝕓 ∘ f ∘ swap 𝕒 𝕓) x
+      ≡⟨⟩
+        swap 𝕒 𝕓 (f $ swap 𝕒 𝕓 x)
+      ≈˘⟨ cong-swap $ ≈-cong f swap-sym′ ⟩
+        swap 𝕒 𝕓 (f $ swap 𝕒 𝕓 $ swap 𝕒 𝕓 $ swap 𝕒 𝕓 x)
+      ≡⟨⟩
+        (swap 𝕒 𝕓 ∘ f ∘ swap 𝕒 𝕓) (swap 𝕒 𝕓 $ swap 𝕒 𝕓 x)
+      ≡⟨⟩
+        (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 $ swap 𝕒 𝕓 x)
+      ≈˘⟨ distr-f 𝕒 𝕓 ⟩
+        swap 𝕒 𝕓 (f $ swap 𝕒 𝕓 x)
+      ∎ where distr-f = swap↔ f
+
 private
   postulate
     𝕒 𝕓 : Atom
@@ -156,7 +180,7 @@ module _
         open ≈-Reasoning
 
         ↝ : Equivariant f
-            ───────────────────
+            ──────────────
             Equivariant′ f
         ↝ equiv-f = fin-f , refl
           where
@@ -171,7 +195,7 @@ module _
               ∎
 
         ↜ : Equivariant′ f
-            ───────────────────
+            ──────────────
             Equivariant f
         ↜ (fin-f , refl) a b {x} =
           begin
@@ -191,7 +215,7 @@ module _
         open ≈-Reasoning
 
         ↝ : Equivariant f
-            ───────────────────
+            ─────────────────
             MinEquivariant′ f
         ↝ equiv-f = fin-f , refl
           where
@@ -206,7 +230,7 @@ module _
               ∎) , λ _ _ ()
 
         ↜ : MinEquivariant′ f
-            ───────────────────
+            ─────────────────
             Equivariant f
         ↜ (fin-f , refl) a b {x} =
           begin

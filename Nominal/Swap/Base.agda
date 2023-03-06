@@ -22,14 +22,6 @@ record Swap (A : Type ℓ) : Type ℓ where
   ⦅_↔_⦆_ = swap
   -- NB: equivariant functions commute with this group action
 
-  -- ** equivariance
-  module _ ⦃ _ : ISetoid A ⦄ where
-    Equivariant¹ : Pred (Op₁ A) (ℓ ⊔ₗ relℓ)
-    Equivariant¹ f = ∀ x 𝕒 𝕓 → f (swap 𝕒 𝕓 x) ≈ swap 𝕒 𝕓 (f x)
-
-    Equivariant² : Pred (Rel A ℓ′) (ℓ ⊔ₗ ℓ′)
-    Equivariant² _~_ = ∀ x y → x ~ y → (∀ 𝕒 𝕓 → swap 𝕒 𝕓 x ~ swap 𝕒 𝕓 y)
-
   swaps : List (Atom × Atom) → A → A
   swaps []             = id
   swaps ((x , y) ∷ as) = swap x y ∘ swaps as
