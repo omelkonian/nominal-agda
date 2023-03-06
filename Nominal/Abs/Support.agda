@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
@@ -67,7 +68,7 @@ module _ {A : Type ℓ}
         with xs , p , ¬p ← ∀fin t
         = xs′ , eq , ¬eq
         where
-          xs′ = filter (¬? ∘ (_≟ x)) xs -- x ∷ xs
+          xs′ = filter (¬? ∘ (_≟ x)) xs
 
           eq : ∀ y z → y ∉ xs′ → z ∉ xs′ → swap z y t̂ ≈ t̂
           eq y z y∉′ z∉′
@@ -144,16 +145,53 @@ module _ {A : Type ℓ}
               z∉ : z ∉ xs
               z∉ z∈ = z∉′ $ ∈-filter⁺ (¬? ∘ (_≟ x)) z∈ z≢
 
-          postulate ¬eq : ∀ y z → y ∈ xs′ → z ∉ xs′ → swap z y t̂ ≉ t̂
-          {-
+          ¬eq : ∀ y z → y ∈ xs′ → z ∉ xs′ → swap z y t̂ ≉ t̂
           ¬eq y z y∈′ z∉′
-            with y∈ , y≢ ← ∈-filter⁻ (¬? ∘ (_≟ x)) y∈′
+            with y∈ , y≢ ← ∈-filter⁻ (¬? ∘ (_≟ x)) {xs = xs} y∈′
+{-
+begin
+  swap z y t̂
+≡⟨⟩
+  abs (swap z y x) (swap z y t)
+≉⟨ ? ⟩
+  abs x t
+≡⟨⟩
+  t̂
+∎
+-}
             with z ≟ x
           ... | yes refl
             -- abs y (⦅ x ↔ y ⦆ t) ≉ abs x t
-            = {!!}
+{-
+begin
+  swap x y t̂
+≡⟨⟩
+  abs (swap x y x) (swap x y t)
+≡⟨ swapˡ ⟩
+  abs y (swap x y t)
+≉⟨ ? ⟩
+  abs x t
+≡⟨⟩
+  t̂
+∎
+-}
+            = {!¬p y z y∈ !}
           ... | no z≢
             rewrite dec-no (z ≟ x) z≢ .proj₂
             -- abs x (⦅ z ↔ y ⦆ t) ≉ abs x t
-            = {!!}
-          -}
+{-
+¬p y z y∈ (∉-∷⁺ z≢ z∉) : swap z y t ≉ t
+
+begin
+  swap z y t̂
+≡⟨⟩
+  abs (swap z y x) (swap z y t)
+≡⟨ swap-noop z y z z≢ y≢ ⟩
+  abs x (swap z y t)
+≉⟨ ? ⟩
+  abs x t
+≡⟨⟩
+  t̂
+∎
+-}
+            = {!¬p y z y∈ (∉-∷⁺ z≢ z∉′)!}

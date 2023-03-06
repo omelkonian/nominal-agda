@@ -1,4 +1,7 @@
 open import Prelude.Init; open SetAsType
+open L.Mem
+open import Prelude.Lists.Membership
+open import Prelude.Lists.Dec
 open import Prelude.General
 open import Prelude.DecEq
 open import Prelude.Decidable
@@ -50,13 +53,26 @@ module _
         let xs , p = ∀∃fin a
             ys , q = ∀∃fin b
         in xs ++ ys , λ y z y∉ z∉ →
-            p y z (y∉ ∘ L.Mem.∈-++⁺ˡ)   (z∉ ∘ L.Mem.∈-++⁺ˡ)
-          , q y z (y∉ ∘ L.Mem.∈-++⁺ʳ _) (z∉ ∘ L.Mem.∈-++⁺ʳ _)
+            p y z (y∉ ∘ ∈-++⁺ˡ)   (z∉ ∘ ∈-++⁺ˡ)
+          , q y z (y∉ ∘ ∈-++⁺ʳ _) (z∉ ∘ ∈-++⁺ʳ _)
 
-      postulate
-        FinSupp-× : ⦃ FinitelySupported A ⦄
-                  → ⦃ FinitelySupported B ⦄
-                  → FinitelySupported (A × B)
+      FinSupp-× : ⦃ FinitelySupported A ⦄
+                → ⦃ FinitelySupported B ⦄
+                → FinitelySupported (A × B)
+      FinSupp-× .∀fin (a , b) =
+        let xs , p , ¬p = ∀fin a
+            ys , q , ¬q = ∀fin b
+        in nub (xs ++ ys)
+         , (λ y z y∉ z∉ →
+              ( p y z (y∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ˡ)   (z∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ˡ)
+              , q y z (y∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ʳ xs) (z∉ ∘ ∈-nub⁺ ∘ ∈-++⁺ʳ xs)
+              )
+           )
+         , λ y z y∈′ z∉ (p , q) →
+           let z∉ˡ , z∉ʳ = ∉-++⁻ $ ∉-nub⁻ z∉
+           in case ∈-++⁻ xs $ ∈-nub⁻ y∈′ of λ where
+             (inj₁ y∈) → ¬p y z y∈ z∉ˡ p
+             (inj₂ y∈) → ¬q y z y∈ z∉ʳ q
 
 private
   postulate
