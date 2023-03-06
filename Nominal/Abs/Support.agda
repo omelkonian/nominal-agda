@@ -11,7 +11,6 @@ module Nominal.Abs.Support (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerab
 open import Nominal.New Atom
 open import Nominal.Swap Atom
 open import Nominal.Support Atom
-open import Nominal.MinSupport Atom
 open import Nominal.Abs.Base Atom
 
 module _ {A : Type ℓ}
@@ -20,12 +19,12 @@ module _ {A : Type ℓ}
 
   open ≈-Reasoning
 
-  module _ ⦃ _ : FinitelySupported A ⦄ where
+  module _ ⦃ _ : ∃FinitelySupported A ⦄ where
     -- abstractions over finitely supported types are themselves finite
     instance
-      FinSupp-Abs : FinitelySupported (Abs A)
-      FinSupp-Abs .∀fin (abs x t) =
-        let xs , p = ∀fin t
+      ∃FinSupp-Abs : ∃FinitelySupported (Abs A)
+      ∃FinSupp-Abs .∀∃fin (abs x t) =
+        let xs , p = ∀∃fin t
         in x ∷ xs , λ y z y∉ z∉ →
         begin
           ⦅ z ↔ y ⦆ (abs x t)
@@ -50,22 +49,22 @@ module _ {A : Type ℓ}
     -- NB: a generalisation would be to say that the size behaviour of
     --     `mapAbs f` corresponds to that of `f`
     mapAbs f x' =
-      let a = fresh-var x' -- T0D0: ++ supp?? f
+      let a = ∃fresh-var x' -- T0D0: ++ supp?? f
       in abs a (f $ conc x' a)
 
     freshen : Op₁ (Abs A)
     freshen f@(abs a t) =
-      let xs , _ = ∀fin f
+      let xs , _ = ∀∃fin f
           b , b∉ = minFresh xs
       in abs b (conc f b)
 
-  module _ ⦃ _ : MinFinitelySupported A ⦄ where
+  module _ ⦃ _ : FinitelySupported A ⦄ where
 
     -- abstractions over finitely supported types are themselves finite
     instance
-      MinFinSupp-Abs : MinFinitelySupported (Abs A)
-      MinFinSupp-Abs .∀minFin t̂@(abs x t)
-        with xs , p , ¬p ← ∀minFin t
+      FinSupp-Abs : FinitelySupported (Abs A)
+      FinSupp-Abs .∀fin t̂@(abs x t)
+        with xs , p , ¬p ← ∀fin t
         = xs′ , eq , ¬eq
         where
           xs′ = filter (¬? ∘ (_≟ x)) xs -- x ∷ xs

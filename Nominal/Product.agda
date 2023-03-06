@@ -43,15 +43,20 @@ module _
 
   module _ ⦃ _ : Enumerable∞ Atom ⦄ where
     instance
-      FinSupp-× : ⦃ FinitelySupported A ⦄
-                → ⦃ FinitelySupported B ⦄
-                → FinitelySupported (A × B)
-      FinSupp-× .∀fin (a , b) =
-        let xs , p = ∀fin a
-            ys , q = ∀fin b
+      ∃FinSupp-× : ⦃ ∃FinitelySupported A ⦄
+                 → ⦃ ∃FinitelySupported B ⦄
+                 → ∃FinitelySupported (A × B)
+      ∃FinSupp-× .∀∃fin (a , b) =
+        let xs , p = ∀∃fin a
+            ys , q = ∀∃fin b
         in xs ++ ys , λ y z y∉ z∉ →
-            p y z (y∉ ∘ L.Mem.∈-++⁺ˡ) (z∉ ∘ L.Mem.∈-++⁺ˡ)
+            p y z (y∉ ∘ L.Mem.∈-++⁺ˡ)   (z∉ ∘ L.Mem.∈-++⁺ˡ)
           , q y z (y∉ ∘ L.Mem.∈-++⁺ʳ _) (z∉ ∘ L.Mem.∈-++⁺ʳ _)
+
+      postulate
+        FinSupp-× : ⦃ FinitelySupported A ⦄
+                  → ⦃ FinitelySupported B ⦄
+                  → FinitelySupported (A × B)
 
 private
   postulate

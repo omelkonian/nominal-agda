@@ -6,9 +6,7 @@ module Nominal (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 open import Nominal.New Atom public
 open import Nominal.Swap Atom public
 open import Nominal.Perm Atom public
-
 open import Nominal.Support Atom public
-open import Nominal.MinSupport Atom public
 
 open import Nominal.Fun Atom public
 open import Nominal.Abs Atom public

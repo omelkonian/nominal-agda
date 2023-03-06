@@ -11,7 +11,6 @@ module Nominal.Fun (Atom : Type) ⦃ _ : DecEq Atom ⦄ where
 
 open import Nominal.Swap Atom
 open import Nominal.Support Atom
-open import Nominal.MinSupport Atom
 
 module _ {A : Type ℓ} {B : Type ℓ′} ⦃ _ : Swap A ⦄ ⦃ _ : Swap B ⦄ where
 
@@ -180,46 +179,11 @@ module _
         open ≈-Reasoning
 
         ↝ : Equivariant f
-            ──────────────
+            ─────────────────
             Equivariant′ f
         ↝ equiv-f = fin-f , refl
           where
             fin-f : FinSupp f
-            fin-f = [] , λ x y _ _ a →
-              begin
-                ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
-              ≈˘⟨ cong-swap $ equiv-f _ _ ⟩
-                ⦅ y ↔ x ⦆ ⦅ y ↔ x ⦆ f a
-              ≈⟨ swap-sym′ ⟩
-                f a
-              ∎
-
-        ↜ : Equivariant′ f
-            ──────────────
-            Equivariant f
-        ↜ (fin-f , refl) a b {x} =
-          begin
-            ⦅ a ↔ b ⦆ f x
-          ≈˘⟨ cong-swap $ fin-f .proj₂ _ _ (λ ()) (λ ()) _ ⟩
-            ⦅ a ↔ b ⦆ ⦅ a ↔ b ⦆ f (⦅ a ↔ b ⦆ x)
-          ≈⟨ swap-sym′ ⟩
-            f (⦅ a ↔ b ⦆ x)
-          ∎
-
-  equivariant-equiv-min : ∀ {f : A → A} →
-    Equivariant f
-    ═════════════════
-    MinEquivariant′ f
-  equivariant-equiv-min {f = f} = ↝ , ↜
-      where
-        open ≈-Reasoning
-
-        ↝ : Equivariant f
-            ─────────────────
-            MinEquivariant′ f
-        ↝ equiv-f = fin-f , refl
-          where
-            fin-f : MinFinSupp f
             fin-f = [] , (λ x y _ _ a →
               begin
                 ⦅ y ↔ x ⦆ (f $ ⦅ y ↔ x ⦆ a)
@@ -229,7 +193,7 @@ module _
                 f a
               ∎) , λ _ _ ()
 
-        ↜ : MinEquivariant′ f
+        ↜ : Equivariant′ f
             ─────────────────
             Equivariant f
         ↜ (fin-f , refl) a b {x} =
@@ -256,11 +220,11 @@ module _
     f≈g : f′ ≈ g′
     f≈g _ = ≈-refl
 
-    fin-f : FinSupp f′
-    fin-f = suppF′ , λ _ _ _ _ _ → swap-sym′
+    ∃fin-f : ∃FinSupp f′
+    ∃fin-f = suppF′ , λ _ _ _ _ _ → swap-sym′
 
-    min-fin-f : MinFinSupp f′
-    min-fin-f = suppF′ , (λ _ _ _ _ _ → swap-sym′) , (λ _ _ ())
+    fin-f : FinSupp f′
+    fin-f = suppF′ , (λ _ _ _ _ _ → swap-sym′) , (λ _ _ ())
 
     equiv-f : Equivariant f′
     equiv-f _ _ = ≈-refl
@@ -284,7 +248,7 @@ module _
     suppF = List Atom ∋ x ∷ y ∷ []
     -- fresh f = False
 
-    finF : FinSupp f
+    finF : ∃FinSupp f
     finF = -, go
       where
         ∀x∉suppF : ∀ {z} → z ∉ suppF → f z ≡ false
@@ -310,7 +274,7 @@ module _
     -- fresh g = True
     -- NB: g is infinite, but has finite support!
 
-    finG : FinSupp g
+    finG : ∃FinSupp g
     finG = -, go
       where
         ∀x∉suppG : ∀ {z} → z ∉ suppG → g z ≡ true
