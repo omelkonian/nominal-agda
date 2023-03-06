@@ -1,51 +1,60 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="utf-8"><title>ULC.Substitution</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css'/><style>.github-fork-ribbon:before { background-color: #333; }</style><link rel="stylesheet" href="css/Agda.css"></head><body><a class='github-fork-ribbon'href='https://github.com/omelkonian/nominal-agda/tree/master/ULC/Substitution.agda'data-ribbon='Source code on Github' title='Source code on Github'>Source code on Github</a><pre class="Agda"><a id="1" class="Comment">-- {-# OPTIONS --allow-unsolved-metas #-}</a>
-<a id="43" class="Comment">-- {-# OPTIONS --auto-inline #-}</a>
-<a id="76" class="Keyword">open</a> <a id="81" class="Keyword">import</a> <a id="88" href="Prelude.Init.html" class="Module">Prelude.Init</a> <a id="101" class="Keyword">hiding</a> <a id="108" class="Symbol">(</a><a id="109" href="Data.List.Base.html#5034" class="Function Operator">[_]</a><a id="112" class="Symbol">);</a> <a id="115" class="Keyword">open</a> <a id="120" href="Prelude.Init.html#504" class="Module">SetAsType</a>
-<a id="130" class="Keyword">open</a> <a id="135" href="Prelude.Init.html#7118" class="Module">L.Mem</a>
-<a id="141" class="Keyword">open</a> <a id="146" class="Keyword">import</a> <a id="153" href="Prelude.General.html" class="Module">Prelude.General</a>
-<a id="169" class="Keyword">open</a> <a id="174" class="Keyword">import</a> <a id="181" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
-<a id="195" class="Comment">-- open import Prelude.Lists.Dec</a>
-<a id="228" class="Comment">-- open import Prelude.Measurable</a>
-<a id="262" class="Keyword">open</a> <a id="267" class="Keyword">import</a> <a id="274" href="Prelude.InfEnumerable.html" class="Module">Prelude.InfEnumerable</a>
-<a id="296" class="Keyword">open</a> <a id="301" class="Keyword">import</a> <a id="308" href="Prelude.Setoid.html" class="Module">Prelude.Setoid</a>
-<a id="323" class="Keyword">open</a> <a id="328" class="Keyword">import</a> <a id="335" href="Prelude.InferenceRules.html" class="Module">Prelude.InferenceRules</a>
+<html><head><meta charset="utf-8"><title>ULC.Substitution</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css'/><style>.github-fork-ribbon:before { background-color: #333; }</style><link rel="stylesheet" href="css/Agda.css"></head><body><a class='github-fork-ribbon'href='https://github.com/omelkonian/nominal-agda/tree/master/ULC/Substitution.agda'data-ribbon='Source code on Github' title='Source code on Github'>Source code on Github</a><pre class="Agda"><a id="1" class="Symbol">{-#</a> <a id="5" class="Keyword">OPTIONS</a> <a id="13" class="Pragma">--allow-unsolved-metas</a> <a id="36" class="Symbol">#-}</a>
+<a id="40" class="Comment">-- {-# OPTIONS --auto-inline #-}</a>
+<a id="73" class="Keyword">open</a> <a id="78" class="Keyword">import</a> <a id="85" href="Prelude.Init.html" class="Module">Prelude.Init</a> <a id="98" class="Keyword">hiding</a> <a id="105" class="Symbol">(</a><a id="106" href="Data.List.Base.html#5034" class="Function Operator">[_]</a><a id="109" class="Symbol">);</a> <a id="112" class="Keyword">open</a> <a id="117" href="Prelude.Init.html#504" class="Module">SetAsType</a>
+<a id="127" class="Keyword">open</a> <a id="132" href="Prelude.Init.html#7118" class="Module">L.Mem</a>
+<a id="138" class="Keyword">open</a> <a id="143" class="Keyword">import</a> <a id="150" href="Prelude.General.html" class="Module">Prelude.General</a>
+<a id="166" class="Keyword">open</a> <a id="171" class="Keyword">import</a> <a id="178" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
+<a id="192" class="Comment">-- open import Prelude.Lists.Dec</a>
+<a id="225" class="Comment">-- open import Prelude.Measurable</a>
+<a id="259" class="Keyword">open</a> <a id="264" class="Keyword">import</a> <a id="271" href="Prelude.InfEnumerable.html" class="Module">Prelude.InfEnumerable</a>
+<a id="293" class="Keyword">open</a> <a id="298" class="Keyword">import</a> <a id="305" href="Prelude.Setoid.html" class="Module">Prelude.Setoid</a>
+<a id="320" class="Keyword">open</a> <a id="325" class="Keyword">import</a> <a id="332" href="Prelude.InferenceRules.html" class="Module">Prelude.InferenceRules</a>
 
-<a id="359" class="Comment">-- ** Substitution.</a>
-<a id="379" class="Keyword">module</a> <a id="386" href="ULC.Substitution.html" class="Module">ULC.Substitution</a> <a id="403" class="Symbol">(</a><a id="404" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="409" class="Symbol">:</a> <a id="411" href="Agda.Primitive.html#320" class="Primitive">Type</a><a id="415" class="Symbol">)</a> <a id="417" class="Symbol">⦃</a> <a id="419" href="ULC.Substitution.html#419" class="Bound">_</a> <a id="421" class="Symbol">:</a> <a id="423" href="Prelude.DecEq.Core.html#148" class="Record">DecEq</a> <a id="429" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="434" class="Symbol">⦄</a> <a id="436" class="Symbol">⦃</a> <a id="438" href="ULC.Substitution.html#438" class="Bound">_</a> <a id="440" class="Symbol">:</a> <a id="442" href="Prelude.InfEnumerable.html#663" class="Record">Enumerable∞</a> <a id="454" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="459" class="Symbol">⦄</a> <a id="461" class="Keyword">where</a>
+<a id="356" class="Comment">-- ** Substitution.</a>
+<a id="376" class="Keyword">module</a> <a id="383" href="ULC.Substitution.html" class="Module">ULC.Substitution</a> <a id="400" class="Symbol">(</a><a id="401" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="406" class="Symbol">:</a> <a id="408" href="Agda.Primitive.html#320" class="Primitive">Type</a><a id="412" class="Symbol">)</a> <a id="414" class="Symbol">⦃</a> <a id="416" href="ULC.Substitution.html#416" class="Bound">_</a> <a id="418" class="Symbol">:</a> <a id="420" href="Prelude.DecEq.Core.html#148" class="Record">DecEq</a> <a id="426" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="431" class="Symbol">⦄</a> <a id="433" class="Symbol">⦃</a> <a id="435" href="ULC.Substitution.html#435" class="Bound">_</a> <a id="437" class="Symbol">:</a> <a id="439" href="Prelude.InfEnumerable.html#663" class="Record">Enumerable∞</a> <a id="451" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="456" class="Symbol">⦄</a> <a id="458" class="Keyword">where</a>
 
-<a id="468" class="Keyword">open</a> <a id="473" class="Keyword">import</a> <a id="480" href="ULC.Base.html" class="Module">ULC.Base</a>    <a id="492" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="497" class="Symbol">⦃</a> <a id="499" href="Function.Base.html#4821" class="Function">it</a> <a id="502" class="Symbol">⦄</a>
-<a id="504" class="Keyword">open</a> <a id="509" class="Keyword">import</a> <a id="516" href="ULC.Measure.html" class="Module">ULC.Measure</a> <a id="528" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="533" class="Symbol">⦃</a> <a id="535" href="Function.Base.html#4821" class="Function">it</a> <a id="538" class="Symbol">⦄</a> <a id="540" class="Symbol">⦃</a> <a id="542" href="Function.Base.html#4821" class="Function">it</a> <a id="545" class="Symbol">⦄</a>
-<a id="547" class="Keyword">open</a> <a id="552" class="Keyword">import</a> <a id="559" href="ULC.Alpha.html" class="Module">ULC.Alpha</a>   <a id="571" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="576" class="Symbol">⦃</a> <a id="578" href="Function.Base.html#4821" class="Function">it</a> <a id="581" class="Symbol">⦄</a> <a id="583" class="Symbol">⦃</a> <a id="585" href="Function.Base.html#4821" class="Function">it</a> <a id="588" class="Symbol">⦄</a>
-<a id="590" class="Keyword">open</a> <a id="595" class="Keyword">import</a> <a id="602" href="Nominal.html" class="Module">Nominal</a> <a id="610" href="ULC.Substitution.html#404" class="Bound">Atom</a>
-<a id="615" class="Keyword">open</a> <a id="620" class="Keyword">import</a> <a id="627" href="Nominal.Product.html" class="Module">Nominal.Product</a> <a id="643" href="ULC.Substitution.html#404" class="Bound">Atom</a>
+<a id="465" class="Keyword">open</a> <a id="470" class="Keyword">import</a> <a id="477" href="ULC.Base.html" class="Module">ULC.Base</a>    <a id="489" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="494" class="Symbol">⦃</a> <a id="496" href="Function.Base.html#4821" class="Function">it</a> <a id="499" class="Symbol">⦄</a>
+<a id="501" class="Keyword">open</a> <a id="506" class="Keyword">import</a> <a id="513" href="ULC.Measure.html" class="Module">ULC.Measure</a> <a id="525" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="530" class="Symbol">⦃</a> <a id="532" href="Function.Base.html#4821" class="Function">it</a> <a id="535" class="Symbol">⦄</a> <a id="537" class="Symbol">⦃</a> <a id="539" href="Function.Base.html#4821" class="Function">it</a> <a id="542" class="Symbol">⦄</a>
+<a id="544" class="Keyword">open</a> <a id="549" class="Keyword">import</a> <a id="556" href="ULC.Alpha.html" class="Module">ULC.Alpha</a>   <a id="568" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="573" class="Symbol">⦃</a> <a id="575" href="Function.Base.html#4821" class="Function">it</a> <a id="578" class="Symbol">⦄</a> <a id="580" class="Symbol">⦃</a> <a id="582" href="Function.Base.html#4821" class="Function">it</a> <a id="585" class="Symbol">⦄</a>
+<a id="587" class="Keyword">open</a> <a id="592" class="Keyword">import</a> <a id="599" href="Nominal.html" class="Module">Nominal</a> <a id="607" href="ULC.Substitution.html#401" class="Bound">Atom</a>
+<a id="612" class="Keyword">open</a> <a id="617" class="Keyword">import</a> <a id="624" href="Nominal.Product.html" class="Module">Nominal.Product</a> <a id="640" href="ULC.Substitution.html#401" class="Bound">Atom</a>
 
-<a id="649" class="Comment">-- enforce the Barendregt convention: no shadowing, distinct bound variables</a>
-<a id="726" class="Symbol">{-#</a> <a id="730" class="Keyword">TERMINATING</a> <a id="742" class="Symbol">#-}</a>
-<a id="barendregt"></a><a id="746" href="ULC.Substitution.html#746" class="Function">barendregt</a> <a id="757" class="Symbol">:</a> <a id="759" href="Algebra.Core.html#484" class="Function">Op₁</a> <a id="763" href="ULC.Base.html#356" class="Datatype">Term</a>
-<a id="768" href="ULC.Substitution.html#746" class="Function">barendregt</a> <a id="779" class="Symbol">=</a> <a id="781" href="ULC.Substitution.html#799" class="Function">go</a> <a id="784" href="Agda.Builtin.List.html#167" class="InductiveConstructor">[]</a>
-  <a id="789" class="Keyword">where</a>
-    <a id="799" href="ULC.Substitution.html#799" class="Function">go</a> <a id="802" class="Symbol">:</a> <a id="804" href="Agda.Builtin.List.html#130" class="Datatype">List</a> <a id="809" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="814" class="Symbol">→</a> <a id="816" href="Algebra.Core.html#484" class="Function">Op₁</a> <a id="820" href="ULC.Base.html#356" class="Datatype">Term</a>
-    <a id="829" href="ULC.Substitution.html#799" class="Function">go</a> <a id="832" href="ULC.Substitution.html#832" class="Bound">xs</a> <a id="835" class="Symbol">=</a> <a id="837" class="Symbol">λ</a> <a id="839" class="Keyword">where</a>
-      <a id="851" class="Symbol">(</a><a id="852" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="854" href="ULC.Substitution.html#854" class="Bound">x</a><a id="855" class="Symbol">)</a>     <a id="861" class="Symbol">→</a> <a id="863" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="865" href="ULC.Substitution.html#854" class="Bound">x</a>
-      <a id="873" class="Symbol">(</a><a id="874" href="ULC.Substitution.html#874" class="Bound">l</a> <a id="876" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="878" href="ULC.Substitution.html#878" class="Bound">r</a><a id="879" class="Symbol">)</a>   <a id="883" class="Symbol">→</a> <a id="885" href="ULC.Substitution.html#799" class="Function">go</a> <a id="888" href="ULC.Substitution.html#832" class="Bound">xs</a> <a id="891" href="ULC.Substitution.html#874" class="Bound">l</a> <a id="893" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="895" href="ULC.Substitution.html#799" class="Function">go</a> <a id="898" href="ULC.Substitution.html#832" class="Bound">xs</a> <a id="901" href="ULC.Substitution.html#878" class="Bound">r</a>
-      <a id="909" class="Symbol">(</a><a id="910" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="912" href="ULC.Substitution.html#912" class="Bound">x</a> <a id="914" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="916" href="ULC.Substitution.html#916" class="Bound">t</a><a id="917" class="Symbol">)</a> <a id="919" class="Symbol">→</a> <a id="921" class="Keyword">let</a> <a id="925" href="ULC.Substitution.html#925" class="Bound">x′</a> <a id="928" class="Symbol">=</a> <a id="930" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="940" class="Symbol">(</a><a id="941" href="ULC.Substitution.html#832" class="Bound">xs</a> <a id="944" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="947" href="Nominal.Support.html#1453" class="Function">supp</a> <a id="952" href="ULC.Substitution.html#916" class="Bound">t</a><a id="953" class="Symbol">)</a>
-                  <a id="973" class="Keyword">in</a> <a id="976" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="978" href="ULC.Substitution.html#925" class="Bound">x′</a> <a id="981" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="983" href="ULC.Substitution.html#799" class="Function">go</a> <a id="986" class="Symbol">(</a><a id="987" href="ULC.Substitution.html#912" class="Bound">x</a> <a id="989" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="991" href="ULC.Substitution.html#832" class="Bound">xs</a><a id="993" class="Symbol">)</a> <a id="995" class="Symbol">(</a><a id="996" href="Nominal.Swap.Base.html#442" class="Field">swap</a> <a id="1001" href="ULC.Substitution.html#925" class="Bound">x′</a> <a id="1004" href="ULC.Substitution.html#912" class="Bound">x</a> <a id="1006" href="ULC.Substitution.html#916" class="Bound">t</a><a id="1007" class="Symbol">)</a>
+<a id="646" class="Comment">-- enforce the Barendregt convention: no shadowing, distinct bound variables</a>
+<a id="723" class="Symbol">{-#</a> <a id="727" class="Keyword">TERMINATING</a> <a id="739" class="Symbol">#-}</a>
+<a id="barendregt"></a><a id="743" href="ULC.Substitution.html#743" class="Function">barendregt</a> <a id="754" class="Symbol">:</a> <a id="756" href="Algebra.Core.html#484" class="Function">Op₁</a> <a id="760" href="ULC.Base.html#356" class="Datatype">Term</a>
+<a id="765" href="ULC.Substitution.html#743" class="Function">barendregt</a> <a id="776" class="Symbol">=</a> <a id="778" href="ULC.Substitution.html#796" class="Function">go</a> <a id="781" href="Agda.Builtin.List.html#167" class="InductiveConstructor">[]</a>
+  <a id="786" class="Keyword">where</a>
+    <a id="796" href="ULC.Substitution.html#796" class="Function">go</a> <a id="799" class="Symbol">:</a> <a id="801" href="Agda.Builtin.List.html#130" class="Datatype">List</a> <a id="806" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="811" class="Symbol">→</a> <a id="813" href="Algebra.Core.html#484" class="Function">Op₁</a> <a id="817" href="ULC.Base.html#356" class="Datatype">Term</a>
+    <a id="826" href="ULC.Substitution.html#796" class="Function">go</a> <a id="829" href="ULC.Substitution.html#829" class="Bound">xs</a> <a id="832" class="Symbol">=</a> <a id="834" class="Symbol">λ</a> <a id="836" class="Keyword">where</a>
+      <a id="848" class="Symbol">(</a><a id="849" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="851" href="ULC.Substitution.html#851" class="Bound">x</a><a id="852" class="Symbol">)</a>     <a id="858" class="Symbol">→</a> <a id="860" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="862" href="ULC.Substitution.html#851" class="Bound">x</a>
+      <a id="870" class="Symbol">(</a><a id="871" href="ULC.Substitution.html#871" class="Bound">l</a> <a id="873" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="875" href="ULC.Substitution.html#875" class="Bound">r</a><a id="876" class="Symbol">)</a>   <a id="880" class="Symbol">→</a> <a id="882" href="ULC.Substitution.html#796" class="Function">go</a> <a id="885" href="ULC.Substitution.html#829" class="Bound">xs</a> <a id="888" href="ULC.Substitution.html#871" class="Bound">l</a> <a id="890" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="892" href="ULC.Substitution.html#796" class="Function">go</a> <a id="895" href="ULC.Substitution.html#829" class="Bound">xs</a> <a id="898" href="ULC.Substitution.html#875" class="Bound">r</a>
+      <a id="906" class="Symbol">(</a><a id="907" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="909" href="ULC.Substitution.html#909" class="Bound">x</a> <a id="911" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="913" href="ULC.Substitution.html#913" class="Bound">t</a><a id="914" class="Symbol">)</a> <a id="916" class="Symbol">→</a> <a id="918" class="Keyword">let</a> <a id="922" href="ULC.Substitution.html#922" class="Bound">x′</a> <a id="925" class="Symbol">=</a> <a id="927" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="937" class="Symbol">(</a><a id="938" href="ULC.Substitution.html#829" class="Bound">xs</a> <a id="941" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="944" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="949" href="ULC.Substitution.html#913" class="Bound">t</a><a id="950" class="Symbol">)</a>
+                  <a id="970" class="Keyword">in</a> <a id="973" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="975" href="ULC.Substitution.html#922" class="Bound">x′</a> <a id="978" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="980" href="ULC.Substitution.html#796" class="Function">go</a> <a id="983" class="Symbol">(</a><a id="984" href="ULC.Substitution.html#909" class="Bound">x</a> <a id="986" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="988" href="ULC.Substitution.html#829" class="Bound">xs</a><a id="990" class="Symbol">)</a> <a id="992" class="Symbol">(</a><a id="993" href="Nominal.Swap.Base.html#442" class="Field">swap</a> <a id="998" href="ULC.Substitution.html#922" class="Bound">x′</a> <a id="1001" href="ULC.Substitution.html#909" class="Bound">x</a> <a id="1003" href="ULC.Substitution.html#913" class="Bound">t</a><a id="1004" class="Symbol">)</a>
 
-<a id="1010" class="Keyword">infix</a> <a id="1016" class="Number">6</a> <a id="1018" href="ULC.Substitution.html#1045" class="Function Operator">_[_/_]</a>
-<a id="1025" class="Symbol">{-#</a> <a id="1029" class="Keyword">TERMINATING</a> <a id="1041" class="Symbol">#-}</a>
-<a id="_[_/_]"></a><a id="1045" href="ULC.Substitution.html#1045" class="Function Operator">_[_/_]</a> <a id="1052" class="Symbol">:</a> <a id="1054" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1059" class="Symbol">→</a> <a id="1061" href="ULC.Substitution.html#404" class="Bound">Atom</a> <a id="1066" class="Symbol">→</a> <a id="1068" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1073" class="Symbol">→</a> <a id="1075" href="ULC.Base.html#356" class="Datatype">Term</a>
-<a id="1080" class="Symbol">(</a><a id="1081" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="1083" href="ULC.Substitution.html#1083" class="Bound">x</a><a id="1084" class="Symbol">)</a> <a id="1086" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1088" href="ULC.Substitution.html#1088" class="Bound">𝕒</a> <a id="1090" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1092" href="ULC.Substitution.html#1092" class="Bound">N</a> <a id="1094" href="ULC.Substitution.html#1045" class="Function Operator">]</a> <a id="1096" class="Symbol">=</a> <a id="1098" href="Data.Bool.Base.html#1292" class="Function Operator">if</a> <a id="1101" href="ULC.Substitution.html#1083" class="Bound">x</a> <a id="1103" href="Prelude.DecEq.Core.html#222" class="Function Operator">==</a> <a id="1106" href="ULC.Substitution.html#1088" class="Bound">𝕒</a> <a id="1108" href="Data.Bool.Base.html#1292" class="Function Operator">then</a> <a id="1113" href="ULC.Substitution.html#1092" class="Bound">N</a> <a id="1115" href="Data.Bool.Base.html#1292" class="Function Operator">else</a> <a id="1120" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="1122" href="ULC.Substitution.html#1083" class="Bound">x</a>
-<a id="1124" class="Symbol">(</a><a id="1125" href="ULC.Substitution.html#1125" class="Bound">L</a> <a id="1127" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="1129" href="ULC.Substitution.html#1129" class="Bound">M</a><a id="1130" class="Symbol">)</a> <a id="1132" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1134" href="ULC.Substitution.html#1134" class="Bound">𝕒</a> <a id="1136" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1138" href="ULC.Substitution.html#1138" class="Bound">N</a> <a id="1140" href="ULC.Substitution.html#1045" class="Function Operator">]</a> <a id="1142" class="Symbol">=</a>
-  <a id="1146" class="Keyword">let</a> <a id="1150" href="ULC.Substitution.html#1150" class="Bound">L′</a> <a id="1153" class="Symbol">=</a> <a id="1155" href="ULC.Substitution.html#1125" class="Bound">L</a> <a id="1157" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1159" href="ULC.Substitution.html#1134" class="Bound">𝕒</a> <a id="1161" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1163" href="ULC.Substitution.html#1138" class="Bound">N</a> <a id="1165" href="ULC.Substitution.html#1045" class="Function Operator">]</a>
-      <a id="1173" href="ULC.Substitution.html#1173" class="Bound">M′</a> <a id="1176" class="Symbol">=</a> <a id="1178" href="ULC.Substitution.html#1129" class="Bound">M</a> <a id="1180" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1182" href="ULC.Substitution.html#1134" class="Bound">𝕒</a> <a id="1184" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1186" href="ULC.Substitution.html#1138" class="Bound">N</a> <a id="1188" href="ULC.Substitution.html#1045" class="Function Operator">]</a>
-  <a id="1192" class="Keyword">in</a> <a id="1195" href="ULC.Substitution.html#1150" class="Bound">L′</a> <a id="1198" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="1200" href="ULC.Substitution.html#1173" class="Bound">M′</a>
-<a id="1203" class="Symbol">(</a><a id="1204" href="ULC.Base.html#413" class="InductiveConstructor Operator">ƛ</a> <a id="1206" href="ULC.Substitution.html#1206" class="Bound">t̂</a><a id="1208" class="Symbol">)</a> <a id="1210" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1212" href="ULC.Substitution.html#1212" class="Bound">𝕒</a> <a id="1214" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1216" href="ULC.Substitution.html#1216" class="Bound">N</a> <a id="1218" href="ULC.Substitution.html#1045" class="Function Operator">]</a> <a id="1220" class="Symbol">=</a>
-  <a id="1224" class="Comment">-- let y = fresh-var (𝕒 , t̂ , N)</a>
-  <a id="1260" class="Keyword">let</a> <a id="1264" href="ULC.Substitution.html#1264" class="Bound">y</a> <a id="1266" class="Symbol">=</a> <a id="1268" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="1278" class="Symbol">(</a><a id="1279" href="ULC.Substitution.html#1212" class="Bound">𝕒</a> <a id="1281" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="1283" href="Nominal.Support.html#1453" class="Function">supp</a> <a id="1288" href="ULC.Substitution.html#1206" class="Bound">t̂</a> <a id="1291" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="1294" href="Nominal.Support.html#1453" class="Function">supp</a> <a id="1299" href="ULC.Substitution.html#1216" class="Bound">N</a><a id="1300" class="Symbol">)</a>
-  <a id="1304" class="Keyword">in</a> <a id="1307" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="1309" href="ULC.Substitution.html#1264" class="Bound">y</a> <a id="1311" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="1313" href="Nominal.Abs.Base.html#587" class="Function">conc</a> <a id="1318" href="ULC.Substitution.html#1206" class="Bound">t̂</a> <a id="1321" href="ULC.Substitution.html#1264" class="Bound">y</a> <a id="1323" href="ULC.Substitution.html#1045" class="Function Operator">[</a> <a id="1325" href="ULC.Substitution.html#1212" class="Bound">𝕒</a> <a id="1327" href="ULC.Substitution.html#1045" class="Function Operator">/</a> <a id="1329" href="ULC.Substitution.html#1216" class="Bound">N</a> <a id="1331" href="ULC.Substitution.html#1045" class="Function Operator">]</a>
+<a id="1007" class="Keyword">infix</a> <a id="1013" class="Number">6</a> <a id="1015" href="ULC.Substitution.html#1043" class="Function Operator">_[_/_]</a>
 
-<a id="1334" class="Comment">{- ** well-founded version
+<a id="1023" class="Symbol">{-#</a> <a id="1027" class="Keyword">TERMINATING</a> <a id="1039" class="Symbol">#-}</a>
+<a id="_[_/_]"></a><a id="1043" href="ULC.Substitution.html#1043" class="Function Operator">_[_/_]</a> <a id="1050" class="Symbol">:</a> <a id="1052" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1057" class="Symbol">→</a> <a id="1059" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="1064" class="Symbol">→</a> <a id="1066" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1071" class="Symbol">→</a> <a id="1073" href="ULC.Base.html#356" class="Datatype">Term</a>
+<a id="1078" class="Symbol">(</a><a id="1079" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="1081" href="ULC.Substitution.html#1081" class="Bound">x</a><a id="1082" class="Symbol">)</a> <a id="1084" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1086" href="ULC.Substitution.html#1086" class="Bound">𝕒</a> <a id="1088" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1090" href="ULC.Substitution.html#1090" class="Bound">N</a> <a id="1092" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="1094" class="Symbol">=</a> <a id="1096" href="Data.Bool.Base.html#1292" class="Function Operator">if</a> <a id="1099" href="ULC.Substitution.html#1081" class="Bound">x</a> <a id="1101" href="Prelude.DecEq.Core.html#222" class="Function Operator">==</a> <a id="1104" href="ULC.Substitution.html#1086" class="Bound">𝕒</a> <a id="1106" href="Data.Bool.Base.html#1292" class="Function Operator">then</a> <a id="1111" href="ULC.Substitution.html#1090" class="Bound">N</a> <a id="1113" href="Data.Bool.Base.html#1292" class="Function Operator">else</a> <a id="1118" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="1120" href="ULC.Substitution.html#1081" class="Bound">x</a>
+<a id="1122" class="Symbol">(</a><a id="1123" href="ULC.Substitution.html#1123" class="Bound">L</a> <a id="1125" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="1127" href="ULC.Substitution.html#1127" class="Bound">M</a><a id="1128" class="Symbol">)</a> <a id="1130" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1132" href="ULC.Substitution.html#1132" class="Bound">𝕒</a> <a id="1134" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1136" href="ULC.Substitution.html#1136" class="Bound">N</a> <a id="1138" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="1140" class="Symbol">=</a>
+  <a id="1144" class="Keyword">let</a> <a id="1148" href="ULC.Substitution.html#1148" class="Bound">L′</a> <a id="1151" class="Symbol">=</a> <a id="1153" href="ULC.Substitution.html#1123" class="Bound">L</a> <a id="1155" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1157" href="ULC.Substitution.html#1132" class="Bound">𝕒</a> <a id="1159" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1161" href="ULC.Substitution.html#1136" class="Bound">N</a> <a id="1163" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+      <a id="1171" href="ULC.Substitution.html#1171" class="Bound">M′</a> <a id="1174" class="Symbol">=</a> <a id="1176" href="ULC.Substitution.html#1127" class="Bound">M</a> <a id="1178" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1180" href="ULC.Substitution.html#1132" class="Bound">𝕒</a> <a id="1182" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1184" href="ULC.Substitution.html#1136" class="Bound">N</a> <a id="1186" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+  <a id="1190" class="Keyword">in</a> <a id="1193" href="ULC.Substitution.html#1148" class="Bound">L′</a> <a id="1196" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="1198" href="ULC.Substitution.html#1171" class="Bound">M′</a>
+<a id="1201" class="Symbol">(</a><a id="1202" href="ULC.Base.html#413" class="InductiveConstructor Operator">ƛ</a> <a id="1204" href="ULC.Substitution.html#1204" class="Bound">t̂</a><a id="1206" class="Symbol">)</a> <a id="1208" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1210" href="ULC.Substitution.html#1210" class="Bound">𝕒</a> <a id="1212" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1214" href="ULC.Substitution.html#1214" class="Bound">N</a> <a id="1216" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="1218" class="Symbol">=</a>
+  <a id="1222" class="Comment">-- let y = fresh-var (𝕒 , t̂ , N)</a>
+  <a id="1258" class="Keyword">let</a> <a id="1262" href="ULC.Substitution.html#1262" class="Bound">y</a> <a id="1264" class="Symbol">=</a> <a id="1266" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="1276" class="Symbol">(</a><a id="1277" href="ULC.Substitution.html#1210" class="Bound">𝕒</a> <a id="1279" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="1281" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="1286" href="ULC.Substitution.html#1204" class="Bound">t̂</a> <a id="1289" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="1292" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="1297" href="ULC.Substitution.html#1214" class="Bound">N</a><a id="1298" class="Symbol">)</a>
+  <a id="1302" class="Keyword">in</a> <a id="1305" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="1307" href="ULC.Substitution.html#1262" class="Bound">y</a> <a id="1309" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="1311" href="Nominal.Abs.Base.html#554" class="Function">conc</a> <a id="1316" href="ULC.Substitution.html#1204" class="Bound">t̂</a> <a id="1319" href="ULC.Substitution.html#1262" class="Bound">y</a> <a id="1321" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1323" href="ULC.Substitution.html#1210" class="Bound">𝕒</a> <a id="1325" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1327" href="ULC.Substitution.html#1214" class="Bound">N</a> <a id="1329" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+
+<a id="1332" class="Keyword">infix</a> <a id="1338" class="Number">6</a> <a id="1340" href="ULC.Substitution.html#1345" class="Function Operator">_[_]</a>
+<a id="_[_]"></a><a id="1345" href="ULC.Substitution.html#1345" class="Function Operator">_[_]</a> <a id="1350" class="Symbol">:</a> <a id="1352" href="Nominal.Abs.Base.html#404" class="Record">Abs</a> <a id="1356" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1361" class="Symbol">→</a> <a id="1363" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1368" class="Symbol">→</a> <a id="1370" href="ULC.Base.html#356" class="Datatype">Term</a>
+<a id="1375" class="Symbol">(</a><a id="1376" href="Nominal.Abs.Base.html#450" class="InductiveConstructor">abs</a> <a id="1380" href="ULC.Substitution.html#1380" class="Bound">x</a> <a id="1382" href="ULC.Substitution.html#1382" class="Bound">t</a><a id="1383" class="Symbol">)</a> <a id="1385" href="ULC.Substitution.html#1345" class="Function Operator">[</a> <a id="1387" href="ULC.Substitution.html#1387" class="Bound">s</a> <a id="1389" href="ULC.Substitution.html#1345" class="Function Operator">]</a> <a id="1391" class="Symbol">=</a> <a id="1393" class="Symbol">(</a><a id="1394" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="1396" href="ULC.Substitution.html#1380" class="Bound">x</a> <a id="1398" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="1400" href="ULC.Substitution.html#1382" class="Bound">t</a><a id="1401" class="Symbol">)</a> <a id="1403" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1405" href="ULC.Substitution.html#1380" class="Bound">x</a> <a id="1407" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1409" href="ULC.Substitution.html#1387" class="Bound">s</a> <a id="1411" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+
+<a id="1414" class="Keyword">infix</a> <a id="1420" class="Number">6</a> <a id="1422" href="ULC.Substitution.html#1430" class="Function Operator">_[_/_]↑</a>
+<a id="_[_/_]↑"></a><a id="1430" href="ULC.Substitution.html#1430" class="Function Operator">_[_/_]↑</a> <a id="1438" class="Symbol">:</a> <a id="1440" href="Nominal.Abs.Base.html#404" class="Record">Abs</a> <a id="1444" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1449" class="Symbol">→</a> <a id="1451" href="ULC.Substitution.html#401" class="Bound">Atom</a> <a id="1456" class="Symbol">→</a> <a id="1458" href="ULC.Base.html#356" class="Datatype">Term</a> <a id="1463" class="Symbol">→</a> <a id="1465" href="Nominal.Abs.Base.html#404" class="Record">Abs</a> <a id="1469" href="ULC.Base.html#356" class="Datatype">Term</a>
+<a id="1474" class="Symbol">(</a><a id="1475" href="Nominal.Abs.Base.html#450" class="InductiveConstructor">abs</a> <a id="1479" href="ULC.Substitution.html#1479" class="Bound">𝕒</a> <a id="1481" href="ULC.Substitution.html#1481" class="Bound">t</a><a id="1482" class="Symbol">)</a> <a id="1484" href="ULC.Substitution.html#1430" class="Function Operator">[</a> <a id="1486" href="ULC.Substitution.html#1486" class="Bound">x</a> <a id="1488" href="ULC.Substitution.html#1430" class="Function Operator">/</a> <a id="1490" href="ULC.Substitution.html#1490" class="Bound">N</a> <a id="1492" href="ULC.Substitution.html#1430" class="Function Operator">]↑</a> <a id="1495" class="Symbol">=</a> <a id="1497" href="ULC.Base.html#1532" class="Function">unƛ</a> <a id="1501" href="Function.Base.html#1928" class="Function Operator">$</a> <a id="1503" class="Symbol">(</a><a id="1504" href="ULC.Base.html#748" class="InductiveConstructor Operator">ƛ</a> <a id="1506" href="ULC.Substitution.html#1479" class="Bound">𝕒</a> <a id="1508" href="ULC.Base.html#748" class="InductiveConstructor Operator">⇒</a> <a id="1510" href="ULC.Substitution.html#1481" class="Bound">t</a><a id="1511" class="Symbol">)</a> <a id="1513" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="1515" href="ULC.Substitution.html#1486" class="Bound">x</a> <a id="1517" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="1519" href="ULC.Substitution.html#1490" class="Bound">N</a> <a id="1521" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+
+<a id="1524" class="Comment">{- ** well-founded version
 t₀ [ 𝕒 / s ] = ≺-rec _ go t₀
   module ∣Substitution∣ where
     go : ∀ x → (∀ y → y ≺ x → Term) → Term
@@ -59,307 +68,93 @@ t₀ [ 𝕒 / s ] = ≺-rec _ go t₀
       in  ƛ y ⇒ rec (conc f y) (conc≺ f y)
 -}</a>
 
-<a id="1829" class="Comment">-- infix 6 _[_/_]↑</a>
-<a id="1848" class="Comment">-- _[_/_]↑ : Abs Term → Atom → Term → Abs Term</a>
-<a id="1895" class="Comment">-- (abs 𝕒 t) [ x / N ]↑ = unƛ $ (ƛ 𝕒 ⇒ t) [ x / N ]</a>
+<a id="2019" class="Comment">-- ** postulate equivariance of substitution for now...</a>
+<a id="2075" class="Keyword">postulate</a> <a id="swap-subst"></a><a id="2085" href="ULC.Substitution.html#2085" class="Postulate">swap-subst</a> <a id="2096" class="Symbol">:</a> <a id="2098" href="Nominal.Swap.Equivariance.html#3245" class="Macro">Equivariant</a> <a id="2110" href="ULC.Substitution.html#1043" class="Function Operator">_[_/_]</a>
+<a id="2117" class="Comment">-- swap-subst = ? -- equivariant _[_/_]</a>
 
-<a id="1948" class="Keyword">postulate</a> <a id="swap-subst"></a><a id="1958" href="ULC.Substitution.html#1958" class="Postulate">swap-subst</a> <a id="1969" class="Symbol">:</a> <a id="1971" href="Nominal.Swap.Equivariance.html#1856" class="Macro">Equivariant</a> <a id="1983" href="ULC.Substitution.html#1045" class="Function Operator">_[_/_]</a>
+<a id="2158" class="Comment">-- ** we will also need the following lemmas for proving Reduction.sub-par (β case)</a>
 
-<a id="1991" class="Comment">{- ** postulate for now...
+<a id="subst-commute"></a><a id="2243" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2257" class="Symbol">:</a> <a id="2259" href="ULC.Base.html#836" class="Generalizable">N</a> <a id="2261" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2263" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="2265" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2267" href="ULC.Base.html#826" class="Generalizable">L</a> <a id="2269" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="2271" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2273" href="ULC.Base.html#783" class="Generalizable">y</a> <a id="2275" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2277" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="2279" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2281" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="2283" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2285" href="ULC.Base.html#826" class="Generalizable">L</a> <a id="2287" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="2289" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="2291" href="Prelude.Setoid.Core.html#191" class="Field Operator">≈</a> <a id="2293" href="ULC.Base.html#836" class="Generalizable">N</a> <a id="2295" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2297" href="ULC.Base.html#783" class="Generalizable">y</a> <a id="2299" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2301" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="2303" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="2305" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2307" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="2309" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2311" href="ULC.Base.html#826" class="Generalizable">L</a> <a id="2313" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+<a id="2315" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2329" class="Symbol">{</a><a id="2330" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="2332" href="ULC.Substitution.html#2332" class="Bound">n</a><a id="2333" class="Symbol">}</a> <a id="2335" class="Symbol">{</a><a id="2336" href="ULC.Substitution.html#2336" class="Bound">x</a><a id="2337" class="Symbol">}</a> <a id="2339" class="Symbol">{</a><a id="2340" href="ULC.Substitution.html#2340" class="Bound">L</a><a id="2341" class="Symbol">}</a> <a id="2343" class="Symbol">{</a><a id="2344" href="ULC.Substitution.html#2344" class="Bound">y</a><a id="2345" class="Symbol">}</a> <a id="2347" class="Symbol">{</a><a id="2348" href="ULC.Substitution.html#2348" class="Bound">M</a><a id="2349" class="Symbol">}</a>
+  <a id="2353" class="Keyword">with</a> <a id="2358" href="ULC.Substitution.html#2332" class="Bound">n</a> <a id="2360" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="2362" href="ULC.Substitution.html#2336" class="Bound">x</a> <a id="2364" class="Symbol">|</a> <a id="2366" href="ULC.Substitution.html#2332" class="Bound">n</a> <a id="2368" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="2370" href="ULC.Substitution.html#2344" class="Bound">y</a>
+<a id="2372" class="Symbol">...</a> <a id="2376" class="Symbol">|</a> <a id="2378" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="2382" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a> <a id="2387" class="Symbol">|</a> <a id="2389" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="2393" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a>
+  <a id="2400" class="Comment">-- exclude with x ≠ y</a>
+  <a id="2424" class="Symbol">=</a> <a id="2426" class="Hole">{!subst-commute !}</a>
+<a id="2445" class="Symbol">...</a> <a id="2449" class="Symbol">|</a> <a id="2451" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="2455" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a> <a id="2460" class="Symbol">|</a> <a id="2462" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="2465" href="ULC.Substitution.html#2465" class="Bound">n≠y</a>
+  <a id="2471" class="Keyword">rewrite</a> <a id="2479" href="Prelude.DecEq.WithK.html#170" class="Function">≟-refl</a> <a id="2486" class="Bound">n</a>
+  <a id="2490" class="Symbol">=</a> <a id="2492" class="Hole">{!!}</a>
+  <a id="2499" class="Comment">-- prove with y ♯ L</a>
+<a id="2519" class="Symbol">...</a> <a id="2523" class="Symbol">|</a> <a id="2525" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="2528" href="ULC.Substitution.html#2528" class="Bound">n≠x</a> <a id="2532" class="Symbol">|</a> <a id="2534" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="2538" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a>
+  <a id="2545" class="Keyword">rewrite</a> <a id="2553" href="Prelude.DecEq.WithK.html#170" class="Function">≟-refl</a> <a id="2560" class="Bound">n</a>
+  <a id="2564" class="Symbol">=</a> <a id="2566" href="Prelude.Setoid.Core.html#470" class="Function">≈-refl</a>
+<a id="2573" class="Symbol">...</a> <a id="2577" class="Symbol">|</a> <a id="2579" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="2582" href="ULC.Substitution.html#2582" class="Bound">n≠x</a> <a id="2586" class="Symbol">|</a> <a id="2588" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="2591" href="ULC.Substitution.html#2591" class="Bound">n≠y</a>
+  <a id="2597" class="Keyword">rewrite</a> <a id="2605" href="Relation.Nullary.Decidable.Core.html#3296" class="Function">dec-no</a> <a id="2612" class="Symbol">(</a><a id="2613" class="Bound">n</a> <a id="2615" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="2617" class="Bound">x</a><a id="2618" class="Symbol">)</a> <a id="2620" href="ULC.Substitution.html#2582" class="Bound">n≠x</a> <a id="2624" class="Symbol">.</a><a id="2625" href="Agda.Builtin.Sigma.html#246" class="Field">proj₂</a>
+        <a id="2639" class="Symbol">|</a> <a id="2641" href="Relation.Nullary.Decidable.Core.html#3296" class="Function">dec-no</a> <a id="2648" class="Symbol">(</a><a id="2649" class="Bound">n</a> <a id="2651" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="2653" class="Bound">y</a><a id="2654" class="Symbol">)</a> <a id="2656" href="ULC.Substitution.html#2591" class="Bound">n≠y</a> <a id="2660" class="Symbol">.</a><a id="2661" href="Agda.Builtin.Sigma.html#246" class="Field">proj₂</a>
+        <a id="2675" class="Symbol">=</a> <a id="2677" href="Prelude.Setoid.Core.html#470" class="Function">≈-refl</a>
+<a id="2684" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2698" class="Symbol">{</a><a id="2699" href="ULC.Substitution.html#2699" class="Bound">Nˡ</a> <a id="2702" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="2704" href="ULC.Substitution.html#2704" class="Bound">Nʳ</a><a id="2706" class="Symbol">}</a> <a id="2708" class="Symbol">{</a><a id="2709" href="ULC.Substitution.html#2709" class="Bound">x</a><a id="2710" class="Symbol">}</a> <a id="2712" class="Symbol">{</a><a id="2713" href="ULC.Substitution.html#2713" class="Bound">L</a><a id="2714" class="Symbol">}</a> <a id="2716" class="Symbol">{</a><a id="2717" href="ULC.Substitution.html#2717" class="Bound">y</a><a id="2718" class="Symbol">}</a> <a id="2720" class="Symbol">{</a><a id="2721" href="ULC.Substitution.html#2721" class="Bound">M</a><a id="2722" class="Symbol">}</a>
+  <a id="2726" class="Symbol">=</a> <a id="2728" href="ULC.Alpha.html#777" class="InductiveConstructor">ξ≡</a> <a id="2731" class="Symbol">(</a><a id="2732" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2746" class="Symbol">{</a><a id="2747" href="ULC.Substitution.html#2699" class="Bound">Nˡ</a><a id="2749" class="Symbol">})</a> <a id="2752" class="Symbol">(</a><a id="2753" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2767" class="Symbol">{</a><a id="2768" href="ULC.Substitution.html#2704" class="Bound">Nʳ</a><a id="2770" class="Symbol">})</a>
+<a id="2773" href="ULC.Substitution.html#2243" class="Function">subst-commute</a> <a id="2787" class="Symbol">{</a><a id="2788" href="ULC.Base.html#413" class="InductiveConstructor Operator">ƛ</a> <a id="2790" href="ULC.Substitution.html#2790" class="Bound">t̂</a><a id="2792" class="Symbol">}</a> <a id="2794" class="Symbol">{</a><a id="2795" href="ULC.Substitution.html#2795" class="Bound">x</a><a id="2796" class="Symbol">}</a> <a id="2798" class="Symbol">{</a><a id="2799" href="ULC.Substitution.html#2799" class="Bound">L</a><a id="2800" class="Symbol">}</a> <a id="2802" class="Symbol">{</a><a id="2803" href="ULC.Substitution.html#2803" class="Bound">y</a><a id="2804" class="Symbol">}</a> <a id="2806" class="Symbol">{</a><a id="2807" href="ULC.Substitution.html#2807" class="Bound">M</a><a id="2808" class="Symbol">}</a>
+  <a id="2812" class="Keyword">with</a> <a id="2817" href="ULC.Substitution.html#2817" class="Bound">xˡ</a> ← <a id="2822" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="2832" class="Symbol">(</a><a id="2833" href="ULC.Substitution.html#2795" class="Bound">x</a> <a id="2835" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="2837" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="2842" href="ULC.Substitution.html#2790" class="Bound">t̂</a> <a id="2845" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="2848" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="2853" href="ULC.Substitution.html#2799" class="Bound">L</a><a id="2854" class="Symbol">)</a>
+  <a id="2858" class="Comment">-- (ƛ xˡ ⇒ conc t̂ xˡ [ x / L ]) [ y / M [ x / L ] ]</a>
+  <a id="2913" class="Keyword">with</a> <a id="2918" href="ULC.Substitution.html#2918" class="Bound">yˡ</a> ← <a id="2923" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="2933" class="Symbol">(</a><a id="2934" href="ULC.Substitution.html#2803" class="Bound">y</a> <a id="2936" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="2938" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="2943" class="Symbol">(</a><a id="2944" href="Nominal.Abs.Base.html#450" class="InductiveConstructor">abs</a> <a id="2948" href="ULC.Substitution.html#2817" class="Bound">xˡ</a> <a id="2951" href="Function.Base.html#1928" class="Function Operator">$</a> <a id="2953" href="Nominal.Abs.Base.html#554" class="Function">conc</a> <a id="2958" href="ULC.Substitution.html#2790" class="Bound">t̂</a> <a id="2961" href="ULC.Substitution.html#2817" class="Bound">xˡ</a> <a id="2964" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2966" href="ULC.Substitution.html#2795" class="Bound">x</a> <a id="2968" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2970" href="ULC.Substitution.html#2799" class="Bound">L</a> <a id="2972" href="ULC.Substitution.html#1043" class="Function Operator">]</a><a id="2973" class="Symbol">)</a> <a id="2975" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="2978" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="2983" class="Symbol">(</a><a id="2984" href="ULC.Substitution.html#2807" class="Bound">M</a> <a id="2986" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="2988" href="ULC.Substitution.html#2795" class="Bound">x</a> <a id="2990" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="2992" href="ULC.Substitution.html#2799" class="Bound">L</a> <a id="2994" href="ULC.Substitution.html#1043" class="Function Operator">]</a><a id="2995" class="Symbol">))</a>
+  <a id="3000" class="Comment">-- ƛ yˡ ⇒ conc (abs xˡ $ conc t̂ xˡ [ x / L ]) yˡ [ y / M [ x / L ] ]</a>
+  <a id="3072" class="Comment">--      ≡ conc t̂ yˡ [ x / L ] [ y / M [ x / L ] ]</a>
 
-subs : List (Atom × Term) → Op₁ Term
-subs = λ where
-  [] t → t
-  ((𝕒 , s) ∷ σ) t → subs σ (t [ 𝕒 / s ])
+  <a id="3126" class="Keyword">with</a> <a id="3131" href="ULC.Substitution.html#3131" class="Bound">yʳ</a> ← <a id="3136" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="3146" class="Symbol">(</a><a id="3147" href="ULC.Substitution.html#2803" class="Bound">y</a> <a id="3149" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="3151" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="3156" href="ULC.Substitution.html#2790" class="Bound">t̂</a> <a id="3159" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="3162" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="3167" href="ULC.Substitution.html#2807" class="Bound">M</a><a id="3168" class="Symbol">)</a>
+  <a id="3172" class="Comment">-- (ƛ yʳ ⇒ conc t̂ yʳ [ y / M ]) [ x / L ]</a>
+  <a id="3217" class="Keyword">with</a> <a id="3222" href="ULC.Substitution.html#3222" class="Bound">xʳ</a> ← <a id="3227" href="Nominal.Support.html#325" class="Function">freshAtom</a> <a id="3237" class="Symbol">(</a><a id="3238" href="ULC.Substitution.html#2795" class="Bound">x</a> <a id="3240" href="Agda.Builtin.List.html#182" class="InductiveConstructor Operator">∷</a> <a id="3242" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="3247" class="Symbol">(</a><a id="3248" href="Nominal.Abs.Base.html#450" class="InductiveConstructor">abs</a> <a id="3252" href="ULC.Substitution.html#3131" class="Bound">yʳ</a> <a id="3255" href="Function.Base.html#1928" class="Function Operator">$</a> <a id="3257" href="Nominal.Abs.Base.html#554" class="Function">conc</a> <a id="3262" href="ULC.Substitution.html#2790" class="Bound">t̂</a> <a id="3265" href="ULC.Substitution.html#3131" class="Bound">yʳ</a> <a id="3268" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="3270" href="ULC.Substitution.html#2803" class="Bound">y</a> <a id="3272" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="3274" href="ULC.Substitution.html#2807" class="Bound">M</a> <a id="3276" href="ULC.Substitution.html#1043" class="Function Operator">]</a><a id="3277" class="Symbol">)</a> <a id="3279" href="Data.List.Base.html#1819" class="Function Operator">++</a> <a id="3282" href="Nominal.Support.html#3495" class="Function">supp</a> <a id="3287" href="ULC.Substitution.html#2799" class="Bound">L</a><a id="3288" class="Symbol">)</a>
+  <a id="3292" class="Comment">-- ƛ xʳ ⇒ conc (abs yʳ $ conc t̂ yʳ [ y / M ]) xʳ [ x / L ]</a>
+  <a id="3354" class="Comment">--      ≡ conc t̂ xʳ [ y / M ] [ x / L ]</a>
+  <a id="3397" class="Symbol">=</a> <a id="3399" href="ULC.Alpha.html#867" class="InductiveConstructor Operator">ζ≡</a> <a id="3402" class="Symbol">(</a><a id="3403" class="Hole">{!!}</a> <a id="3408" href="Agda.Builtin.Sigma.html#218" class="InductiveConstructor Operator">,</a> <a id="3410" class="Symbol">(λ</a> <a id="3413" href="ULC.Substitution.html#3413" class="Bound">z</a> <a id="3415" href="ULC.Substitution.html#3415" class="Bound">z∉</a> <a id="3418" class="Symbol">→</a> <a id="3420" class="Hole">{!!}</a><a id="3424" class="Symbol">))</a>
 
-sub-ξ : (L · M) [ x / N ] ≡ (L [ x / N ]) · (M [ x / N ])
-sub-ξ = refl
+<a id="3428" class="Keyword">postulate</a> <a id="cong-subst"></a><a id="3438" href="ULC.Substitution.html#3438" class="Postulate">cong-subst</a> <a id="3449" class="Symbol">:</a> <a id="3451" href="ULC.Base.html#818" class="Generalizable">t</a> <a id="3453" href="Prelude.Setoid.Core.html#191" class="Field Operator">≈</a> <a id="3455" href="ULC.Base.html#820" class="Generalizable">t′</a> <a id="3458" class="Symbol">→</a> <a id="3460" href="ULC.Base.html#818" class="Generalizable">t</a> <a id="3462" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="3464" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="3466" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="3468" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="3470" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="3472" href="Prelude.Setoid.Core.html#191" class="Field Operator">≈</a> <a id="3474" href="ULC.Base.html#820" class="Generalizable">t′</a> <a id="3477" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="3479" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="3481" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="3483" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="3485" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
 
-sub-ƛ : (ƛ x ⇒ N) [ y / M ] ≡
-  (let x′ = freshAtom (y ∷ x ∷ supp N ++ supp M)
-   in ƛ x′ ⇒ swap x′ x N [ y / M ])
-sub-ƛ = refl
+<a id="3488" class="Comment">-- {-# TERMINATING #-}</a>
+<a id="swap∘subst"></a><a id="3511" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3522" class="Symbol">:</a> <a id="3524" href="Nominal.Swap.Base.html#442" class="Field">swap</a> <a id="3529" href="ULC.Base.html#783" class="Generalizable">y</a> <a id="3531" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="3533" href="ULC.Base.html#836" class="Generalizable">N</a> <a id="3535" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="3537" href="ULC.Base.html#783" class="Generalizable">y</a> <a id="3539" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="3541" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="3543" href="ULC.Substitution.html#1043" class="Function Operator">]</a> <a id="3545" href="Prelude.Setoid.Core.html#191" class="Field Operator">≈</a> <a id="3547" href="ULC.Base.html#836" class="Generalizable">N</a> <a id="3549" href="ULC.Substitution.html#1043" class="Function Operator">[</a> <a id="3551" href="ULC.Base.html#781" class="Generalizable">x</a> <a id="3553" href="ULC.Substitution.html#1043" class="Function Operator">/</a> <a id="3555" href="ULC.Base.html#831" class="Generalizable">M</a> <a id="3557" href="ULC.Substitution.html#1043" class="Function Operator">]</a>
+<a id="3559" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3570" class="Symbol">{</a><a id="3571" href="ULC.Substitution.html#3571" class="Bound">y</a><a id="3572" class="Symbol">}</a> <a id="3574" class="Symbol">{</a><a id="3575" href="ULC.Substitution.html#3575" class="Bound">x</a><a id="3576" class="Symbol">}</a> <a id="3578" class="Symbol">{</a><a id="3579" href="ULC.Base.html#376" class="InductiveConstructor Operator">`</a> <a id="3581" href="ULC.Substitution.html#3581" class="Bound">n</a><a id="3582" class="Symbol">}</a> <a id="3584" class="Symbol">{</a><a id="3585" href="ULC.Substitution.html#3585" class="Bound">M</a><a id="3586" class="Symbol">}</a>
+  <a id="3590" class="Keyword">with</a> <a id="3595" href="ULC.Substitution.html#3581" class="Bound">n</a> <a id="3597" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="3599" href="ULC.Substitution.html#3575" class="Bound">x</a> <a id="3601" class="Symbol">|</a> <a id="3603" href="ULC.Substitution.html#3581" class="Bound">n</a> <a id="3605" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="3607" href="ULC.Substitution.html#3571" class="Bound">y</a>
+<a id="3609" class="Symbol">...</a> <a id="3613" class="Symbol">|</a> <a id="3615" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="3619" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a> <a id="3624" class="Symbol">|</a> <a id="3626" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="3630" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a>
+  <a id="3637" class="Keyword">rewrite</a> <a id="3645" href="Prelude.DecEq.WithK.html#170" class="Function">≟-refl</a> <a id="3652" class="Bound">y</a>
+  <a id="3656" class="Symbol">=</a> <a id="3658" href="Prelude.Setoid.Core.html#470" class="Function">≈-refl</a>
+<a id="3665" class="Symbol">...</a> <a id="3669" class="Symbol">|</a> <a id="3671" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="3675" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a> <a id="3680" class="Symbol">|</a> <a id="3682" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="3685" href="ULC.Substitution.html#3685" class="Bound">n≠y</a>
+  <a id="3691" class="Keyword">rewrite</a> <a id="3699" href="Prelude.DecEq.WithK.html#170" class="Function">≟-refl</a> <a id="3706" class="Bound">y</a>
+  <a id="3710" class="Symbol">=</a> <a id="3712" href="Prelude.Setoid.Core.html#470" class="Function">≈-refl</a>
+<a id="3719" class="Symbol">...</a> <a id="3723" class="Symbol">|</a> <a id="3725" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="3728" href="ULC.Substitution.html#3728" class="Bound">n≠x</a> <a id="3732" class="Symbol">|</a> <a id="3734" href="Relation.Nullary.html#1657" class="InductiveConstructor">yes</a> <a id="3738" href="Agda.Builtin.Equality.html#190" class="InductiveConstructor">refl</a>
+  <a id="3745" class="Keyword">rewrite</a> <a id="3753" href="Relation.Nullary.Decidable.Core.html#3296" class="Function">dec-no</a> <a id="3760" class="Symbol">(</a><a id="3761" class="Bound">x</a> <a id="3763" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="3765" class="Bound">y</a><a id="3766" class="Symbol">)</a> <a id="3768" class="Symbol">(</a><a id="3769" href="Relation.Binary.PropositionalEquality.Core.html#2310" class="Function">≢-sym</a> <a id="3775" href="ULC.Substitution.html#3728" class="Bound">n≠x</a><a id="3778" class="Symbol">)</a> <a id="3780" class="Symbol">.</a><a id="3781" href="Agda.Builtin.Sigma.html#246" class="Field">proj₂</a>
+  <a id="3789" class="Symbol">=</a> <a id="3791" class="Hole">{!!}</a> <a id="3796" class="Comment">-- prove with y ♯ N</a>
+<a id="3816" class="Symbol">...</a> <a id="3820" class="Symbol">|</a> <a id="3822" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="3825" href="ULC.Substitution.html#3825" class="Bound">n≠x</a> <a id="3829" class="Symbol">|</a> <a id="3831" href="Relation.Nullary.html#1694" class="InductiveConstructor">no</a> <a id="3834" href="ULC.Substitution.html#3834" class="Bound">n≠y</a>
+  <a id="3840" class="Keyword">rewrite</a> <a id="3848" href="Relation.Nullary.Decidable.Core.html#3296" class="Function">dec-no</a> <a id="3855" class="Symbol">(</a><a id="3856" class="Bound">n</a> <a id="3858" href="Prelude.DecEq.Core.html#190" class="Field Operator">≟</a> <a id="3860" class="Bound">y</a><a id="3861" class="Symbol">)</a> <a id="3863" href="ULC.Substitution.html#3834" class="Bound">n≠y</a> <a id="3867" class="Symbol">.</a><a id="3868" href="Agda.Builtin.Sigma.html#246" class="Field">proj₂</a>
+  <a id="3876" class="Symbol">=</a> <a id="3878" href="Prelude.Setoid.Core.html#470" class="Function">≈-refl</a>
+<a id="3885" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3896" class="Symbol">{</a><a id="3897" href="ULC.Substitution.html#3897" class="Bound">y</a><a id="3898" class="Symbol">}</a> <a id="3900" class="Symbol">{</a><a id="3901" href="ULC.Substitution.html#3901" class="Bound">x</a><a id="3902" class="Symbol">}</a> <a id="3904" class="Symbol">{</a><a id="3905" href="ULC.Substitution.html#3905" class="Bound">L</a> <a id="3907" href="ULC.Base.html#396" class="InductiveConstructor Operator">·</a> <a id="3909" href="ULC.Substitution.html#3909" class="Bound">R</a><a id="3910" class="Symbol">}</a> <a id="3912" class="Symbol">{</a><a id="3913" href="ULC.Substitution.html#3913" class="Bound">M</a><a id="3914" class="Symbol">}</a>
+  <a id="3918" class="Symbol">=</a> <a id="3920" href="ULC.Alpha.html#777" class="InductiveConstructor">ξ≡</a> <a id="3923" class="Symbol">(</a><a id="3924" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3935" class="Symbol">{</a><a id="3936" class="Argument">N</a> <a id="3938" class="Symbol">=</a> <a id="3940" href="ULC.Substitution.html#3905" class="Bound">L</a><a id="3941" class="Symbol">})</a> <a id="3944" class="Symbol">(</a><a id="3945" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3956" class="Symbol">{</a><a id="3957" class="Argument">N</a> <a id="3959" class="Symbol">=</a> <a id="3961" href="ULC.Substitution.html#3909" class="Bound">R</a><a id="3962" class="Symbol">})</a>
+<a id="3965" href="ULC.Substitution.html#3511" class="Function">swap∘subst</a> <a id="3976" class="Symbol">{</a><a id="3977" href="ULC.Substitution.html#3977" class="Bound">y</a><a id="3978" class="Symbol">}</a> <a id="3980" class="Symbol">{</a><a id="3981" href="ULC.Substitution.html#3981" class="Bound">x</a><a id="3982" class="Symbol">}</a> <a id="3984" class="Symbol">{</a><a id="3985" href="ULC.Base.html#413" class="InductiveConstructor Operator">ƛ</a> <a id="3987" href="ULC.Substitution.html#3987" class="Bound">t̂</a><a id="3989" class="Symbol">}</a> <a id="3991" class="Symbol">{</a><a id="3992" href="ULC.Substitution.html#3992" class="Bound">M</a><a id="3993" class="Symbol">}</a>
+<a id="3995" class="Comment">{-
+swap y x (ƛ z ⇒ t) [ y / M ]
+≡ (ƛ swap y x z ⇒ swap y x t) [ y / M ]
+≡ let zˡ = freshAtom (y ∷ supp (swap y z (ƛ z ⇒ t) ++ supp M)
+  in ƛ zˡ → conc (swap y x $ abs z t) zˡ [ y / M ]
+          ≡ conc (swap y x $ abs z t) zˡ [ swap y x x / M ]
+          ≡ conc (swap y x $ abs z t) (swap y x zˡ) [ swap y x x / M ]
 
-sub-` : (` x) [ x / N ] ≡ N
-sub-` {x} rewrite ≟-refl x = refl
+≡ let zʳ = freshAtom (x ∷ z ∷ supp t ++ supp M)
+  in ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]
+≡ (ƛ z ⇒ t) [ x / M ]
+∎
 
-sub-`-reject : x ≢ y → (` x) [ y / N ] ≡ ` x
-sub-`-reject {x}{y} x≢y rewrite dec-no (x ≟ y) x≢y .proj₂ = refl
+conc (ƛ zˡ → conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]) w
+≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]
+≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ swap y x x / M ]
 
--- sub-noop : x ∉ supp t → t [ x / M ] ≈ t
--- sub-noop x∉ = {!!}
+≡ conc (swap w zˡ $ ƛ swap y x z ⇒ swap y x t) w [ y / M ]
+≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
+≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
 
-swap-var-helper : ∀ x y v z s
-  → swap x y (if v == z then s else (` v))
-  ≈ swap x y (` v) [ swap x y z / swap x y s ]
-swap-var-helper x y v z s
-  = case v ≟ z of λ where
-      (yes v≡z) → ∙v≡z v≡z
-      (no  v≢z) → ∙v≢z v≢z
-  where
-  ∙v≡z : v ≡ z
-        → swap x y (if v == z then s else (` v))
-        ≈ swap x y (` v) [ swap x y z / swap x y s ]
-  ∙v≡z v≡z rewrite dec-yes (v ≟ z) v≡z .proj₂ | v≡z
-    = ≈-reflexive $ sym $ sub-`
-
-  ∙v≢z : v ≢ z
-        → swap x y (if v == z then s else (` v))
-        ≈ swap x y (` v) [ swap x y z / swap x y s ]
-  ∙v≢z v≢z rewrite dec-no (v ≟ z) v≢z .proj₂
-    = ≈-reflexive
-    $ sym
-    $ sub-`-reject
-    $ swap-≢ v≢z
-
-private
-  pattern 𝟘 = here refl; pattern 𝟙 = there 𝟘
-  pattern 𝟚 = there 𝟙; pattern 𝟛 = there 𝟚
-open ≈-Reasoning
-
-cong-if : ∀ {b} →
-  ∙ L ≈ L′
-  ∙ M ≈ M′
-    ──────────────────────
-    (if b then L  else M)
-  ≈ (if b then L′ else M′)
-cong-if {b = true} = const
-cong-if {b = false} _ = id
-
-cong-substˡ : x ≈ y → t [ x / M ] ≈ t [ y / M ]
-cong-substˡ refl = ≈-refl
-
-mutual
-  {-# TERMINATING #-}
-  swap-subst : ∀ {x y z : Atom} {s : Term} t →
-    ─────────────────────────────────────────────────────────────────
-    swap x y (t [ z / s ]) ≈ swap x y t [ swap x y z / swap x y s ]
-  swap-subst {x}{y}{z}{s} t with t
-  ... | ` v
-    = begin
-      swap x y ((` v) [ z / s ])
-    ≡⟨⟩
-      swap x y (if v == z then s else (` v))
-    ≈⟨ swap-var-helper x y v z s ⟩
-      ` (if v == x then y else if v == y then x else v) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (` v) [ swap x y z / swap x y s ]
-    ∎
-  ... | L · M
-    = begin
-      swap x y ((L · M) [ z / s ])
-    ≡⟨⟩
-      swap x y ((L [ z / s ]) · (M [ z / s ]))
-    ≡⟨⟩
-      swap x y (L [ z / s ]) · swap x y (M [ z / s ])
-    ≈⟨ ξ≡ (swap-subst L) (swap-subst M) ⟩
-        (swap x y L [ swap x y z / swap x y s ])
-      · (swap x y M [ swap x y z / swap x y s ])
-    ≡⟨⟩
-      (swap x y L · swap x y M) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (L · M) [ swap x y z / swap x y s ]
-    ∎
-  ... | ƛ t̂@(abs 𝕩 t)
-         --   𝕩′ ∉ z ∷ supp t̂ ++ supp s
-         -- ⇒⟨ equivariance of _∉_ ⟩
-         --   swap x y 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         -- ⇒⟨ equivariance on 𝕩′ ⟩
-         --   𝕩′ ∉ -//-
-         --   ─────────────────────────────────────────────
-         --   ✓ swap x y 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         --     𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         --   ✖ 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-    = {!!}
-  {-
-    let 𝕩′ , x∉ = minFresh (z ∷ supp t̂ ++ supp s)
-        𝕪′ , y∉ = minFresh (swap x y z ∷ supp (swap x y t̂) ++ supp (swap x y s))
-
-        cur-supp : Atoms
-        cur-supp = swap x y z ∷ supp (swap x y t̂) ++ supp (swap x y s)
-
-        x∉′ : swap x y 𝕩′ ∉ cur-supp
-        x∉′ = λ where
-          (here eq) → swap-≢ (x∉ ∘ here) eq
-          (there x∈) → case ∈-++⁻ (supp $ swap x y t̂) x∈ of λ where
-            (inj₁ x∈) → -- x∈ : swap x y 𝕩′ ∈ supp (swap x y t̂)
-                        -- ⇒? 𝕩′ ∈ supp t̂
-              {!!}
-            (inj₂ x∈) → -- x∈ : swap x y 𝕩′ ∈ supp (swap x y s)
-                        -- ⇒? 𝕩′ ∈ supp s
-              {!!}
-
-        w∉′ : w ∉ swap x y 𝕩′ ∷ cur-supp
-        w∉′ = {!!}
-
-        y∉′ : 𝕪′ ∉ cur-supp
-        y∉′ = y∉
-
-        w∉″ : w ∉ 𝕪′ ∷ cur-supp
-        w∉″ = {!!}
-    in begin
-      swap x y ((ƛ t̂) [ z / s ])
-    ≡⟨⟩
-      swap x y (ƛ 𝕩′ ⇒ conc t̂ 𝕩′ [ z / s ])
-    ≡⟨⟩
-      ƛ swap x y 𝕩′ ⇒ swap x y (conc t̂ 𝕩′ [ z / s ])
-    ≡⟨⟩
-      (ƛ (abs (swap x y 𝕩′) $ swap x y (conc t̂ 𝕩′ [ z / s ])))
-    ≈⟨ ζ≡ ((𝕩′ ∷ 𝕪′ ∷ x ∷ y ∷ z ∷ supp t̂ ++ supp s) , λ w w∉ →
-      -- this is precisely the Abs-isomorphism proof for _×_!
-      begin
-        conc (abs (swap x y 𝕩′) $
-          swap x y (conc t̂ 𝕩′ [ z / s ])) w
-      ≈⟨ cong-conc∘abs $ swap-subst (conc t̂ 𝕩′) ⟩
-        conc (abs (swap x y 𝕩′) $
-          swap x y (conc t̂ 𝕩′) [ swap x y z / swap x y s ]) w
-      ≈⟨ (cong-conc∘abs $ cong-subst $ swap-conc t̂) ⟩
-        conc (abs (swap x y 𝕩′) $
-          conc (swap x y t̂) (swap x y 𝕩′) [ swap x y z / swap x y s ]) w
-      ≈⟨ conc-fresh {t̂ = swap x y t̂} x∉′ w∉′ ⟩
-        conc (swap x y t̂) w [ swap x y z / swap x y s ]
-      ≈˘⟨ conc-fresh {t̂ = swap x y t̂} y∉′ w∉″ ⟩
-        conc (abs 𝕪′ (conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ])) w
-      ∎)
-    ⟩
-      (ƛ (abs 𝕪′ (conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ])))
-    ≡⟨⟩
-      ƛ 𝕪′ ⇒ conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      (ƛ swap x y 𝕩 ⇒ swap x y t) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (ƛ t̂) [ swap x y z / swap x y s ]
-    ∎
-  -}
-
-  -- {-# TERMINATING #-}
-  postulate cong-subst : t ≈ t′ → t [ x / M ] ≈ t′ [ x / M ]
-{-
-  cong-subst ν≡ = ≡α-refl _
-  cong-subst (ξ≡ eqˡ eqʳ) = ξ≡ (cong-subst eqˡ) (cong-subst eqʳ)
-  cong-subst {ƛ t̂}{ƛ t̂′}{x}{M} (ζ≡ (xs , eq)) =
-    let 𝕩 , x∉ = minFresh (x ∷ supp t̂ ++ supp M)
-        𝕪 , y∉ = minFresh (x ∷ supp t̂′ ++ supp M)
-
-        ys = 𝕩 ∷ 𝕪 ∷ x ∷ supp t̂ ++ supp t̂′ ++ supp M ++ xs
-        ysˡ = 𝕩 ∷ x ∷ supp t̂ ++ supp M
-        ysʳ = 𝕪 ∷ x ∷ supp t̂′ ++ supp M
-        ys⊆ˡ : ysˡ ⊆ ys
-        ys⊆ˡ = λ where
-          (here p) → here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp t̂′) $ ∈-++⁺ˡ x∈
-        ys⊆ʳ : ysʳ ⊆ ys
-        ys⊆ʳ = λ where
-          (here p) → there $′ here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂′) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp t̂′) $ ∈-++⁺ˡ x∈
-
-    in ζ≡ (ys , λ z z∉ →
-    begin
-      conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-    ≈⟨ conc-fresh {t̂ = t̂} x∉ (z∉ ∘ ys⊆ˡ) ⟩
-      conc t̂ z [ x / M ]
-    ≈⟨ cong-subst
-     $ eq z
-     $ z∉ ∘ there ∘′ there ∘′ there ∘′
-       ∈-++⁺ʳ (supp t̂) ∘ ∈-++⁺ʳ (supp t̂′) ∘ ∈-++⁺ʳ (supp M)
-     ⟩
-      conc t̂′ z [ x / M ]
-    ≈˘⟨ conc-fresh {t̂ = t̂′} y∉ (z∉ ∘ ys⊆ʳ) ⟩
-      conc (abs 𝕪 $ conc t̂′ 𝕪 [ x / M ]) z
-    ∎)
--}
-  postulate
-    conc-fresh :
-    --   let 𝕩 = freshAtom (x ∷ supp t̂ ++ supp M) in
-      ∙ 𝕩 ∉ x ∷ supp t̂ ++ supp M
-      ∙ z ∉ (𝕩 ∷ x ∷ supp t̂ ++ supp M)
-        ─────────────────────────────────
-        conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-      ≈ conc t̂ z [ x / M ]
-{-
-  conc-fresh {𝕩}{x}{t̂}{M}{z} x∉ z∉ =
-    begin
-      conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-    ≡⟨⟩
-      ⦅ z ↔ 𝕩 ⦆ (conc t̂ 𝕩 [ x / M ])
-    ≈⟨ swap-subst (conc t̂ 𝕩) ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ ⦅ z ↔ 𝕩 ⦆ x / ⦅ z ↔ 𝕩 ⦆ M ]
-    ≈⟨ cong-substˡ {t = ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩} {M = ⦅ z ↔ 𝕩 ⦆ M} eq-x ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ x / ⦅ z ↔ 𝕩 ⦆ M ]
-    ≈⟨ cong-substʳ {t = ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩} {x = x} eq-M ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ x / M ]
-    ≈⟨ cong-subst $ swap-conc t̂ ⟩
-      conc (⦅ z ↔ 𝕩 ⦆ t̂) (⦅ z ↔ 𝕩 ⦆ 𝕩) [ x / M ]
-    ≡⟨ cong (λ ◆ → conc (⦅ z ↔ 𝕩 ⦆ t̂) ◆ [ x / M ]) $ swapʳ z 𝕩 ⟩
-      conc (⦅ z ↔ 𝕩 ⦆ t̂) z [ x / M ]
-    ≈⟨ cong-subst $ cong-conc eq-t̂ z∉′ ⟩
-      conc t̂ z [ x / M ]
-    ∎
-    where
-      z∉t̂ : z ∉ supp t̂
-      z∉t̂ = z∉ ∘ there ∘′ there ∘′ ∈-++⁺ˡ
-
-      x∉t̂ : 𝕩 ∉ supp t̂
-      x∉t̂ = x∉ ∘ there ∘ ∈-++⁺ˡ
-
-      eq-x : ⦅ z ↔ 𝕩 ⦆ x ≈ x
-      eq-x = swap-fresh x (λ where 𝟘 → z∉ 𝟙) (λ where 𝟘 → x∉ 𝟘)
-
-      eq-t̂ : ⦅ z ↔ 𝕩 ⦆ t̂ ≈ t̂
-      eq-t̂ = swap-fresh t̂ z∉t̂ x∉t̂
-
-      eq-M : ⦅ z ↔ 𝕩 ⦆ M ≈ M
-      eq-M = swap-fresh M (z∉ ∘ there ∘′ there ∘′ ∈-++⁺ʳ (supp t̂))
-                          (x∉ ∘ there ∘′ ∈-++⁺ʳ (supp t̂))
-
-      z∉′ : z ∉ eq-t̂ .proj₁
-      z∉′ = z∉ ∘ there ∘′ there ∘′ ∈-++⁺ˡ ∘ supp-abs⊆ t̂ x∉t̂ z∉t̂
-
-  {-# TERMINATING #-}
-  cong-substʳ : M ≈ M′ → t [ x / M ] ≈ t [ x / M′ ]
-  cong-substʳ {t = ` _}{x} eq = cong-if {b = _ == x} eq ≈-refl
-  cong-substʳ {t = L · M} eq = ξ≡ (cong-substʳ {t = L} eq) (cong-substʳ {t = M} eq)
-  cong-substʳ {M}{M′}{ƛ t̂}{x} eq =
-    let 𝕩 , x∉ = minFresh (x ∷ supp t̂ ++ supp M)
-        𝕪 , y∉ = minFresh (x ∷ supp t̂ ++ supp M′)
-        xs = 𝕩 ∷ 𝕪 ∷ x ∷ supp t̂ ++ supp M ++ supp M′
-        xsˡ = 𝕩 ∷ x ∷ supp t̂ ++ supp M
-        xsʳ = 𝕪 ∷ x ∷ supp t̂ ++ supp M′
-        xs⊆ˡ : xsˡ ⊆ xs
-        xs⊆ˡ = λ where
-          (here p) → here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′ ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ˡ x∈
-        xs⊆ʳ : xsʳ ⊆ xs
-        xs⊆ʳ = λ where
-          (here p) → there $′ here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′ ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp M) x∈
-    in
-    ζ≡ (xs , λ z z∉ →
-      begin
-        conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-      ≈⟨ conc-fresh {t̂ = t̂} {M = M} x∉ (z∉ ∘ xs⊆ˡ) ⟩
-        conc t̂ z [ x / M ]
-      ≈⟨ cong-substʳ {t = conc t̂ z} eq ⟩
-        conc t̂ z [ x / M′ ]
-      ≈˘⟨ conc-fresh {t̂ = t̂} {M = M′} y∉ (z∉ ∘ xs⊆ʳ) ⟩
-        conc (abs 𝕪 $ conc t̂ 𝕪 [ x / M′ ]) z
-      ∎)
--}
-
+≈?
+≡ swap w z t [ x / M ]
+≡ conc (ƛ z ⇒ t) w [ x / M ]
+≡ conc (swap w zʳ $ ƛ z ⇒ t) w [ x / M ]
+≡ swap w zʳ $ conc (ƛ z ⇒ t) zʳ [ x / M ]
+conc (ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]) w
 -}</a>
+  <a id="5006" class="Symbol">=</a> <a id="5008" href="ULC.Alpha.html#867" class="InductiveConstructor Operator">ζ≡</a> <a id="5011" class="Symbol">(</a><a id="5012" class="Hole">{!!}</a> <a id="5017" href="Agda.Builtin.Sigma.html#218" class="InductiveConstructor Operator">,</a> <a id="5019" class="Symbol">λ</a> <a id="5021" href="ULC.Substitution.html#5021" class="Bound">w</a> <a id="5023" href="ULC.Substitution.html#5023" class="Bound">w∉</a> <a id="5026" class="Symbol">→</a> <a id="5028" class="Hole">{!!}</a><a id="5032" class="Symbol">)</a>
 </pre></body></html>
