@@ -1,4 +1,4 @@
--- {-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 -- {-# OPTIONS --auto-inline #-}
 open import Prelude.Init hiding ([_]); open SetAsType
 open L.Mem
@@ -32,6 +32,7 @@ barendregt = go []
                   in ƛ x′ ⇒ go (x ∷ xs) (swap x′ x t)
 
 infix 6 _[_/_]
+
 {-# TERMINATING #-}
 _[_/_] : Term → Atom → Term → Term
 (` x) [ 𝕒 / N ] = if x == 𝕒 then N else ` x
@@ -43,6 +44,14 @@ _[_/_] : Term → Atom → Term → Term
   -- let y = fresh-var (𝕒 , t̂ , N)
   let y = freshAtom (𝕒 ∷ supp t̂ ++ supp N)
   in ƛ y ⇒ conc t̂ y [ 𝕒 / N ]
+
+infix 6 _[_]
+_[_] : Abs Term → Term → Term
+(abs x t) [ s ] = (ƛ x ⇒ t) [ x / s ]
+
+infix 6 _[_/_]↑
+_[_/_]↑ : Abs Term → Atom → Term → Abs Term
+(abs 𝕒 t) [ x / N ]↑ = unƛ $ (ƛ 𝕒 ⇒ t) [ x / N ]
 
 {- ** well-founded version
 t₀ [ 𝕒 / s ] = ≺-rec _ go t₀
@@ -58,306 +67,92 @@ t₀ [ 𝕒 / s ] = ≺-rec _ go t₀
       in  ƛ y ⇒ rec (conc f y) (conc≺ f y)
 -}
 
--- infix 6 _[_/_]↑
--- _[_/_]↑ : Abs Term → Atom → Term → Abs Term
--- (abs 𝕒 t) [ x / N ]↑ = unƛ $ (ƛ 𝕒 ⇒ t) [ x / N ]
-
+-- ** postulate equivariance of substitution for now...
 postulate swap-subst : Equivariant _[_/_]
+-- swap-subst = ? -- equivariant _[_/_]
 
-{- ** postulate for now...
+-- ** we will also need the following lemmas for proving Reduction.sub-par (β case)
 
-subs : List (Atom × Term) → Op₁ Term
-subs = λ where
-  [] t → t
-  ((𝕒 , s) ∷ σ) t → subs σ (t [ 𝕒 / s ])
+subst-commute : N [ x / L ] [ y / M [ x / L ] ] ≈ N [ y / M ] [ x / L ]
+subst-commute {` n} {x} {L} {y} {M}
+  with n ≟ x | n ≟ y
+... | yes refl | yes refl
+  -- exclude with x ≠ y
+  = {!subst-commute !}
+... | yes refl | no n≠y
+  rewrite ≟-refl n
+  = {!!}
+  -- prove with y ♯ L
+... | no n≠x | yes refl
+  rewrite ≟-refl n
+  = ≈-refl
+... | no n≠x | no n≠y
+  rewrite dec-no (n ≟ x) n≠x .proj₂
+        | dec-no (n ≟ y) n≠y .proj₂
+        = ≈-refl
+subst-commute {Nˡ · Nʳ} {x} {L} {y} {M}
+  = ξ≡ (subst-commute {Nˡ}) (subst-commute {Nʳ})
+subst-commute {ƛ t̂} {x} {L} {y} {M}
+  with xˡ ← freshAtom (x ∷ supp t̂ ++ supp L)
+  -- (ƛ xˡ ⇒ conc t̂ xˡ [ x / L ]) [ y / M [ x / L ] ]
+  with yˡ ← freshAtom (y ∷ supp (abs xˡ $ conc t̂ xˡ [ x / L ]) ++ supp (M [ x / L ]))
+  -- ƛ yˡ ⇒ conc (abs xˡ $ conc t̂ xˡ [ x / L ]) yˡ [ y / M [ x / L ] ]
+  --      ≡ conc t̂ yˡ [ x / L ] [ y / M [ x / L ] ]
 
-sub-ξ : (L · M) [ x / N ] ≡ (L [ x / N ]) · (M [ x / N ])
-sub-ξ = refl
+  with yʳ ← freshAtom (y ∷ supp t̂ ++ supp M)
+  -- (ƛ yʳ ⇒ conc t̂ yʳ [ y / M ]) [ x / L ]
+  with xʳ ← freshAtom (x ∷ supp (abs yʳ $ conc t̂ yʳ [ y / M ]) ++ supp L)
+  -- ƛ xʳ ⇒ conc (abs yʳ $ conc t̂ yʳ [ y / M ]) xʳ [ x / L ]
+  --      ≡ conc t̂ xʳ [ y / M ] [ x / L ]
+  = ζ≡ ({!!} , (λ z z∉ → {!!}))
 
-sub-ƛ : (ƛ x ⇒ N) [ y / M ] ≡
-  (let x′ = freshAtom (y ∷ x ∷ supp N ++ supp M)
-   in ƛ x′ ⇒ swap x′ x N [ y / M ])
-sub-ƛ = refl
+postulate cong-subst : t ≈ t′ → t [ x / M ] ≈ t′ [ x / M ]
 
-sub-` : (` x) [ x / N ] ≡ N
-sub-` {x} rewrite ≟-refl x = refl
-
-sub-`-reject : x ≢ y → (` x) [ y / N ] ≡ ` x
-sub-`-reject {x}{y} x≢y rewrite dec-no (x ≟ y) x≢y .proj₂ = refl
-
--- sub-noop : x ∉ supp t → t [ x / M ] ≈ t
--- sub-noop x∉ = {!!}
-
-swap-var-helper : ∀ x y v z s
-  → swap x y (if v == z then s else (` v))
-  ≈ swap x y (` v) [ swap x y z / swap x y s ]
-swap-var-helper x y v z s
-  = case v ≟ z of λ where
-      (yes v≡z) → ∙v≡z v≡z
-      (no  v≢z) → ∙v≢z v≢z
-  where
-  ∙v≡z : v ≡ z
-        → swap x y (if v == z then s else (` v))
-        ≈ swap x y (` v) [ swap x y z / swap x y s ]
-  ∙v≡z v≡z rewrite dec-yes (v ≟ z) v≡z .proj₂ | v≡z
-    = ≈-reflexive $ sym $ sub-`
-
-  ∙v≢z : v ≢ z
-        → swap x y (if v == z then s else (` v))
-        ≈ swap x y (` v) [ swap x y z / swap x y s ]
-  ∙v≢z v≢z rewrite dec-no (v ≟ z) v≢z .proj₂
-    = ≈-reflexive
-    $ sym
-    $ sub-`-reject
-    $ swap-≢ v≢z
-
-private
-  pattern 𝟘 = here refl; pattern 𝟙 = there 𝟘
-  pattern 𝟚 = there 𝟙; pattern 𝟛 = there 𝟚
-open ≈-Reasoning
-
-cong-if : ∀ {b} →
-  ∙ L ≈ L′
-  ∙ M ≈ M′
-    ──────────────────────
-    (if b then L  else M)
-  ≈ (if b then L′ else M′)
-cong-if {b = true} = const
-cong-if {b = false} _ = id
-
-cong-substˡ : x ≈ y → t [ x / M ] ≈ t [ y / M ]
-cong-substˡ refl = ≈-refl
-
-mutual
-  {-# TERMINATING #-}
-  swap-subst : ∀ {x y z : Atom} {s : Term} t →
-    ─────────────────────────────────────────────────────────────────
-    swap x y (t [ z / s ]) ≈ swap x y t [ swap x y z / swap x y s ]
-  swap-subst {x}{y}{z}{s} t with t
-  ... | ` v
-    = begin
-      swap x y ((` v) [ z / s ])
-    ≡⟨⟩
-      swap x y (if v == z then s else (` v))
-    ≈⟨ swap-var-helper x y v z s ⟩
-      ` (if v == x then y else if v == y then x else v) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (` v) [ swap x y z / swap x y s ]
-    ∎
-  ... | L · M
-    = begin
-      swap x y ((L · M) [ z / s ])
-    ≡⟨⟩
-      swap x y ((L [ z / s ]) · (M [ z / s ]))
-    ≡⟨⟩
-      swap x y (L [ z / s ]) · swap x y (M [ z / s ])
-    ≈⟨ ξ≡ (swap-subst L) (swap-subst M) ⟩
-        (swap x y L [ swap x y z / swap x y s ])
-      · (swap x y M [ swap x y z / swap x y s ])
-    ≡⟨⟩
-      (swap x y L · swap x y M) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (L · M) [ swap x y z / swap x y s ]
-    ∎
-  ... | ƛ t̂@(abs 𝕩 t)
-         --   𝕩′ ∉ z ∷ supp t̂ ++ supp s
-         -- ⇒⟨ equivariance of _∉_ ⟩
-         --   swap x y 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         -- ⇒⟨ equivariance on 𝕩′ ⟩
-         --   𝕩′ ∉ -//-
-         --   ─────────────────────────────────────────────
-         --   ✓ swap x y 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         --     𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-         --   ✖ 𝕩′ ∉ swap x y (z ∷ supp t̂ ++ supp s)
-    = {!!}
-  {-
-    let 𝕩′ , x∉ = minFresh (z ∷ supp t̂ ++ supp s)
-        𝕪′ , y∉ = minFresh (swap x y z ∷ supp (swap x y t̂) ++ supp (swap x y s))
-
-        cur-supp : Atoms
-        cur-supp = swap x y z ∷ supp (swap x y t̂) ++ supp (swap x y s)
-
-        x∉′ : swap x y 𝕩′ ∉ cur-supp
-        x∉′ = λ where
-          (here eq) → swap-≢ (x∉ ∘ here) eq
-          (there x∈) → case ∈-++⁻ (supp $ swap x y t̂) x∈ of λ where
-            (inj₁ x∈) → -- x∈ : swap x y 𝕩′ ∈ supp (swap x y t̂)
-                        -- ⇒? 𝕩′ ∈ supp t̂
-              {!!}
-            (inj₂ x∈) → -- x∈ : swap x y 𝕩′ ∈ supp (swap x y s)
-                        -- ⇒? 𝕩′ ∈ supp s
-              {!!}
-
-        w∉′ : w ∉ swap x y 𝕩′ ∷ cur-supp
-        w∉′ = {!!}
-
-        y∉′ : 𝕪′ ∉ cur-supp
-        y∉′ = y∉
-
-        w∉″ : w ∉ 𝕪′ ∷ cur-supp
-        w∉″ = {!!}
-    in begin
-      swap x y ((ƛ t̂) [ z / s ])
-    ≡⟨⟩
-      swap x y (ƛ 𝕩′ ⇒ conc t̂ 𝕩′ [ z / s ])
-    ≡⟨⟩
-      ƛ swap x y 𝕩′ ⇒ swap x y (conc t̂ 𝕩′ [ z / s ])
-    ≡⟨⟩
-      (ƛ (abs (swap x y 𝕩′) $ swap x y (conc t̂ 𝕩′ [ z / s ])))
-    ≈⟨ ζ≡ ((𝕩′ ∷ 𝕪′ ∷ x ∷ y ∷ z ∷ supp t̂ ++ supp s) , λ w w∉ →
-      -- this is precisely the Abs-isomorphism proof for _×_!
-      begin
-        conc (abs (swap x y 𝕩′) $
-          swap x y (conc t̂ 𝕩′ [ z / s ])) w
-      ≈⟨ cong-conc∘abs $ swap-subst (conc t̂ 𝕩′) ⟩
-        conc (abs (swap x y 𝕩′) $
-          swap x y (conc t̂ 𝕩′) [ swap x y z / swap x y s ]) w
-      ≈⟨ (cong-conc∘abs $ cong-subst $ swap-conc t̂) ⟩
-        conc (abs (swap x y 𝕩′) $
-          conc (swap x y t̂) (swap x y 𝕩′) [ swap x y z / swap x y s ]) w
-      ≈⟨ conc-fresh {t̂ = swap x y t̂} x∉′ w∉′ ⟩
-        conc (swap x y t̂) w [ swap x y z / swap x y s ]
-      ≈˘⟨ conc-fresh {t̂ = swap x y t̂} y∉′ w∉″ ⟩
-        conc (abs 𝕪′ (conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ])) w
-      ∎)
-    ⟩
-      (ƛ (abs 𝕪′ (conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ])))
-    ≡⟨⟩
-      ƛ 𝕪′ ⇒ conc (swap x y t̂) 𝕪′ [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      (ƛ swap x y 𝕩 ⇒ swap x y t) [ swap x y z / swap x y s ]
-    ≡⟨⟩
-      swap x y (ƛ t̂) [ swap x y z / swap x y s ]
-    ∎
-  -}
-
-  -- {-# TERMINATING #-}
-  postulate cong-subst : t ≈ t′ → t [ x / M ] ≈ t′ [ x / M ]
+-- {-# TERMINATING #-}
+swap∘subst : swap y x N [ y / M ] ≈ N [ x / M ]
+swap∘subst {y} {x} {` n} {M}
+  with n ≟ x | n ≟ y
+... | yes refl | yes refl
+  rewrite ≟-refl y
+  = ≈-refl
+... | yes refl | no n≠y
+  rewrite ≟-refl y
+  = ≈-refl
+... | no n≠x | yes refl
+  rewrite dec-no (x ≟ y) (≢-sym n≠x) .proj₂
+  = {!!} -- prove with y ♯ N
+... | no n≠x | no n≠y
+  rewrite dec-no (n ≟ y) n≠y .proj₂
+  = ≈-refl
+swap∘subst {y} {x} {L · R} {M}
+  = ξ≡ (swap∘subst {N = L}) (swap∘subst {N = R})
+swap∘subst {y} {x} {ƛ t̂} {M}
 {-
-  cong-subst ν≡ = ≡α-refl _
-  cong-subst (ξ≡ eqˡ eqʳ) = ξ≡ (cong-subst eqˡ) (cong-subst eqʳ)
-  cong-subst {ƛ t̂}{ƛ t̂′}{x}{M} (ζ≡ (xs , eq)) =
-    let 𝕩 , x∉ = minFresh (x ∷ supp t̂ ++ supp M)
-        𝕪 , y∉ = minFresh (x ∷ supp t̂′ ++ supp M)
+swap y x (ƛ z ⇒ t) [ y / M ]
+≡ (ƛ swap y x z ⇒ swap y x t) [ y / M ]
+≡ let zˡ = freshAtom (y ∷ supp (swap y z (ƛ z ⇒ t) ++ supp M)
+  in ƛ zˡ → conc (swap y x $ abs z t) zˡ [ y / M ]
+          ≡ conc (swap y x $ abs z t) zˡ [ swap y x x / M ]
+          ≡ conc (swap y x $ abs z t) (swap y x zˡ) [ swap y x x / M ]
 
-        ys = 𝕩 ∷ 𝕪 ∷ x ∷ supp t̂ ++ supp t̂′ ++ supp M ++ xs
-        ysˡ = 𝕩 ∷ x ∷ supp t̂ ++ supp M
-        ysʳ = 𝕪 ∷ x ∷ supp t̂′ ++ supp M
-        ys⊆ˡ : ysˡ ⊆ ys
-        ys⊆ˡ = λ where
-          (here p) → here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp t̂′) $ ∈-++⁺ˡ x∈
-        ys⊆ʳ : ysʳ ⊆ ys
-        ys⊆ʳ = λ where
-          (here p) → there $′ here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂′) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′
-                        ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp t̂′) $ ∈-++⁺ˡ x∈
+≡ let zʳ = freshAtom (x ∷ z ∷ supp t ++ supp M)
+  in ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]
+≡ (ƛ z ⇒ t) [ x / M ]
+∎
 
-    in ζ≡ (ys , λ z z∉ →
-    begin
-      conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-    ≈⟨ conc-fresh {t̂ = t̂} x∉ (z∉ ∘ ys⊆ˡ) ⟩
-      conc t̂ z [ x / M ]
-    ≈⟨ cong-subst
-     $ eq z
-     $ z∉ ∘ there ∘′ there ∘′ there ∘′
-       ∈-++⁺ʳ (supp t̂) ∘ ∈-++⁺ʳ (supp t̂′) ∘ ∈-++⁺ʳ (supp M)
-     ⟩
-      conc t̂′ z [ x / M ]
-    ≈˘⟨ conc-fresh {t̂ = t̂′} y∉ (z∉ ∘ ys⊆ʳ) ⟩
-      conc (abs 𝕪 $ conc t̂′ 𝕪 [ x / M ]) z
-    ∎)
+conc (ƛ zˡ → conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]) w
+≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]
+≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ swap y x x / M ]
+
+≡ conc (swap w zˡ $ ƛ swap y x z ⇒ swap y x t) w [ y / M ]
+≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
+≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
+
+≈?
+≡ swap w z t [ x / M ]
+≡ conc (ƛ z ⇒ t) w [ x / M ]
+≡ conc (swap w zʳ $ ƛ z ⇒ t) w [ x / M ]
+≡ swap w zʳ $ conc (ƛ z ⇒ t) zʳ [ x / M ]
+conc (ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]) w
 -}
-  postulate
-    conc-fresh :
-    --   let 𝕩 = freshAtom (x ∷ supp t̂ ++ supp M) in
-      ∙ 𝕩 ∉ x ∷ supp t̂ ++ supp M
-      ∙ z ∉ (𝕩 ∷ x ∷ supp t̂ ++ supp M)
-        ─────────────────────────────────
-        conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-      ≈ conc t̂ z [ x / M ]
-{-
-  conc-fresh {𝕩}{x}{t̂}{M}{z} x∉ z∉ =
-    begin
-      conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-    ≡⟨⟩
-      ⦅ z ↔ 𝕩 ⦆ (conc t̂ 𝕩 [ x / M ])
-    ≈⟨ swap-subst (conc t̂ 𝕩) ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ ⦅ z ↔ 𝕩 ⦆ x / ⦅ z ↔ 𝕩 ⦆ M ]
-    ≈⟨ cong-substˡ {t = ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩} {M = ⦅ z ↔ 𝕩 ⦆ M} eq-x ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ x / ⦅ z ↔ 𝕩 ⦆ M ]
-    ≈⟨ cong-substʳ {t = ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩} {x = x} eq-M ⟩
-      ⦅ z ↔ 𝕩 ⦆ conc t̂ 𝕩 [ x / M ]
-    ≈⟨ cong-subst $ swap-conc t̂ ⟩
-      conc (⦅ z ↔ 𝕩 ⦆ t̂) (⦅ z ↔ 𝕩 ⦆ 𝕩) [ x / M ]
-    ≡⟨ cong (λ ◆ → conc (⦅ z ↔ 𝕩 ⦆ t̂) ◆ [ x / M ]) $ swapʳ z 𝕩 ⟩
-      conc (⦅ z ↔ 𝕩 ⦆ t̂) z [ x / M ]
-    ≈⟨ cong-subst $ cong-conc eq-t̂ z∉′ ⟩
-      conc t̂ z [ x / M ]
-    ∎
-    where
-      z∉t̂ : z ∉ supp t̂
-      z∉t̂ = z∉ ∘ there ∘′ there ∘′ ∈-++⁺ˡ
-
-      x∉t̂ : 𝕩 ∉ supp t̂
-      x∉t̂ = x∉ ∘ there ∘ ∈-++⁺ˡ
-
-      eq-x : ⦅ z ↔ 𝕩 ⦆ x ≈ x
-      eq-x = swap-fresh x (λ where 𝟘 → z∉ 𝟙) (λ where 𝟘 → x∉ 𝟘)
-
-      eq-t̂ : ⦅ z ↔ 𝕩 ⦆ t̂ ≈ t̂
-      eq-t̂ = swap-fresh t̂ z∉t̂ x∉t̂
-
-      eq-M : ⦅ z ↔ 𝕩 ⦆ M ≈ M
-      eq-M = swap-fresh M (z∉ ∘ there ∘′ there ∘′ ∈-++⁺ʳ (supp t̂))
-                          (x∉ ∘ there ∘′ ∈-++⁺ʳ (supp t̂))
-
-      z∉′ : z ∉ eq-t̂ .proj₁
-      z∉′ = z∉ ∘ there ∘′ there ∘′ ∈-++⁺ˡ ∘ supp-abs⊆ t̂ x∉t̂ z∉t̂
-
-  {-# TERMINATING #-}
-  cong-substʳ : M ≈ M′ → t [ x / M ] ≈ t [ x / M′ ]
-  cong-substʳ {t = ` _}{x} eq = cong-if {b = _ == x} eq ≈-refl
-  cong-substʳ {t = L · M} eq = ξ≡ (cong-substʳ {t = L} eq) (cong-substʳ {t = M} eq)
-  cong-substʳ {M}{M′}{ƛ t̂}{x} eq =
-    let 𝕩 , x∉ = minFresh (x ∷ supp t̂ ++ supp M)
-        𝕪 , y∉ = minFresh (x ∷ supp t̂ ++ supp M′)
-        xs = 𝕩 ∷ 𝕪 ∷ x ∷ supp t̂ ++ supp M ++ supp M′
-        xsˡ = 𝕩 ∷ x ∷ supp t̂ ++ supp M
-        xsʳ = 𝕪 ∷ x ∷ supp t̂ ++ supp M′
-        xs⊆ˡ : xsˡ ⊆ xs
-        xs⊆ˡ = λ where
-          (here p) → here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′ ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ˡ x∈
-        xs⊆ʳ : xsʳ ⊆ xs
-        xs⊆ʳ = λ where
-          (here p) → there $′ here p
-          (there (here p)) → there $′ there $′ here p
-          (there (there x∈)) → case ∈-++⁻ (supp t̂) x∈ of λ where
-            (inj₁ x∈) → there $′ there $′ there $′ ∈-++⁺ˡ x∈
-            (inj₂ x∈) → there $′ there $′ there $′ ∈-++⁺ʳ (supp t̂) $ ∈-++⁺ʳ (supp M) x∈
-    in
-    ζ≡ (xs , λ z z∉ →
-      begin
-        conc (abs 𝕩 $ conc t̂ 𝕩 [ x / M ]) z
-      ≈⟨ conc-fresh {t̂ = t̂} {M = M} x∉ (z∉ ∘ xs⊆ˡ) ⟩
-        conc t̂ z [ x / M ]
-      ≈⟨ cong-substʳ {t = conc t̂ z} eq ⟩
-        conc t̂ z [ x / M′ ]
-      ≈˘⟨ conc-fresh {t̂ = t̂} {M = M′} y∉ (z∉ ∘ xs⊆ʳ) ⟩
-        conc (abs 𝕪 $ conc t̂ 𝕪 [ x / M′ ]) z
-      ∎)
--}
-
--}
+  = ζ≡ ({!!} , λ w w∉ → {!!})

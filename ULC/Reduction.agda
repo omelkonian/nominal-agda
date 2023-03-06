@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+-- {-# OPTIONS --allow-unsolved-metas #-}
 open import Prelude.Init hiding ([_]); open SetAsType
 open L.Mem
 open import Prelude.DecEq
@@ -9,7 +9,8 @@ open import Prelude.Decidable
 open import Prelude.Functor
 open import Prelude.Bifunctor
 open import Prelude.Setoid
-
+open import Prelude.Lists.Membership
+open import Prelude.Lists.Dec
 
 module ULC.Reduction (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
@@ -18,6 +19,7 @@ open import ULC.Measure      Atom ⦃ it ⦄
 open import ULC.Alpha        Atom ⦃ it ⦄
 open import ULC.Substitution Atom ⦃ it ⦄
 open import Nominal          Atom ⦃ it ⦄
+  renaming (minSupp to supp; supp to maxSupp)
 
 -- ** Reduction rules.
 infix 0 _—→_
@@ -41,6 +43,67 @@ data _—→_ : Rel₀ Term where
       t —→ t′
       ─────────────────
       t″ · t —→ t″ · t′
+
+postulate
+  supp-conc : supp (conc t̂ y) ⊆ y ∷ supp (t̂ .term)
+  supp-conc♯ : t̂ .atom ∉ supp (conc t̂ y)
+
+{-# TERMINATING #-}
+supp-[] : supp (t [ x / t′ ]) ⊆ supp t ++ supp t′
+supp-[] {` y}{x}{t′}
+  with y ≟ x
+... | yes refl
+  = ∈-++⁺ʳ _
+... | no x≠y
+  = λ where (here refl) → here refl
+supp-[] {L · M}{x}{t′} x∈
+  with ∈-++⁻ (supp (L [ x / t′ ])) (∈-nub⁻ x∈)
+... | inj₁ x∈ = case ∈-++⁻ (supp L) $ supp-[] {t = L} x∈ of λ where
+  (inj₁ x∈) → ∈-++⁺ˡ $ ∈-nub⁺ $ ∈-++⁺ˡ x∈
+  (inj₂ x∈) → ∈-++⁺ʳ (nub $ supp L ++ supp M) x∈
+... | inj₂ x∈ = case ∈-++⁻ (supp M) $ supp-[] {t = M} x∈ of λ where
+  (inj₁ x∈) → ∈-++⁺ˡ $ ∈-nub⁺ $ ∈-++⁺ʳ (supp L) x∈
+  (inj₂ x∈) → ∈-++⁺ʳ (nub $ supp L ++ supp M) x∈
+supp-[] {t₀@(ƛ t̂@(abs _ t))}{x}{t′} {x′} x∈
+  with y ← freshAtom (x ∷ supp t̂ ++ supp t′)
+  with x∈ , x≢ ← ∈-filter⁻ (¬? ∘ (_≟ y)) {xs = supp (conc t̂ y [ x / t′ ])} x∈
+  with ∈-++⁻ (supp $ conc t̂ y) $ supp-[] {t = conc t̂ y} x∈
+... | inj₂ x∈ = ∈-++⁺ʳ (supp t₀) x∈
+... | inj₁ x∈
+  with x∉ ← supp-conc♯ {t̂ = t̂} {y = y}
+  with supp-conc {t̂}{y} x∈
+... | 𝟘 = ⊥-elim $ x≢ refl
+... | there x∈′
+  with x′ ≟ t̂ .atom
+... | yes refl = ⊥-elim $ x∉ x∈
+... | no x≢ = ∈-++⁺ˡ {xs = supp t₀}
+            $ ∈-filter⁺ (¬? ∘ (_≟ t̂ .atom)) {xs = supp t} x∈′ x≢
+
+∉-[] :
+  ∙ y ∉ supp t
+  ∙ y ∉ supp t′
+    ───────────────────────
+    y ∉ supp (t [ x / t′ ])
+∉-[] {t = t} y∉ y∉′ = ∉-++⁺ y∉ y∉′ ∘ supp-[] {t = t}
+
+fresh-—→ :
+  N —→ N′
+  ───────────────────────────
+  (_∉ supp N) ⊆¹ (_∉ supp N′)
+fresh-—→ (β {t = t}) x∉ =
+  let x∉ , x∉′ = ∉-++⁻ $ ∉-nub⁻ x∉
+  in ∉-[] {t = t} (∉-filter⁻ (¬? ∘ (_≟ _)) x∉ {!!}) x∉′
+fresh-—→ (ζ p) x∉ =
+  let x∉ = ∉-filter⁻ (¬? ∘ (_≟ _)) x∉ {!!}
+  in ∉-filter⁺ (¬? ∘ (_≟ _)) $ fresh-—→ p x∉
+fresh-—→ (ξ₁ p) x∉ =
+  let x∉ , x∉″ = ∉-++⁻ $ ∉-nub⁻ x∉
+      x∉′ = fresh-—→ p x∉
+  in ∉-nub⁺ $ ∉-++⁺ x∉′ x∉″
+fresh-—→ (ξ₂_ {t″ = t″} p) x∉ =
+  let x∉″ , x∉ = ∉-++⁻ {xs = supp t″} $ ∉-nub⁻ x∉
+      x∉′ = fresh-—→ p x∉
+  in ∉-nub⁺ $ ∉-++⁺ x∉″ x∉′
 
 open ReflexiveTransitiveClosure _—→_
 
@@ -70,12 +133,12 @@ private
     s z n m : Atom
     s≠z : s ≢ z
 
-  infixr 2 _≡⟨_⟩_ _≡⟨⟩_
-  _≡⟨_⟩_ : (t : Term) → t ≡ t′ → t′ —↠ t″ → t —↠ t″
-  _ ≡⟨ refl ⟩ p = p
+  infixr 2 _—→≡⟨_⟩_ _—→≡⟨⟩_
+  _—→≡⟨_⟩_ : (t : Term) → t ≡ t′ → t′ —↠ t″ → t —↠ t″
+  _ —→≡⟨ refl ⟩ p = p
 
-  _≡⟨⟩_ : (t : Term) → t —↠ t′ → t —↠ t′
-  _ ≡⟨⟩ p = _ ≡⟨ refl ⟩ p
+  _—→≡⟨⟩_ : (t : Term) → t —↠ t′ → t —↠ t′
+  _ —→≡⟨⟩ p = _ —→≡⟨ refl ⟩ p
 
   open import Prelude.General
 
@@ -84,13 +147,13 @@ private
       (ƛ s ⇒ ` s) · ` z
     —→⟨ β ⟩
       (` s) [ s / ` z ]
-    ≡⟨⟩
+    —→≡⟨⟩
       (if s == s then ` z else ` s)
-    ≡⟨ if-true $ cong isYes $ ≟-refl s ⟩
+    —→≡⟨ if-true $ cong isYes $ ≟-refl s ⟩
       ` z
     ∎
 
-  $z = freshAtom (s ∷ z ∷ s ∷ z ∷ [])
+  $z = freshAtom (s ∷ supp (ƛ z ⇒ ` s) ++ (z ∷ []))
 
   _ : (ƛ s ⇒ ƛ z ⇒ ` s) · ` z —↠ (ƛ $z ⇒ ` z)
   _ =
@@ -98,15 +161,15 @@ private
       (ƛ s ⇒ ƛ z ⇒ ` s) · ` z
     —→⟨ β ⟩
       (ƛ z ⇒ ` s) [ s / ` z ]
-    ≡⟨⟩
+    —→≡⟨⟩
       (ƛ $z ⇒ conc (abs z $ ` s) $z [ s / ` z ])
-    ≡⟨⟩
+    —→≡⟨⟩
       (ƛ $z ⇒ swap $z z (` s) [ s / ` z ])
-    ≡⟨ cong (λ ◆ → ƛ $z ⇒ (` ◆) [ s / ` z ]) $ swap-noop $z z s (λ where
+    —→≡⟨ cong (λ ◆ → ƛ $z ⇒ (` ◆) [ s / ` z ]) $ swap-noop $z z s (λ where
          (here eq) → freshAtom∉ $ here $′ sym eq
          (there (here eq)) → s≠z eq) ⟩
       (ƛ $z ⇒ ` s [ s / ` z ])
-    ≡⟨ cong (λ ◆ → ƛ $z ⇒ ◆) $ if-true $ cong isYes $ ≟-refl s ⟩
+    —→≡⟨ cong (λ ◆ → ƛ $z ⇒ ◆) $ if-true $ cong isYes $ ≟-refl s ⟩
       (ƛ $z ⇒ ` z)
     ∎
 
@@ -215,6 +278,8 @@ infix -1 _⇛_
 
 data _⇛_ : Rel₀ Term where
 
+  -- TODO: adding α-renaming is morally OK
+
   ν⇛ : ` x ⇛ ` x
 
   ζ⇛ :
@@ -298,15 +363,6 @@ pars-betas :
 pars-betas (_ ⇛∎) = _ ∎
 pars-betas (_ ⇛⟨ p ⟩ ps) = —↠-trans (par-betas p) (pars-betas ps)
 
--- T0D0: maybe add hypothesis : y ♯ L
-subst-commute : N [ x / L ] [ y / M [ x / L ] ] ≡ N [ y / M ] [ x / L ]
-subst-commute = {!!}
-
--- T0D0: add hypothesis : y ♯ N̂
-swap∘subst : swap y x N [ y / M ] ≡ N [ x / M ]
--- swap∘subst : swap y x N̂ [ M ] ≡ N̂ [ M ]
-swap∘subst = {!!}
-
 sub-abs :
   N ⇛ N′
   ──────────────────────
@@ -320,12 +376,13 @@ sub-swap :
 sub-swap ν⇛ = ν⇛
 sub-swap (ζ⇛ p) = ζ⇛ (sub-swap p)
 sub-swap (ξ⇛ p q) = ξ⇛ (sub-swap p) (sub-swap q)
-sub-swap {x = 𝕒}{𝕓} (β⇛ {N}{N′}{M}{M′}{x} p q) = -- {!ξ⇛ ? (sub-swap q)!}
-  -- β⇛ :
-  --   ∙ N ⇛ N′
-  --   ∙ M ⇛ M′
-  --     ─────────────────────────────
-  --     (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
+sub-swap {x = 𝕒}{𝕓} (β⇛ {N}{N′}{M}{M′}{x} p q) =
+  {- β⇛ :
+      ∙ N ⇛ N′
+      ∙ M ⇛ M′
+        ─────────────────────────────
+        (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
+  -}
   qed
   where
     a↔b = swap 𝕒 𝕓
@@ -346,11 +403,21 @@ sub-swap {x = 𝕒}{𝕓} (β⇛ {N}{N′}{M}{M′}{x} p q) = -- {!ξ⇛ ? (sub-
     H : a↔b (ƛ x ⇒ N) · a↔b M ⇛ a↔b N′ [ a↔b↓ x / a↔b M′ ]
     H = β⇛ N⇛ M⇛
 
+    eq≈ : a↔b (N′ [ x / M′ ]) ≈ a↔b N′ [ a↔b↓ x / a↔b M′ ]
+    -- eq≈ = equivariant [_/_] 𝕒 𝕓
+    eq≈ = swap-subst 𝕒 𝕓 {N′}{x}{M′}
+
+    eq : a↔b (N′ [ x / M′ ]) ≡ a↔b N′ [ a↔b↓ x / a↔b M′ ]
+    eq = {!!}
+
     qed : a↔b (ƛ x ⇒ N) · a↔b M ⇛ a↔b (N′ [ x / M′ ])
-    -- ≡ (ƛ a↔b x ⇒ a↔b N) · a↔b M
-    -- ⇛⟨ β⇛ N⇛ M⇛ ⟩ a↔b N′ [ a↔b x / a↔b M′ ]
-    -- ≡⟨ ? ⟩ a↔b (N′ [ x / M′ ])
-    qed = {!!} -- subst (λ ◆ → a↔b (ƛ x ⇒ N) · a↔b M ⇛ ◆) (swap-conc 𝕒 𝕓) H
+    qed = subst (λ ◆ → a↔b (ƛ x ⇒ N) · a↔b M ⇛ ◆) (sym eq) H
+
+postulate
+  sub-swap˘ :
+    swap x y N ⇛ swap x y N′
+    ──────────────────────────
+    N ⇛ N′
 
 -- sub-conc : ∀ {f f′ : Abs Term} →
 --   ƛ f ⇛ ƛ f′
@@ -373,16 +440,17 @@ sub-par {x = 𝕒} (ν⇛ {x = x}) p
 sub-par (ξ⇛ L→ M→) p =
   ξ⇛ (sub-par L→ p) (sub-par M→ p)
 
-  -- ζ⇛ :
-  --     N ⇛ N′
-  --     ──────────────────
-  --     ƛ x ⇒ N ⇛ ƛ x ⇒ N′
 sub-par {M = M}{M′}{𝕒} (ζ⇛ {N}{N′}{x} p) q =
+  {- ζ⇛ :
+      N ⇛ N′
+      ──────────────────
+      ƛ x ⇒ N ⇛ ƛ x ⇒ N′
+  -}
   qed
   where
     x′ x′′ : Atom
-    x′  = fresh (𝕒 ∷ x ∷ supp N ++ supp M) .proj₁
-    x′′ = fresh (𝕒 ∷ x ∷ supp N′ ++ supp M′) .proj₁
+    x′  = freshAtom (𝕒 ∷ x ∷ supp N ++ supp M)
+    x′′ = freshAtom (𝕒 ∷ x ∷ supp N′ ++ supp M′)
 
     x≡ : x′ ≡ x′′
     x≡ = {!!}
@@ -392,34 +460,44 @@ sub-par {M = M}{M′}{𝕒} (ζ⇛ {N}{N′}{x} p) q =
     ↔p : swap x x′ N ⇛ swap x x′ N′
     ↔p = sub-swap p
 
-    s↔p : swap x x′ N [ 𝕒 / M ] ⇛ swap x x′ N′ [ 𝕒 / M′ ]
-    s↔p = sub-par ↔p q
+    s↔p′ : swap x x′ (N [ 𝕒 / M ]) ⇛ swap x x′ (N′ [ 𝕒 / M′ ])
+    s↔p′ = {!sub-par ↔p (sub-swap q)!} -- sub-par ↔p (sub-swap q)
 
-    ƛs↔p : (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ]) ⇛ (ƛ x′ ⇒ swap x x′ N′ [ 𝕒 / M′ ])
-    ƛs↔p = sub-abs s↔p
+    ƛs↔p′ : swap x x′ (ƛ x ⇒ N [ 𝕒 / M ])
+          ⇛ swap x x′ (ƛ x ⇒ N′ [ 𝕒 / M′ ])
+    ƛs↔p′ = sub-abs s↔p′
 
-    ƛs↔p′ : (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ])
-          ⇛ (ƛ x′′ ⇒ swap x x′′ N′ [ 𝕒 / M′ ])
-    ƛs↔p′ = subst (λ ◆ → (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ])
-                        ⇛ (ƛ ◆ ⇒ swap x ◆ N′ [ 𝕒 / M′ ]))
-                   x≡ ƛs↔p
+    -- s↔p : swap x x′ N [ 𝕒 / M ] ⇛ swap x x′ N′ [ 𝕒 / M′ ]
+    -- s↔p = sub-par ↔p q
+
+    -- ƛs↔p : (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ]) ⇛ (ƛ x′ ⇒ swap x x′ N′ [ 𝕒 / M′ ])
+    -- ƛs↔p = sub-abs s↔p
+
+    -- ƛs↔p′ : (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ])
+    --       ⇛ (ƛ x′′ ⇒ swap x x′′ N′ [ 𝕒 / M′ ])
+    -- ƛs↔p′ = subst (λ ◆ → (ƛ x′ ⇒ swap x x′ N [ 𝕒 / M ])
+    --                     ⇛ (ƛ ◆ ⇒ swap x ◆ N′ [ 𝕒 / M′ ]))
+    --                x≡ ƛs↔p
+
+    -- ƛs↔p′′ : (ƛ swap x x′ x ⇒ swap x x′ N [ 𝕒 / M ])
+    --        ⇛ (ƛ swap x x′′ x ⇒ swap x x′′ N′ [ 𝕒 / M′ ])
+    -- ƛs↔p′′ rewrite swapˡ x x′ | swapˡ x x′′ = ƛs↔p′
 
     qed : (ƛ x ⇒ N) [ 𝕒 / M ] ⇛ (ƛ x ⇒ N′) [ 𝕒 / M′ ]
     -- qed : (ƛ N̂) [ 𝕒 / M ] ⇛ (ƛ N̂′) [ 𝕒 / M′ ]
-    qed = {!!} -- ƛs↔p′
+    qed = {!!} -- sub-swap˘ {!ƛs↔p′!} -- ƛs↔p′
 
-  -- β⇛ :
-  --   ∙ N ⇛ N′
-  --   ∙ M ⇛ M′
-  --     ─────────────────────────────
-  --     (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
 sub-par {M = X}{X′}{𝕒} (β⇛ {N}{N′}{M}{M′}{x} p q) pq =
-  {!!}
-{-
+  {- β⇛ :
+      ∙ N ⇛ N′
+      ∙ M ⇛ M′
+        ─────────────────────────────
+        (ƛ x ⇒ N) · M ⇛ N′ [ x / M′ ]
+  -}
   qed
   where
     x′ : Atom
-    x′ = fresh (𝕒 ∷ x ∷ supp N ++ supp X) .proj₁
+    x′ = freshAtom (𝕒 ∷ supp (ƛ x ⇒ N) ++ supp X)
 
     _ : ((ƛ x ⇒ N) · M) [ 𝕒 / X ]
       ≡ (ƛ x′ ⇒ swap x′ x N [ 𝕒 / X ]) · (M [ 𝕒 / X ])
@@ -435,121 +513,77 @@ sub-par {M = X}{X′}{𝕒} (β⇛ {N}{N′}{M}{M′}{x} p q) pq =
          ⇛ swap x′ x N′ [ 𝕒 / X′ ] [ x′ / M′ [ 𝕒 / X′ ] ]
     qed′ = β⇛ N⇛ M⇛
 
+    eq≈ : swap x′ x N′ [ 𝕒 / X′ ] [ x′ / M′ [ 𝕒 / X′ ] ]
+        ≈ N′ [ x / M′ ] [ 𝕒 / X′ ]
+    eq≈ =
+      ≈-Reasoning.begin
+        swap x′ x N′ [ 𝕒 / X′ ] [ x′ / M′ [ 𝕒 / X′ ] ]
+      ≈⟨ subst-commute {swap x′ x N′} ⟩
+        swap x′ x N′ [ x′ / M′ ] [ 𝕒 / X′ ]
+      ≈⟨ cong-subst $ swap∘subst {x′}{x}{N′}{M′} ⟩
+        N′ [ x / M′ ] [ 𝕒 / X′ ]
+      ≈-Reasoning.∎ where open ≈-Reasoning
+
     eq : swap x′ x N′ [ 𝕒 / X′ ] [ x′ / M′ [ 𝕒 / X′ ] ]
        ≡ N′ [ x / M′ ] [ 𝕒 / X′ ]
-    eq =
-      begin≡
-        swap x′ x N′ [ 𝕒 / X′ ] [ x′ / M′ [ 𝕒 / X′ ] ]
-      ≡⟨ subst-commute {swap x′ x N′} ⟩
-        swap x′ x N′ [ x′ / M′ ] [ 𝕒 / X′ ]
-      ≡⟨ cong (_[ 𝕒 / X′ ]) $ swap∘subst {x′}{x}{N′}{M′} ⟩
-        N′ [ x / M′ ] [ 𝕒 / X′ ]
-      ∎≡ where open ≡-Reasoning renaming (begin_ to begin≡_; _∎ to _∎≡)
+    eq = {!!}
 
     qed : ((ƛ x ⇒ N) · M) [ 𝕒 / X ] ⇛ N′ [ x / M′ ] [ 𝕒 / X′ ]
     qed = subst (_ ⇛_) eq qed′
--}
 
--- _⁺ : Op₁ Term
--- _⁺ = λ where
---   (` x)           → ` x
---   (ƛ x ⇒ M)       → ƛ x ⇒ (M ⁺)
---   ((ƛ x ⇒ N) · M) → N ⁺ [ x / M ⁺ ]
---   (L · M)         → (L ⁺) · (M ⁺)
+_⁺ : Op₁ Term
+_⁺ = λ where
+  (` x)           → ` x
+  (ƛ x ⇒ M)       → ƛ x ⇒ (M ⁺)
+  ((ƛ x ⇒ N) · M) → N ⁺ [ x / M ⁺ ]
+  (L · M)         → (L ⁺) · (M ⁺)
 
--- par-⦊ :
---   M ⇛ N
---   ───────
---   N ⇛ M ⁺
--- par-⦊ ν⇛ = ν⇛
--- par-⦊ (ζ⇛ p) = ζ⇛ (par-⦊ p)
--- par-⦊ (β⇛ p p′) = sub-par (par-⦊ p) (par-⦊ p′)
--- par-⦊ (ξ⇛ {_ · _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
--- par-⦊ (ξ⇛ {` _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
--- par-⦊ (ξ⇛ {ƛ _} (ζ⇛ p) p′) = β⇛ (par-⦊ p) (par-⦊ p′)
+par-⦊ :
+  M ⇛ N
+  ───────
+  N ⇛ M ⁺
+par-⦊ ν⇛ = ν⇛
+par-⦊ (ζ⇛ p) = ζ⇛ (par-⦊ p)
+par-⦊ (β⇛ p p′) = sub-par (par-⦊ p) (par-⦊ p′)
+par-⦊ (ξ⇛ {_ · _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
+par-⦊ (ξ⇛ {` _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
+par-⦊ (ξ⇛ {ƛ _} (ζ⇛ p) p′) = β⇛ (par-⦊ p) (par-⦊ p′)
 
--- par-⦉ = par-⦊
+par-⦉ = par-⦊
 
--- par-◇ :
---   ∙ M ⇛ N
---   ∙ M ⇛ N′
---     ──────────────────────────
---     ∃ λ L → (N ⇛ L) × (N′ ⇛ L)
--- par-◇ {M = M} p p′ = M ⁺ , par-⦉ p , par-⦊ p′
+par-◇ :
+  ∙ M ⇛ N
+  ∙ M ⇛ N′
+    ──────────────────────────
+    ∃ λ L → (N ⇛ L) × (N′ ⇛ L)
+par-◇ {M = M} p p′ = M ⁺ , par-⦉ p , par-⦊ p′
 
--- strip :
---   ∙ M ⇛ N
---   ∙ M ⇛∗ N′
---     ──────────────────────────
---     ∃ λ L → (N ⇛∗ L) × (N′ ⇛ L)
--- strip mn (_ ⇛∎) = -, (_ ⇛∎) , mn
--- strip mn (_ ⇛⟨ mm' ⟩ m'n') =
---   let _ , ll' , n'l' = strip (par-⦊ mm') m'n'
---   in  -, (_ ⇛⟨ par-⦊ mn ⟩ ll') , n'l'
+strip :
+  ∙ M ⇛ N
+  ∙ M ⇛∗ N′
+    ──────────────────────────
+    ∃ λ L → (N ⇛∗ L) × (N′ ⇛ L)
+strip mn (_ ⇛∎) = -, (_ ⇛∎) , mn
+strip mn (_ ⇛⟨ mm' ⟩ m'n') =
+  let _ , ll' , n'l' = strip (par-⦊ mm') m'n'
+  in  -, (_ ⇛⟨ par-⦊ mn ⟩ ll') , n'l'
 
--- par-confluence :
---   ∙ L ⇛∗ M₁
---   ∙ L ⇛∗ M₂
---     ──────────────────────────
---     ∃ λ N → (M₁ ⇛∗ N) × (M₂ ⇛∗ N)
--- par-confluence (_ ⇛∎) p = -, p , (_ ⇛∎)
--- par-confluence (_ ⇛⟨ L⇛M₁ ⟩ M₁⇛*M₁′) L⇛*M₂ =
---   let _ , M₁⇛*N , M₂⇛N    = strip L⇛M₁ L⇛*M₂
---       _ , M₁′⇛*N′ , N⇛*N′ = par-confluence M₁⇛*M₁′ M₁⇛*N
---    in -, M₁′⇛*N′ , (_ ⇛⟨ M₂⇛N ⟩ N⇛*N′)
+par-confluence :
+  ∙ L ⇛∗ M₁
+  ∙ L ⇛∗ M₂
+    ──────────────────────────
+    ∃ λ N → (M₁ ⇛∗ N) × (M₂ ⇛∗ N)
+par-confluence (_ ⇛∎) p = -, p , (_ ⇛∎)
+par-confluence (_ ⇛⟨ L⇛M₁ ⟩ M₁⇛*M₁′) L⇛*M₂ =
+  let _ , M₁⇛*N , M₂⇛N    = strip L⇛M₁ L⇛*M₂
+      _ , M₁′⇛*N′ , N⇛*N′ = par-confluence M₁⇛*M₁′ M₁⇛*N
+   in -, M₁′⇛*N′ , (_ ⇛⟨ M₂⇛N ⟩ N⇛*N′)
 
--- confluence :
---   ∙ L —↠ M₁
---   ∙ L —↠ M₂
---     ─────────────────────────────
---     ∃ λ N → (M₁ —↠ N) × (M₂ —↠ N)
--- confluence L↠M₁ L↠M₂ =
---   let _ , M₁⇛N , M₂⇛N = par-confluence (betas-pars L↠M₁) (betas-pars L↠M₂)
---   in -, pars-betas M₁⇛N , pars-betas M₂⇛N
-
--- {- Version working with an abstract `Atom` type and rewriting with decidable equalitx′.
---   open import Relation.Nullarx′.Decidable using (isYes≗does)
---   private
---     postulate
---       𝕒 𝕓 𝕔 : Atom
---       b≢a : 𝕓 ≢ 𝕒
-
---     rw₁ : isYes (𝕒 ≟ 𝕒) ≡ true
---     rw₁ rewrite ≟-refl 𝕒 = refl
---     {-` REWRITE rw₁ `-}
---     rw₂ : isYes (𝕓 ≟ 𝕓) ≡ true
---     rw₂ rewrite ≟-refl 𝕓 = refl
---     {-` REWRITE rw₂ `-}
---     rw₃ : isYes (𝕓 ≟ 𝕒) ≡ false
---     rw₃ rewrite isYes≗does (𝕓 ≟ 𝕒) | dec-false (𝕓 ≟ 𝕒) b≢a = refl
---     {-` REWRITE rw₃ `-}
---     rw₄ : isYes (𝕒 ≟ 𝕓) ≡ false
---     rw₄ rewrite isYes≗does (𝕒 ≟ 𝕓) | dec-false (𝕒 ≟ 𝕓) (b≢a ∘ sym) = refl
---     {-` REWRITE rw₄ `-}
-
---     -- ** example swapping in a λ-term
---     _ : swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
---     _ = refl
-
---     _ = swap 𝕒 𝕓 (` 𝕒 · ` 𝕓) ≡ ` 𝕓 · ` 𝕒
---       ∋ refl
-
---     `id = ƛ abs 𝕒 (` 𝕒)
-
---     _ = swap 𝕒 𝕓 `id ≡ ƛ (abs 𝕓 (` 𝕓))
---       ∋ refl
-
---     -- this is the expected behaviour, doesn't matter denotationallx′
---     -- onlx′ need a smarter `swap` for efficiencx′ (e.g. using support indices)
---     -- e.g. in `swap a b (\{⋯a⋯b⋯}. x₁ * a * ⋯ xᵢ ⋯ * (b + ⋯))`
---     --      do not go inside the term as an optimix′ation
---     -- FUTURE: name restriction (e.g. used in iEUTxO instead of abstraction)
---     _ = swap 𝕒 𝕓 ((ƛ abs 𝕒 (` 𝕒)) · ` 𝕒)
---                 ≡ (ƛ abs 𝕓 (` 𝕓)) · ` 𝕓
---       ∋ refl
-
---     _ : (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —↠ ` 𝕒 · ` 𝕓
---     _ = begin (ƛ abs 𝕓 (` 𝕓 · ` 𝕒)) · (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) —→⟨ β ⟩
---               (ƛ abs 𝕒 (` 𝕒 · ` 𝕓)) · ` 𝕒                   —→⟨ β ⟩
---               ` 𝕒 · ` 𝕓                                     ∎
--- -}
+confluence :
+  ∙ L —↠ M₁
+  ∙ L —↠ M₂
+    ─────────────────────────────
+    ∃ λ N → (M₁ —↠ N) × (M₂ —↠ N)
+confluence L↠M₁ L↠M₂ =
+  let _ , M₁⇛N , M₂⇛N = par-confluence (betas-pars L↠M₁) (betas-pars L↠M₂)
+  in -, pars-betas M₁⇛N , pars-betas M₂⇛N

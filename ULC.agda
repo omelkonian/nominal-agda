@@ -7,4 +7,4 @@ open import ULC.Base         Atom public
 open import ULC.Measure      Atom public
 open import ULC.Alpha        Atom public
 open import ULC.Substitution Atom public
-open import ULC.Reduction    Atom public
+-- open import ULC.Reduction    Atom public
