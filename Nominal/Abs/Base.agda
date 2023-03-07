@@ -2,7 +2,6 @@
 open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
-open import Prelude.Setoid
 open import Prelude.Bifunctor
 open import Prelude.InferenceRules
 
@@ -29,6 +28,10 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     -- this is the conjugation action for nominal abstractions
     -- (terminology from G-sets, sets with a group action)
 
+  -- ** α-equivalence
+  _≗α_ : Rel (Abs A) _
+  f ≗α g = И (λ 𝕩 → conc f 𝕩 ≡ conc g 𝕩)
+
   private
     variable
       𝕒 𝕓 𝕔 : Atom
@@ -41,86 +44,38 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
     _ : conc (abs 𝕒 x) 𝕓 ≡ swap 𝕓 𝕒 x
     _ = refl
 
-  module _ ⦃ is : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄ ⦃ _ : SwapLaws A ⦄ where
+  module _ ⦃ _ : SwapLaws A ⦄ where
     -- swap-conc : ∀ (f : Abs A) →
-    --   ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≈ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
+    --   ⦅ 𝕒 ↔ 𝕓 ⦆ (conc f 𝕔) ≡ conc (⦅ 𝕒 ↔ 𝕓 ⦆ f) (⦅ 𝕒 ↔ 𝕓 ⦆ 𝕔)
     swap-conc : Equivariant conc
     swap-conc _ _ = swap-swap
 
-    -- ** α-equivalence
-    _≈α_ : Rel (Abs A) (is .relℓ)
-    f ≈α g = И (λ 𝕩 → conc f 𝕩 ≈ conc g 𝕩)
-
-    instance
-      Setoid-Abs : ISetoid (Abs A)
-      Setoid-Abs = λ where
-        .relℓ → is .relℓ
-        ._≈_  → _≈α_
+    postulate extᵃ : _≗α_ ⇒² _≡_
 
     private variable f g h : Abs A
 
-    ≈α-refl : f ≈α f
-    ≈α-refl = [] , (λ _ _ → ≈-refl)
+    ≗α-refl : f ≗α f
+    ≗α-refl = [] , (λ _ _ → refl)
 
-    ≈α-sym : f ≈α g → g ≈α f
-    ≈α-sym = map₂′ (≈-sym ∘₂_)
+    ≗α-sym : f ≗α g → g ≗α f
+    ≗α-sym = map₂′ (sym ∘₂_)
 
-    ≈α-trans : f ≈α g → g ≈α h → f ≈α h
-    ≈α-trans (xs , f≈g) (ys , g≈h) = (xs ++ ys) , λ y y∉ →
-      ≈-trans (f≈g y (y∉ ∘ L.Mem.∈-++⁺ˡ)) (g≈h y (y∉ ∘ L.Mem.∈-++⁺ʳ xs))
+    ≗α-trans : f ≗α g → g ≗α h → f ≗α h
+    ≗α-trans (xs , f≡g) (ys , g≡h) = (xs ++ ys) , λ y y∉ →
+      trans (f≡g y (y∉ ∘ L.Mem.∈-++⁺ˡ)) (g≡h y (y∉ ∘ L.Mem.∈-++⁺ʳ xs))
 
-    instance
-      SetoidLaws-Abs : SetoidLaws (Abs A)
-      SetoidLaws-Abs .isEquivalence = record
-        { refl = ≈α-refl ; sym = ≈α-sym ; trans = ≈α-trans }
+    -- cong-conc : ∀ {t̂ t̂′ : Abs A} →
+    --   ∀ (eq : t̂ ≡ t̂′) →
+    --   ∙ 𝕒 ∉ eq .proj₁
+    --     ────────────────────
+    --     conc t̂  𝕒
+    --   ≡ conc t̂′ 𝕒
+    -- cong-conc (_ , eq) = eq _
 
-    cong-abs : ∀ {t t′ : A} → t ≈ t′ → abs 𝕒 t ≈ abs 𝕒 t′
-    cong-abs t≈ = [] , λ _ _ → cong-swap t≈
-
-    cong-conc : ∀ {t̂ t̂′ : Abs A} →
-      ∀ (eq : t̂ ≈ t̂′) →
-      ∙ 𝕒 ∉ eq .proj₁
-        ────────────────────
-        conc t̂  𝕒
-      ≈ conc t̂′ 𝕒
-    cong-conc (_ , eq) = eq _
-
-    cong-conc∘abs : ∀ {t t′ : A} →
-      ∀ (eq : t ≈ t′) →
-        ────────────────────
-        conc (abs 𝕓 t)  𝕒
-      ≈ conc (abs 𝕓 t′) 𝕒
-    cong-conc∘abs eq = cong-conc (cong-abs eq) λ ()
-
-    open ≈-Reasoning
+    open ≡-Reasoning
 
     instance
       SwapLaws-Abs : SwapLaws (Abs A)
-      SwapLaws-Abs .cong-swap {f@(abs 𝕩 t)}{g@(abs 𝕪 t′)}{a}{b} (xs , f≈g)
-        = a ∷ b ∷ xs , λ x x∉  →
-          begin
-            conc (⦅ a ↔ b ⦆ f) x
-          ≡⟨⟩
-            conc (abs (⦅ a ↔ b ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
-          ≡⟨⟩
-            ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
-          ≡˘⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t)
-                  $ swap-noop a b x (λ where 𝟘 → x∉ 𝟘; 𝟙 → x∉ 𝟙) ⟩
-            ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕩 ⦆ ⦅ a ↔ b ⦆ t
-          ≈˘⟨ swap-conc _ _ ⟩
-            ⦅ a ↔ b ⦆ conc f x
-          ≈⟨ cong-swap $ f≈g x (x∉ ∘′ there ∘′ there) ⟩
-            ⦅ a ↔ b ⦆ conc g x
-          ≈⟨ swap-conc _ _ ⟩
-            ⦅ ⦅ a ↔ b ⦆ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
-          ≡⟨ cong (λ ◆ → ⦅ ◆ ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′)
-                $ swap-noop a b x (λ where 𝟘 → x∉ 𝟘; 𝟙 → x∉ 𝟙) ⟩
-            ⦅ x ↔ ⦅ a ↔ b ⦆ 𝕪 ⦆ ⦅ a ↔ b ⦆ t′
-          ≡⟨⟩
-            conc (abs (⦅ a ↔ b ⦆ 𝕪) (⦅ a ↔ b ⦆ t′)) x
-          ≡⟨⟩
-            conc (⦅ a ↔ b ⦆ g) x
-          ∎
       SwapLaws-Abs .swap-id {a}{abs x t} =
         begin
           ⦅ a ↔ a ⦆ abs x t
@@ -128,10 +83,10 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           abs (⦅ a ↔ a ⦆ x) (⦅ a ↔ a ⦆ t)
         ≡⟨ cong (λ ◆ → abs ◆ (⦅ a ↔ a ⦆ t)) swap-id ⟩
           abs x (⦅ a ↔ a ⦆ t)
-        ≈⟨ cong-abs swap-id ⟩
+        ≡⟨ cong (abs _) swap-id ⟩
           abs x t
         ∎
-      SwapLaws-Abs .swap-rev {a}{b}{f@(abs 𝕩 t)} =
+      SwapLaws-Abs .swap-rev {a}{b}{f@(abs 𝕩 t)} = extᵃ $
         a ∷ b ∷ [] , λ x x∉ →
         begin
           conc (⦅ a ↔ b ⦆ f) x
@@ -139,12 +94,12 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           conc (abs (⦅ a ↔ b ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
         ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ t)) x) swap-rev ⟩
           conc (abs (⦅ b ↔ a ⦆ 𝕩) (⦅ a ↔ b ⦆ t)) x
-        ≈⟨ cong-abs swap-rev .proj₂ x (λ ()) ⟩
+        ≡⟨ cong (λ ◆ → conc (abs _ ◆) x) swap-rev ⟩
           conc (abs (⦅ b ↔ a ⦆ 𝕩) (⦅ b ↔ a ⦆ t)) x
         ≡⟨⟩
           conc (⦅ b ↔ a ⦆ f) x
         ∎
-      SwapLaws-Abs .swap-sym {a}{b}{f@(abs 𝕩 t)} =
+      SwapLaws-Abs .swap-sym {a}{b}{f@(abs 𝕩 t)} = extᵃ $
         a ∷ b ∷ [] , λ x x∉ →
         begin
           conc (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ f) x
@@ -152,12 +107,12 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
           conc (abs (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ 𝕩) (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x
         ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x) swap-sym ⟩
           conc (abs 𝕩 (⦅ a ↔ b ⦆ ⦅ b ↔ a ⦆ t)) x
-        ≈⟨ cong-abs swap-sym .proj₂ x (λ ()) ⟩
+        ≡⟨ cong (λ ◆ → conc (abs _ ◆) x) swap-sym ⟩
           conc (abs 𝕩 t) x
         ≡⟨⟩
           conc f x
         ∎
-      SwapLaws-Abs .swap-swap {a}{b}{c}{d}{f@(abs 𝕩 t)} =
+      SwapLaws-Abs .swap-swap {a}{b}{c}{d}{f@(abs 𝕩 t)} = extᵃ $
         a ∷ b ∷ c ∷ d ∷ [] , λ x x∉ →
         begin
           conc (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ f) x
@@ -166,7 +121,7 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
         ≡⟨ cong (λ ◆ → conc (abs ◆ (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ t)) x) swap-swap ⟩
           conc (abs (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ 𝕩)
                     (⦅ a ↔ b ⦆ ⦅ c ↔ d ⦆ t)) x
-        ≈⟨ cong-abs swap-swap .proj₂ x (λ ()) ⟩
+        ≡⟨ cong (λ ◆ → conc (abs _ ◆) x) $ swap-swap ⟩
           conc (⦅ ⦅ a ↔ b ⦆ c ↔ ⦅ a ↔ b ⦆ d ⦆ ⦅ a ↔ b ⦆ f) x
         ∎
 

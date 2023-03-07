@@ -7,17 +7,15 @@ open import Prelude.DecEq
 -- open import Prelude.Lists.Dec
 -- open import Prelude.Measurable
 open import Prelude.InfEnumerable
-open import Prelude.Setoid
 open import Prelude.InferenceRules
 
 -- ** Substitution.
 module ULC.Substitution (Atom : Type) ⦃ _ : DecEq Atom ⦄ ⦃ _ : Enumerable∞ Atom ⦄ where
 
+open import Nominal     Atom
 open import ULC.Base    Atom ⦃ it ⦄
 open import ULC.Measure Atom ⦃ it ⦄ ⦃ it ⦄
 open import ULC.Alpha   Atom ⦃ it ⦄ ⦃ it ⦄
-open import Nominal Atom
-open import Nominal.Product Atom
 
 -- enforce the Barendregt convention: no shadowing, distinct bound variables
 {-# TERMINATING #-}
@@ -73,86 +71,86 @@ postulate swap-subst : Equivariant _[_/_]
 
 -- ** we will also need the following lemmas for proving Reduction.sub-par (β case)
 
-subst-commute : N [ x / L ] [ y / M [ x / L ] ] ≈ N [ y / M ] [ x / L ]
-subst-commute {` n} {x} {L} {y} {M}
-  with n ≟ x | n ≟ y
-... | yes refl | yes refl
-  -- exclude with x ≠ y
-  = {!subst-commute !}
-... | yes refl | no n≠y
-  rewrite ≟-refl n
-  = {!!}
-  -- prove with y ♯ L
-... | no n≠x | yes refl
-  rewrite ≟-refl n
-  = ≈-refl
-... | no n≠x | no n≠y
-  rewrite dec-no (n ≟ x) n≠x .proj₂
-        | dec-no (n ≟ y) n≠y .proj₂
-        = ≈-refl
-subst-commute {Nˡ · Nʳ} {x} {L} {y} {M}
-  = ξ≡ (subst-commute {Nˡ}) (subst-commute {Nʳ})
-subst-commute {ƛ t̂} {x} {L} {y} {M}
-  with xˡ ← freshAtom (x ∷ supp t̂ ++ supp L)
-  -- (ƛ xˡ ⇒ conc t̂ xˡ [ x / L ]) [ y / M [ x / L ] ]
-  with yˡ ← freshAtom (y ∷ supp (abs xˡ $ conc t̂ xˡ [ x / L ]) ++ supp (M [ x / L ]))
-  -- ƛ yˡ ⇒ conc (abs xˡ $ conc t̂ xˡ [ x / L ]) yˡ [ y / M [ x / L ] ]
-  --      ≡ conc t̂ yˡ [ x / L ] [ y / M [ x / L ] ]
+postulate
+  subst-commute : N [ x / L ] [ y / M [ x / L ] ] ≡ N [ y / M ] [ x / L ]
+-- subst-commute {` n} {x} {L} {y} {M}
+--   with n ≟ x | n ≟ y
+-- ... | yes refl | yes refl
+--   -- exclude with x ≠ y
+--   = {!subst-commute !}
+-- ... | yes refl | no n≠y
+--   rewrite ≟-refl n
+--   = {!!}
+--   -- prove with y ♯ L
+-- ... | no n≠x | yes refl
+--   rewrite ≟-refl n
+--   = ≈-refl
+-- ... | no n≠x | no n≠y
+--   rewrite dec-no (n ≟ x) n≠x .proj₂
+--         | dec-no (n ≟ y) n≠y .proj₂
+--         = ≈-refl
+-- subst-commute {Nˡ · Nʳ} {x} {L} {y} {M}
+--   = ξ≡ (subst-commute {Nˡ}) (subst-commute {Nʳ})
+-- subst-commute {ƛ t̂} {x} {L} {y} {M}
+--   with xˡ ← freshAtom (x ∷ supp t̂ ++ supp L)
+--   -- (ƛ xˡ ⇒ conc t̂ xˡ [ x / L ]) [ y / M [ x / L ] ]
+--   with yˡ ← freshAtom (y ∷ supp (abs xˡ $ conc t̂ xˡ [ x / L ]) ++ supp (M [ x / L ]))
+--   -- ƛ yˡ ⇒ conc (abs xˡ $ conc t̂ xˡ [ x / L ]) yˡ [ y / M [ x / L ] ]
+--   --      ≡ conc t̂ yˡ [ x / L ] [ y / M [ x / L ] ]
 
-  with yʳ ← freshAtom (y ∷ supp t̂ ++ supp M)
-  -- (ƛ yʳ ⇒ conc t̂ yʳ [ y / M ]) [ x / L ]
-  with xʳ ← freshAtom (x ∷ supp (abs yʳ $ conc t̂ yʳ [ y / M ]) ++ supp L)
-  -- ƛ xʳ ⇒ conc (abs yʳ $ conc t̂ yʳ [ y / M ]) xʳ [ x / L ]
-  --      ≡ conc t̂ xʳ [ y / M ] [ x / L ]
-  = ζ≡ ({!!} , (λ z z∉ → {!!}))
-
-postulate cong-subst : t ≈ t′ → t [ x / M ] ≈ t′ [ x / M ]
+--   with yʳ ← freshAtom (y ∷ supp t̂ ++ supp M)
+--   -- (ƛ yʳ ⇒ conc t̂ yʳ [ y / M ]) [ x / L ]
+--   with xʳ ← freshAtom (x ∷ supp (abs yʳ $ conc t̂ yʳ [ y / M ]) ++ supp L)
+--   -- ƛ xʳ ⇒ conc (abs yʳ $ conc t̂ yʳ [ y / M ]) xʳ [ x / L ]
+--   --      ≡ conc t̂ xʳ [ y / M ] [ x / L ]
+--   = ζ≡ ({!!} , (λ z z∉ → {!!}))
 
 -- {-# TERMINATING #-}
-swap∘subst : swap y x N [ y / M ] ≈ N [ x / M ]
-swap∘subst {y} {x} {` n} {M}
-  with n ≟ x | n ≟ y
-... | yes refl | yes refl
-  rewrite ≟-refl y
-  = ≈-refl
-... | yes refl | no n≠y
-  rewrite ≟-refl y
-  = ≈-refl
-... | no n≠x | yes refl
-  rewrite dec-no (x ≟ y) (≢-sym n≠x) .proj₂
-  = {!!} -- prove with y ♯ N
-... | no n≠x | no n≠y
-  rewrite dec-no (n ≟ y) n≠y .proj₂
-  = ≈-refl
-swap∘subst {y} {x} {L · R} {M}
-  = ξ≡ (swap∘subst {N = L}) (swap∘subst {N = R})
-swap∘subst {y} {x} {ƛ t̂} {M}
-{-
-swap y x (ƛ z ⇒ t) [ y / M ]
-≡ (ƛ swap y x z ⇒ swap y x t) [ y / M ]
-≡ let zˡ = freshAtom (y ∷ supp (swap y z (ƛ z ⇒ t) ++ supp M)
-  in ƛ zˡ → conc (swap y x $ abs z t) zˡ [ y / M ]
-          ≡ conc (swap y x $ abs z t) zˡ [ swap y x x / M ]
-          ≡ conc (swap y x $ abs z t) (swap y x zˡ) [ swap y x x / M ]
+postulate
+  swap∘subst : swap y x N [ y / M ] ≡ N [ x / M ]
+-- swap∘subst {y} {x} {` n} {M}
+--   with n ≟ x | n ≟ y
+-- ... | yes refl | yes refl
+--   rewrite ≟-refl y
+--   = ≈-refl
+-- ... | yes refl | no n≠y
+--   rewrite ≟-refl y
+--   = ≈-refl
+-- ... | no n≠x | yes refl
+--   rewrite dec-no (x ≟ y) (≢-sym n≠x) .proj₂
+--   = {!!} -- prove with y ♯ N
+-- ... | no n≠x | no n≠y
+--   rewrite dec-no (n ≟ y) n≠y .proj₂
+--   = ≈-refl
+-- swap∘subst {y} {x} {L · R} {M}
+--   = ξ≡ (swap∘subst {N = L}) (swap∘subst {N = R})
+-- swap∘subst {y} {x} {ƛ t̂} {M}
+-- {-
+-- swap y x (ƛ z ⇒ t) [ y / M ]
+-- ≡ (ƛ swap y x z ⇒ swap y x t) [ y / M ]
+-- ≡ let zˡ = freshAtom (y ∷ supp (swap y z (ƛ z ⇒ t) ++ supp M)
+--   in ƛ zˡ → conc (swap y x $ abs z t) zˡ [ y / M ]
+--           ≡ conc (swap y x $ abs z t) zˡ [ swap y x x / M ]
+--           ≡ conc (swap y x $ abs z t) (swap y x zˡ) [ swap y x x / M ]
 
-≡ let zʳ = freshAtom (x ∷ z ∷ supp t ++ supp M)
-  in ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]
-≡ (ƛ z ⇒ t) [ x / M ]
-∎
+-- ≡ let zʳ = freshAtom (x ∷ z ∷ supp t ++ supp M)
+--   in ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]
+-- ≡ (ƛ z ⇒ t) [ x / M ]
+-- ∎
 
-conc (ƛ zˡ → conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]) w
-≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]
-≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ swap y x x / M ]
+-- conc (ƛ zˡ → conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]) w
+-- ≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ y / M ]
+-- ≡ swap w zˡ $ conc (ƛ swap y x z ⇒ swap y x t) zˡ [ swap y x x / M ]
 
-≡ conc (swap w zˡ $ ƛ swap y x z ⇒ swap y x t) w [ y / M ]
-≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
-≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
+-- ≡ conc (swap w zˡ $ ƛ swap y x z ⇒ swap y x t) w [ y / M ]
+-- ≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
+-- ≡ conc (ƛ swap w zˡ (swap y x z) ⇒ swap w zˡ $ swap y x t) w [ y / M ]
 
-≈?
-≡ swap w z t [ x / M ]
-≡ conc (ƛ z ⇒ t) w [ x / M ]
-≡ conc (swap w zʳ $ ƛ z ⇒ t) w [ x / M ]
-≡ swap w zʳ $ conc (ƛ z ⇒ t) zʳ [ x / M ]
-conc (ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]) w
--}
-  = ζ≡ ({!!} , λ w w∉ → {!!})
+-- ≈?
+-- ≡ swap w z t [ x / M ]
+-- ≡ conc (ƛ z ⇒ t) w [ x / M ]
+-- ≡ conc (swap w zʳ $ ƛ z ⇒ t) w [ x / M ]
+-- ≡ swap w zʳ $ conc (ƛ z ⇒ t) zʳ [ x / M ]
+-- conc (ƛ zʳ → conc (ƛ z ⇒ t) zʳ [ x / M ]) w
+-- -}
+--   = ζ≡ ({!!} , λ w w∉ → {!!})

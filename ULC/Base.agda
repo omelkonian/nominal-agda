@@ -26,6 +26,25 @@ instance
     (` x)    → ` swap 𝕒 𝕓 x
     (ƛ f)    → ƛ swap 𝕒 𝕓 f
 
+  {-# TERMINATING #-}
+  SwapLaws-Term : SwapLaws Term
+  SwapLaws-Term .swap-id {a}{t} with t
+  ... | ` x   = cong `_ swap-id
+  ... | l · r = cong₂ _·_ swap-id swap-id
+  ... | ƛ f   = cong ƛ_ swap-id
+  SwapLaws-Term .swap-rev {a}{b}{t} with t
+  ... | ` x   = cong `_ swap-rev
+  ... | l · r = cong₂ _·_ swap-rev swap-rev
+  ... | ƛ f   = cong ƛ_ swap-rev
+  SwapLaws-Term .swap-sym {a}{b}{t} with t
+  ... | ` x   = cong `_ swap-sym
+  ... | l · r = cong₂ _·_ swap-sym swap-sym
+  ... | ƛ f   = cong ƛ_ swap-sym
+  SwapLaws-Term .swap-swap {a}{b}{c}{d}{t} with t
+  ... | ` x   = cong `_ swap-swap
+  ... | l · r = cong₂ _·_ swap-swap swap-swap
+  ... | ƛ f   = cong ƛ_ swap-swap
+
 infix  30 `_
 infixl 20 _·_
 infixr 10 ƛ_

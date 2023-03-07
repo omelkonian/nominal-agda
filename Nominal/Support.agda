@@ -1,7 +1,6 @@
 open import Prelude.Init; open SetAsType
 open L.Mem
 open import Prelude.DecEq
-open import Prelude.Setoid
 open import Prelude.InfEnumerable
 open import Prelude.InferenceRules
 
@@ -18,20 +17,20 @@ freshAtom∉ {xs} = minFresh xs .proj₂
 
 private variable A : Type ℓ; B : Type ℓ′
 
-module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
+module _ ⦃ _ : Swap A ⦄ where
 
   ∃FinSupp FinSupp ∃Equivariant′ Equivariant′ : Pred A _
 
   -- NB: this is an over-approximation!
   -- e.g. ∃supp (ƛ x ⇒ x) = {x}
-  ∃FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≈ x
+  ∃FinSupp x = И² λ 𝕒 𝕓 → swap 𝕓 𝕒 x ≡ x
 
   -- ** a proper notion of support
   -- e.g. in λ-calculus this would correspond to the free variables of a term
   FinSupp a = ∃ λ (xs : Atoms) →
-    (∀ x y → x ∉ xs → y ∉ xs → swap y x a ≈ a)
+    (∀ x y → x ∉ xs → y ∉ xs → swap y x a ≡ a)
     ×
-    (∀ x y → x ∈ xs → y ∉ xs → swap y x a ≉ a)
+    (∀ x y → x ∈ xs → y ∉ xs → swap y x a ≢ a)
 
   -- alternative definition of equivariance based on (finite) support
   --  * equivariant(x) := supp(x) = ∅
@@ -41,10 +40,7 @@ module _ ⦃ _ : Swap A ⦄ ⦃ _ : ISetoid A ⦄ where
 -- counter-example: a function with infinite support
 -- e.g. λ x → (x == 𝕒) ∨ (x == 𝕓)
 
-record ∃FinitelySupported (A : Type ℓ)
-  ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄
-  ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω
-  where
+record ∃FinitelySupported (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω where
 
   field ∀∃fin : Unary.Universal ∃FinSupp
 
@@ -52,17 +48,6 @@ record ∃FinitelySupported (A : Type ℓ)
   ∃supp = proj₁ ∘ ∀∃fin
 
   _∙∃supp = ∃supp
-
-  -- T0D0: extract minimal support
-  --   i.e. filter out elements of `supp` that already satisfy P
-  -- module _ ⦃ _ : IDecSetoid A ⦄ where
-  --   minSupp : A → Atoms
-  --   minSupp a =
-  --     let xs , P = ∀fin a
-  --     in  filter ? xs
-  --     ?
-  -- NB: doesn't hold in general ⇒ leads to a solution to the halting problem
-  -- T0D0: find a characterization of this decidable sub-space
 
   ∃fresh∉ : (a : A) → ∃ (_∉ ∃supp a)
   ∃fresh∉ = minFresh ∘ ∃supp
@@ -75,7 +60,7 @@ record ∃FinitelySupported (A : Type ℓ)
     ∙ 𝕒 ∉ ∃supp x
     ∙ 𝕓 ∉ ∃supp x
       ────────────────
-      ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ x
+      ⦅ 𝕒 ↔ 𝕓 ⦆ x ≡ x
   swap-∃fresh x = flip (∀∃fin x .proj₂ _ _)
 
 {-
@@ -117,10 +102,7 @@ instance
 ... | yes refl = λ where 𝟘 → 𝟘
 ... | no _     = λ where 𝟘 → 𝟚
 
-record FinitelySupported (A : Type ℓ)
-  ⦃ _ : ISetoid A ⦄ ⦃ _ : SetoidLaws A ⦄
-  ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω
-  where
+record FinitelySupported (A : Type ℓ) ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ : Typeω where
 
   field ∀fin : Unary.Universal FinSupp
 
@@ -144,19 +126,19 @@ record FinitelySupported (A : Type ℓ)
     ∙ 𝕒 ∉ supp x
     ∙ 𝕓 ∉ supp x
       ────────────────
-      ⦅ 𝕒 ↔ 𝕓 ⦆ x ≈ x
+      ⦅ 𝕒 ↔ 𝕓 ⦆ x ≡ x
   swap-fresh-min x = flip (∀fin x .proj₂ .proj₁ _ _)
 
   ∃fresh : ∀ (x : A) → ∃ λ 𝕒 → ∃ λ 𝕓 →
       (𝕒 ♯ x)
     × (𝕓 ♯ x)
-    × (swap 𝕓 𝕒 x ≈ x)
+    × (swap 𝕓 𝕒 x ≡ x)
   ∃fresh x =
-    let xs , swap≈ , swap≉ = ∀fin x
+    let xs , swap≡ , swap≢ = ∀fin x
         -- (a ∷ b ∷ [] , a∉ ∷ b∉ ∷ []) = (fresh^ 2) xs
         a , a∉ = minFresh xs
         b , b∉ = minFresh xs
-    in a , b , a∉ , b∉ , swap≈ a b a∉ b∉
+    in a , b , a∉ , b∉ , swap≡ a b a∉ b∉
 
   -- T0D0: meta-programming tactic `fresh-in-context` (big sister to `deriveSwap`)
   -- NB: these tactics correspond to two fundamental axioms/notions in nominal sets
@@ -168,10 +150,10 @@ instance
   FinSupp-Atom : FinitelySupported Atom
   FinSupp-Atom .∀fin 𝕒 = [ 𝕒 ] , eq , ¬eq
     where
-      eq : ∀ x y → x ∉ [ 𝕒 ] → y ∉ [ 𝕒 ] → swap y x 𝕒 ≈ 𝕒
+      eq : ∀ x y → x ∉ [ 𝕒 ] → y ∉ [ 𝕒 ] → swap y x 𝕒 ≡ 𝕒
       eq _ _ x∉ y∉ = swap-noop _ _ _ λ where 𝟘 → y∉ 𝟘; 𝟙 → x∉ 𝟘
 
-      ¬eq : ∀ x y → x ∈ [ 𝕒 ] → y ∉ [ 𝕒 ] → swap y x 𝕒 ≉ 𝕒
+      ¬eq : ∀ x y → x ∈ [ 𝕒 ] → y ∉ [ 𝕒 ] → swap y x 𝕒 ≢ 𝕒
       ¬eq _ y 𝟘 y∉
         rewrite ≟-refl 𝕒 | ≟-refl y
         with 𝕒 ≟ y

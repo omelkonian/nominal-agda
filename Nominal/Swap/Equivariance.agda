@@ -6,7 +6,6 @@ open import Prelude.Functor
 open import Prelude.Monad
 open import Prelude.Semigroup
 open import Prelude.Show
-open import Prelude.Setoid
 open import Prelude.Lists
 open import Prelude.ToN
 open import Prelude.Tactics.PostulateIt
@@ -23,10 +22,10 @@ open import Nominal.Swap.Base Atom
 {- ∀ (𝕒 𝕓 : Atom).
      ∙[n = 0]
        ∀ (x : A).
-         swap 𝕒 𝕓 x ≈ swap 𝕒 𝕓 x
+         swap 𝕒 𝕓 x ≡ swap 𝕒 𝕓 x
      ∙[n = 1]
        ∀ (f : A → B) (x : A).
-         swap 𝕒 𝕓 (f x) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 x)
+         swap 𝕒 𝕓 (f x) ≡ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 x)
      ∙[n = 2]
        ∀ (f : A → B → C) (x : A) (y : B).
          swap 𝕒 𝕓 (f x y) → (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 x) (swap 𝕒 𝕓 y)
@@ -75,7 +74,7 @@ deriveSwapDistributiveType equiv? t = do
 
     equivTy = vΠ[ "𝕒" ∶ ♯ (length ctx ∸ 1) ]
               vΠ[ "𝕓" ∶ ♯ (length ctx) ]
-              ∀args as (quote _≈_ ∙⟦ lhs ∣ rhs ⟧)
+              ∀args as (quote _≡_ ∙⟦ lhs ∣ rhs ⟧)
   print $ "Equivariant " ◇ show t ◇ " := " ◇ show equivTy
   print "-------------------------------------------------"
   return equivTy
@@ -103,10 +102,10 @@ postulateSwap↔ f t = declarePostulate (vArg f) =<< deriveSwap↔ t
 {- ∀ (𝕒 𝕓 : Atom).
      ∙[n = 0]
        ∀ (x : A).
-         swap 𝕒 𝕓 x ≈ x
+         swap 𝕒 𝕓 x ≡ x
      ∙[n = 1]
        ∀ (f : A → B) (x : A).
-         swap 𝕒 𝕓 (f x) ≈ f (swap 𝕒 𝕓 x)
+         swap 𝕒 𝕓 (f x) ≡ f (swap 𝕒 𝕓 x)
      ∙[n = 2]
        ∀ (f : A → B → C) (x : A) (y : B).
          swap 𝕒 𝕓 (f x y) → f (swap 𝕒 𝕓 x) (swap 𝕒 𝕓 y)
@@ -128,8 +127,6 @@ private
     g : ℕ → ℕ → ℕ
 
     instance
-      _ : ISetoid ℕ
-      _ : ISetoid X
       _ : Swap X
       _ : Swap (ℕ → ℕ)
       _ : Swap (ℕ → ℕ → ℕ)
@@ -137,20 +134,20 @@ private
 
   module _ 𝕒 𝕓 where postulate
     distr-f : ∀ {n} →
-      swap 𝕒 𝕓 (f n) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
+      swap 𝕒 𝕓 (f n) ≡ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
     equiv-f : ∀ {n} →
-      swap 𝕒 𝕓 (f n) ≈ f (swap 𝕒 𝕓 n)
+      swap 𝕒 𝕓 (f n) ≡ f (swap 𝕒 𝕓 n)
     distr-g : ∀ {n m} →
-      swap 𝕒 𝕓 (g n m) ≈ (swap 𝕒 𝕓 g) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+      swap 𝕒 𝕓 (g n m) ≡ (swap 𝕒 𝕓 g) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
     equiv-g : ∀ {n m} →
-      swap 𝕒 𝕓 (g n m) ≈ g (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+      swap 𝕒 𝕓 (g n m) ≡ g (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
     distr-mkX : ∀ {n m} →
-      swap 𝕒 𝕓 (mkX n m) ≈ (swap 𝕒 𝕓 mkX) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+      swap 𝕒 𝕓 (mkX n m) ≡ (swap 𝕒 𝕓 mkX) (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
     equiv-mkX : ∀ {n m} →
-      swap 𝕒 𝕓 (mkX n m) ≈ mkX (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
+      swap 𝕒 𝕓 (mkX n m) ≡ mkX (swap 𝕒 𝕓 n) (swap 𝕒 𝕓 m)
   module _ {f : ℕ → ℕ} 𝕒 𝕓 where postulate
-    distr-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≈ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
-    equiv-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≈ f (swap 𝕒 𝕓 n)
+    distr-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≡ (swap 𝕒 𝕓 f) (swap 𝕒 𝕓 n)
+    equiv-∀f : ∀ {n} → swap 𝕒 𝕓 (f n) ≡ f (swap 𝕒 𝕓 n)
 
   _ = Swap↔ f ∋ distr-f
   _ = Swap↔ f ∋ swap↔ f

@@ -5,7 +5,6 @@ open import Prelude.Closures
 open import Prelude.InferenceRules
 open import Prelude.Decidable
 open import Prelude.Membership
-open import Prelude.Setoid
 open import Prelude.Bifunctor
 open import Prelude.Measurable
 open import Prelude.Ord
@@ -20,7 +19,7 @@ open import Nominal  Atom
 private variable A : Type ℓ
 
 -- module _ {A : Type}
---          ⦃ _ : LawfulSetoid A ⦄ ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
+--          ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄
 --          ⦃ _ : FinitelySupported A ⦄
 --          ⦃ _ : Measurable A ⦄ where
 --   mapAbs′ : (x' : Abs A) → ((x : A) → x ≺ᵐ x' → A) → Abs A
