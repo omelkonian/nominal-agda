@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html><head><meta charset="utf-8"><title>Nominal.Swap.Equivariance</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css'/><style>.github-fork-ribbon:before { background-color: #333; }</style><link rel="stylesheet" href="css/Agda.css"></head><body><a class='github-fork-ribbon'href='https://github.com/omelkonian/nominal-agda/tree/master/Nominal/Swap/Equivariance.agda'data-ribbon='Source code on Github' title='Source code on Github'>Source code on Github</a><pre class="Agda"><a id="1" class="Symbol">{-#</a> <a id="5" class="Keyword">OPTIONS</a> <a id="13" class="Pragma">--v</a> <a id="17" class="Pragma">equivariance:100</a> <a id="34" class="Symbol">#-}</a>
 <a id="38" class="Keyword">open</a> <a id="43" class="Keyword">import</a> <a id="50" href="Prelude.Init.html" class="Module">Prelude.Init</a>
-<a id="63" class="Keyword">open</a> <a id="68" href="Prelude.Init.html#7118" class="Module">L.Mem</a>
+<a id="63" class="Keyword">open</a> <a id="68" href="Prelude.Init.html#7133" class="Module">L.Mem</a>
 <a id="74" class="Keyword">open</a> <a id="79" class="Keyword">import</a> <a id="86" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
 <a id="100" class="Keyword">open</a> <a id="105" class="Keyword">import</a> <a id="112" href="Prelude.Functor.html" class="Module">Prelude.Functor</a>
 <a id="128" class="Keyword">open</a> <a id="133" class="Keyword">import</a> <a id="140" href="Prelude.Monad.html" class="Module">Prelude.Monad</a>
@@ -13,7 +13,7 @@
 <a id="286" class="Keyword">open</a> <a id="291" class="Keyword">import</a> <a id="298" href="Prelude.Tactics.PostulateIt.html" class="Module">Prelude.Tactics.PostulateIt</a>
 
 <a id="327" class="Keyword">open</a> <a id="332" class="Keyword">import</a> <a id="339" href="Prelude.Generics.html" class="Module">Prelude.Generics</a>
-<a id="356" class="Keyword">open</a> <a id="361" href="Prelude.Init.html#12188" class="Module">Meta</a>
+<a id="356" class="Keyword">open</a> <a id="361" href="Prelude.Init.html#12203" class="Module">Meta</a>
 <a id="366" class="Keyword">open</a> <a id="371" href="Prelude.Generics.Debug.html#648" class="Module">Debug</a> <a id="377" class="Symbol">(</a><a id="378" class="String">&quot;equivariance&quot;</a> <a id="393" href="Agda.Builtin.Sigma.html#218" class="InductiveConstructor Operator">,</a> <a id="395" class="Number">100</a><a id="398" class="Symbol">)</a>
 
 <a id="401" class="Keyword">module</a> <a id="408" href="Nominal.Swap.Equivariance.html" class="Module">Nominal.Swap.Equivariance</a> <a id="434" class="Symbol">(</a><a id="435" href="Nominal.Swap.Equivariance.html#435" class="Bound">Atom</a> <a id="440" class="Symbol">:</a> <a id="442" href="Agda.Primitive.html#320" class="Primitive">Set</a><a id="445" class="Symbol">)</a> <a id="447" class="Symbol">⦃</a> <a id="449" href="Nominal.Swap.Equivariance.html#449" class="Bound">_</a> <a id="451" class="Symbol">:</a> <a id="453" href="Prelude.DecEq.Core.html#148" class="Record">DecEq</a> <a id="459" href="Nominal.Swap.Equivariance.html#435" class="Bound">Atom</a> <a id="464" class="Symbol">⦄</a> <a id="466" class="Keyword">where</a>
