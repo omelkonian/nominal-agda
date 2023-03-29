@@ -16,15 +16,8 @@ data Term : Type where
   `_  : Atom → Term
   _·_ : Op₂ Term
   ƛ_  : Abs Term → Term
--- unquoteDecl Swap-Term = DERIVE Swap [ quote Term , Swap-Term ]
-
-instance
-  {-# TERMINATING #-}
-  Swap-Term : Swap Term
-  Swap-Term .swap 𝕒 𝕓 = λ where
-    (t · t′) → swap 𝕒 𝕓 t · swap 𝕒 𝕓 t′
-    (` x)    → ` swap 𝕒 𝕓 x
-    (ƛ f)    → ƛ swap 𝕒 𝕓 f
+{-# TERMINATING #-}
+unquoteDecl Swap-Term = DERIVE Swap [ quote Term , Swap-Term ]
 
 infix  30 `_
 infixl 20 _·_

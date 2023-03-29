@@ -1,4 +1,4 @@
--- {-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Prelude.Init hiding ([_]); open SetAsType
 open L.Mem
 open import Prelude.DecEq
@@ -19,7 +19,6 @@ open import ULC.Measure      Atom ⦃ it ⦄
 open import ULC.Alpha        Atom ⦃ it ⦄
 open import ULC.Substitution Atom ⦃ it ⦄
 open import Nominal          Atom ⦃ it ⦄
-  renaming (minSupp to supp; supp to maxSupp)
 
 -- ** Reduction rules.
 infix 0 _—→_
@@ -373,6 +372,7 @@ sub-swap :
   N ⇛ N′
   ──────────────────────────
   swap x y N ⇛ swap x y N′
+  -- Equivariant² _⇒_
 sub-swap ν⇛ = ν⇛
 sub-swap (ζ⇛ p) = ζ⇛ (sub-swap p)
 sub-swap (ξ⇛ p q) = ξ⇛ (sub-swap p) (sub-swap q)
@@ -448,7 +448,6 @@ sub-par {M = M}{M′}{𝕒} (ζ⇛ {N}{N′}{x} p) q =
   -}
   qed
   where
-    x′ x′′ : Atom
     x′  = freshAtom (𝕒 ∷ x ∷ supp N ++ supp M)
     x′′ = freshAtom (𝕒 ∷ x ∷ supp N′ ++ supp M′)
 
@@ -496,7 +495,6 @@ sub-par {M = X}{X′}{𝕒} (β⇛ {N}{N′}{M}{M′}{x} p q) pq =
   -}
   qed
   where
-    x′ : Atom
     x′ = freshAtom (𝕒 ∷ supp (ƛ x ⇒ N) ++ supp X)
 
     _ : ((ƛ x ⇒ N) · M) [ 𝕒 / X ]
@@ -542,12 +540,13 @@ par-⦊ :
   M ⇛ N
   ───────
   N ⇛ M ⁺
-par-⦊ ν⇛ = ν⇛
-par-⦊ (ζ⇛ p) = ζ⇛ (par-⦊ p)
-par-⦊ (β⇛ p p′) = sub-par (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {_ · _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {` _} p p′) = ξ⇛ (par-⦊ p) (par-⦊ p′)
-par-⦊ (ξ⇛ {ƛ _} (ζ⇛ p) p′) = β⇛ (par-⦊ p) (par-⦊ p′)
+par-⦊ = λ where
+  ν⇛ → ν⇛
+  (ζ⇛ p) → ζ⇛ (par-⦊ p)
+  (β⇛ p p′) → sub-par (par-⦊ p) (par-⦊ p′)
+  (ξ⇛ {_ · _} p p′) → ξ⇛ (par-⦊ p) (par-⦊ p′)
+  (ξ⇛ {` _} p p′) → ξ⇛ (par-⦊ p) (par-⦊ p′)
+  (ξ⇛ {ƛ _} (ζ⇛ p) p′) → β⇛ (par-⦊ p) (par-⦊ p′)
 
 par-⦉ = par-⦊
 

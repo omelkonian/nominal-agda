@@ -32,7 +32,6 @@ barendregt = go []
                   in ƛ x′ ⇒ go (x ∷ xs) (swap x′ x t)
 
 infix 6 _[_/_]
-
 {-# TERMINATING #-}
 _[_/_] : Term → Atom → Term → Term
 (` x) [ 𝕒 / N ] = if x == 𝕒 then N else ` x
