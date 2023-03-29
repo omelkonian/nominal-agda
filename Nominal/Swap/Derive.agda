@@ -38,7 +38,6 @@ derive↔ d with d
     mkClause fn = clause [] [ vArg $ proj fn ] (quote swap ∙⟦ ♯a ∣ ♯b ∣ fn ∙⟦ ♯r ⟧ ⟧)
 ... | data-type ps cs = do
   print $ "DATATYPE {pars = " ◇ show ps ◇ "; cs = " ◇ show cs ◇ "}"
-  -- cs′ ← mapM mkClause $ drop 1 cs
   cs′ ← mapM mkClause cs
   return `λ⟦ "𝕒" ∣ "𝕓" ⇒ pat-lam cs′ [] ⟧
   where
@@ -49,7 +48,6 @@ derive↔ d with d
       let N = length tel; ♯𝕒 = ♯ (N + 1); ♯𝕓 = ♯ N
       print $ "  ♯𝕒: " ◇ show ♯𝕒
       print $ "  ♯𝕓: " ◇ show ♯𝕓
-      -- let tel′ = map (map₂ $ fmap $ mapVars $ suc ∘ suc ∘ suc) tel
       let tel′ = map (map₂ $ fmap $ const unknown) tel
       print $ "  tel′: " ◇ show tel′
       let
@@ -98,16 +96,13 @@ addHypotheses = λ where
         _ → ty′)
   ty → ty
 
-externalizeSwap : Type → Type
-externalizeSwap = go 0
-  where
-    go : ℕ → Type → Type
-    go n = λ where
-      (def (quote Swap) as) →
-        def (quote Swap) (vArg (♯ (suc n)) ∷ iArg (♯ n) ∷ as)
-      (Π[ s ∶ arg i a ] ty) →
-        Π[ s ∶ arg i (go n a) ] go (suc n) ty
-      t → t
+externalizeSwap : ℕ → Type → Type
+externalizeSwap n = λ where
+  (def (quote Swap) as) →
+    def (quote Swap) (vArg (♯ (suc n)) ∷ iArg (♯ n) ∷ as)
+  (Π[ s ∶ arg i a ] ty) →
+    Π[ s ∶ arg i (externalizeSwap n a) ] externalizeSwap (suc n) ty
+  t → t
 
 addHypotheses′ : (Type → Type) → Type → Type
 addHypotheses′ Swap∙ = λ where
@@ -150,7 +145,11 @@ instance
            $ ∀indices⋯ tel
            $ quote Swap ∙⟦ n′ ⟧
     print $ "  T′: " ◇ show T′
-    let T″ = externalizeSwap T′
+    -- let mn = length $ flip L.boolTakeWhile ctx λ where
+    --   (¬? ∘ (_≟ iArg (def (quote DecEq) {!!})) ∘ unArg ∘ proj₂) ctx
+    suc (suc mn) ← pure $ length ctx
+      where _ → error "module parameters should always start with `(Atom : Set) ⦃ _ : DecEq Atom ⦄`"
+    let T″ = externalizeSwap mn T′
     print $ "  T″: " ◇ show T″
     T ←   (declareDef (iArg f) T′ >> return T′)
       <|> (declareDef (iArg f) T″ >> return T″)
