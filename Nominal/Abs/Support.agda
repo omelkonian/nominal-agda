@@ -51,11 +51,65 @@ module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ ⦃ _ : SwapLaws A ⦄ where
       in abs a (f $ conc x' a)
 
     freshen : Op₁ (Abs A)
+
+    -- freshen f@(abs a t) =
+    --   let xs , _ = ∀∃fin f
+    --       b , b∉ = minFresh (a ∷ xs)
+    --   in abs b (conc f b)
+
     freshen f@(abs a t) =
       let xs , _ = ∀∃fin f
           b , b∉ = minFresh xs
       in abs b (conc f b)
 
+    safe-conc : Abs A → Atom → A
+    safe-conc = conc ∘ freshen
+{-
+
+x  := abs a  (a  , T{b})
+· a ♯ T
+x' := abs a' (a' , T{b})
+· a' ♯ T
+
+safe-conc x b
+conc (freshen x) b
+swap b {T{b} ─ a}^a (conc (abs a (a, T{b})) ^a)
+swap b {T{b} ─ a}^a (swap ^a a (a, T{b}))
+swap b {T{b} ─ a}^a (^a, swap ^a a T{b})
+swap b {T{b} ─ a}^a (^a, T{b})
+(T{b} , ^a)
+(T{b} , swap b ^a (swap ^a a b))
+(T{b} , swap (swap b ^a ^a) (swap b ^a a) (swap b ^a b))
+(T{b} , swap b (swap b ^a a) ^a
+
+swap b ^a (swap ^a a T{b})
+≡
+swap b ^a T{b}
+T{^a}
+≟
+T{^a'}
+swap b ^a' T{b}
+
+
+
+minFresh {T{b}} ≡ minFresh {T{b}}
+
+
+
+
+
+minFresh {b} ≟ minFresh {b}
+
+-- minFresh {a,b} ≟ minFresh {a',b}
+
+(b , ^a')
+swap b {a',b}^a' (^a', b)
+swap b {a',b}^a' (swap ^a' a' (a', b))
+swap b {a',b}^a' (conc (abs a' (a', b)) ^a')
+conc (freshen x') b
+safe-conc x' b
+
+-}
   module _ ⦃ _ : FinitelySupported A ⦄ where
 
     -- abstractions over finitely supported types are themselves finite

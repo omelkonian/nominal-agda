@@ -17,6 +17,17 @@ record Abs (A : Type ℓ) : Type ℓ where
         term : A
 open Abs public
 
+x  := abs a  (a  , b)
+x' := abs a' (a' , b)
+
+conc x  b
+swap b a (a , b)
+(b , a)
+
+(b , a')
+swap b a' (a' , b)
+conc x' b
+
 module _ {A : Type ℓ} ⦃ _ : Swap A ⦄ where
 
   conc : Abs A → Atom → A
